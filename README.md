@@ -1,6 +1,7 @@
 
 # Collection of commands
 curl -fsSL https://install.determinate.systems/nix | sh -s -- install --determinate
+
 wget -qO- https://install.determinate.systems/nix | sh -s -- install --determinate
 
 sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake '.'
