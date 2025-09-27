@@ -1,6 +1,7 @@
 
 # Collection of commands
 curl -fsSL https://install.determinate.systems/nix | sh -s -- install --determinate
+wget -qO- https://install.determinate.systems/nix | sh -s -- install --determinate
 
 sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake '.'
 sudo env "PATH=$PATH" system-manager switch --flake '/home/drakkir/.config/nix/'
@@ -13,14 +14,14 @@ home-manager switch --flake '/home/drakkir/.config/nix/'
 
 # desktop gnome login
 
-/usr/share/wayland-sessions/hyprland.desktop
-
-``` bash
+```bash
+sudo tee /usr/share/wayland-sessions/hyprland.desktop > /dev/null <<EOF
 [Desktop Entry]
 Name=Hyprland
 Comment=An intelligent dynamic tiling Wayland compositor
-Exec=/run/system-manager/sw/bin//hyprland
+Exec=/run/system-manager/sw/bin/Hyprland
 Type=Application
+EOF
 ```
 
 

@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ... }:
+{ config, ... }:
 
 {
   #home.file.".config/hypr".source = config.lib.file.mkOutOfStoreSymlink "/home/drakkir/.dotfiles/hypr/.config/hypr";

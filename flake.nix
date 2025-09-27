@@ -23,17 +23,30 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    flatpaks = {
-      url = "github:gmodena/nix-flatpak/?ref=latest";
+    hyprland = {
+      url = "github:hyprwm/Hyprland";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-flatpak = {
+      url = "github:gmodena/nix-flatpak";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    auto-cpufreq = {
+        url = "github:AdnanHodzic/auto-cpufreq";
+        inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, system-manager, nix-system-graphics, zen-browser, flatpaks, ... }:
+  outputs = { nixpkgs, home-manager, system-manager, nix-system-graphics, zen-browser, nix-flatpak, auto-cpufreq, ... }:
     let
       system = "x86_64-linux";
       username = "drakkir";
-      # pkgs = nixpkgs.legacyPackages.${system};
-      pkgs = import nixpkgs { system = "x86_64-linux"; config.allowUnfree = true; };
+      pkgs = import nixpkgs {
+        system = "x86_64-linux";
+        config.allowUnfree = true;
+      };
     in {
       defaultPackage.x86_64-linux = home-manager.defaultPackage.x86_64-linux;
 
@@ -52,31 +65,68 @@
               environment.systemPackages = with pkgs; [
                 git
                 neovim
-                ghostty
-                kitty
                 hyprland
+                ghostty
+                flatpak
                 xdg-desktop-portal
                 xdg-desktop-portal-gtk
+                auto-cpufreq
               ];
+
+              systemd.services."xdg-desktop-portal" = {
+                description = "XDG Desktop Portal";
+                after = [ "graphical-session.target" ];
+                wantedBy = [ "multi-user.target" ];
+                serviceConfig = {
+                  ExecStart = "${pkgs.xdg-desktop-portal}/libexec/xdg-desktop-portal";
+                  Restart = "on-failure";
+                };
+              };
+
+              environment.etc."apparmor.d/nix-bwrap".text = ''
+                abi <abi/4.0>,
+                include <tunables/global>
+
+                profile bwrap ${pkgs.bubblewrap}/bin/bwrap flags=(unconfined) {
+                  userns,
+                  include if exists <local/bwrap>
+                }
+              '';
             };
           })
         ];
       };
 
       homeConfigurations = {
+        imports = [
+            "${nix-flatpak}/modules/nixos.nix"
+          ];
         "${username}" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
 
           extraSpecialArgs = {
             inherit zen-browser;
-            inherit flatpaks;
+            inherit nix-flatpak;
+            # inherit hyprland;
           };
+
 
           modules = [
             ./home.nix
-            ({
+            {
               home.packages = [ system-manager.packages."${system}".default ];
-            })
+            }
+
+            "${nix-flatpak}/modules/home-manager.nix"
+            {
+              services.flatpak = {
+                enable = true;
+
+                packages = [
+                  "net.davidotek.pupgui2"
+                ];
+              };
+            }
           ];
         };
       };

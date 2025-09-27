@@ -13,12 +13,11 @@
         environment.systemPackages = with pkgs; [
           git
           neovim
-          ghostty
-          kitty
           hyprland
           rofi
           xdg-desktop-portal
           xdg-desktop-portal-gtk
+          proton-pass
         ];
       })
     ];

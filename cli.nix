@@ -23,6 +23,7 @@
     gnumake
     gcc
     fastfetch
+    cargo
   ];
 }
 

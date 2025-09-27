@@ -1,30 +1,38 @@
 {
-  config,
   pkgs,
-  lib,
-  inputs,
   zen-browser,
-  flatpaks,
   ...
 }:
 {
-    imports = [
-      ./cli.nix
-      ./dotfiles.nix
-      ./gui.nix
-      zen-browser.homeModules.beta
+  imports = [
+    ./cli.nix
+    ./dotfiles.nix
+    ./gui.nix
+    zen-browser.homeModules.beta
+  ];
+
+  home = {
+    username = "drakkir";
+    homeDirectory = "/home/drakkir";
+    stateVersion = "25.11";
+  };
+
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gnome
+      xdg-desktop-portal-gtk
     ];
-
-    home = {
-      username = "drakkir";
-      homeDirectory = "/home/drakkir";
-      stateVersion = "25.11";
+    config = {
+      hyprland = {
+        default = [ "hyprland" "gtk" ];
+        "org.freedesktop.impl.portal.ScreenCast" = [
+          "gnome"
+        ];
+      };
     };
-
-    # home.packages = with pkgs; [
-    #   flatpak
-    # ];
-    programs.home-manager.enable = true;
-    programs.zen-browser.enable = true;
+  };
+  programs.home-manager.enable = true;
+  programs.zen-browser.enable = true;
 }
 
