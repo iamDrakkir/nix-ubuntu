@@ -1,16 +1,24 @@
 
 # Collection of commands
-curl -fsSL https://install.determinate.systems/nix | sh -s -- install --determinate
-
 wget -qO- https://install.determinate.systems/nix | sh -s -- install --determinate
 
+nix-shell -p git
+
+https://github.com/iamDrakkir/nix-ubuntu.git ~/.config/nix
+
+https://github.com/iamDrakkir/dotfiles ~/.dotfiles
+
 sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake '.'
+
 sudo env "PATH=$PATH" system-manager switch --flake '/home/drakkir/.config/nix/'
 
 nix shell 'nixpkgs#mesa-demos' --command glxgears
 
 nix shell github:nix-community/home-manager
+
 home-manager switch --flake '/home/drakkir/.config/nix/'
+
+sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 
 # desktop gnome login

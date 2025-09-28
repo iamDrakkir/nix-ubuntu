@@ -69,6 +69,7 @@
                 ghostty
                 flatpak
                 xdg-desktop-portal
+                xdg-desktop-portal-hyprland
                 xdg-desktop-portal-gtk
                 auto-cpufreq
               ];
@@ -118,12 +119,16 @@
             }
 
             "${nix-flatpak}/modules/home-manager.nix"
+
             {
               services.flatpak = {
                 enable = true;
 
                 packages = [
                   "net.davidotek.pupgui2"
+                  "com.usebottles.bottles"
+                  "com.valvesoftware.Steam"
+                  "com.discordapp.Discord"
                 ];
               };
             }

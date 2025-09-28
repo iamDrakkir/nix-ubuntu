@@ -16,6 +16,8 @@ in {
     kitty
     (wrapElectronApp discord "discord")
     qbittorrent
+    (wrapElectronApp vscode "code")
+
   ];
   programs.zen-browser.policies = {
     AutofillAddressEnabled = true;
