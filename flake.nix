@@ -48,7 +48,7 @@
         config.allowUnfree = true;
       };
     in {
-      defaultPackage.x86_64-linux = home-manager.defaultPackage.x86_64-linux;
+      packages.x86_64-linux.default = home-manager.packages.x86_64-linux.default;
 
       systemConfigs.default = system-manager.lib.makeSystemConfig {
         modules = [
@@ -66,23 +66,28 @@
                 git
                 neovim
                 hyprland
+                niri
                 ghostty
                 flatpak
-                xdg-desktop-portal
-                xdg-desktop-portal-hyprland
-                xdg-desktop-portal-gtk
+                pipewire
+                wireplumber
+                grim
+                slurp
+                wl-clipboard
                 auto-cpufreq
               ];
 
-              systemd.services."xdg-desktop-portal" = {
-                description = "XDG Desktop Portal";
-                after = [ "graphical-session.target" ];
-                wantedBy = [ "multi-user.target" ];
-                serviceConfig = {
-                  ExecStart = "${pkgs.xdg-desktop-portal}/libexec/xdg-desktop-portal";
-                  Restart = "on-failure";
-                };
-              };
+              # Set up xdg-desktop-portal properly
+              environment.pathsToLink = [
+                "/share/xdg-desktop-portal"
+                "/share/dbus-1"
+              ];
+
+
+              # # Symlink the hyprland portal file to system location
+              # systemd.tmpfiles.rules = [
+              #   "L+ /usr/share/xdg-desktop-portal/portals/hyprland.portal - - - - ${pkgs.xdg-desktop-portal-hyprland}/share/xdg-desktop-portal/portals/hyprland.portal"
+              # ];
 
               environment.etc."apparmor.d/nix-bwrap".text = ''
                 abi <abi/4.0>,
@@ -99,18 +104,13 @@
       };
 
       homeConfigurations = {
-        imports = [
-            "${nix-flatpak}/modules/nixos.nix"
-          ];
         "${username}" = home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
 
           extraSpecialArgs = {
             inherit zen-browser;
             inherit nix-flatpak;
-            # inherit hyprland;
           };
-
 
           modules = [
             ./home.nix
