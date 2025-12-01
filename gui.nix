@@ -21,6 +21,8 @@ in {
     qbittorrent
     (wrapElectronApp vscode "code")
     steam
+    _1password
+    (wrapElectronApp _1password-gui "1password")
   ];
 
   # Create desktop entries for wrapped applications
@@ -34,7 +36,7 @@ in {
       categories = [ "Network" "InstantMessaging" ];
       mimeType = [ "x-scheme-handler/discord" ];
     };
-    
+
     vscode = {
       name = "Visual Studio Code";
       comment = "Code Editing. Redefined.";
