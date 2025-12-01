@@ -4,9 +4,9 @@ wget -qO- https://install.determinate.systems/nix | sh -s -- install --determina
 
 nix-shell -p git
 
-https://github.com/iamDrakkir/nix-ubuntu.git ~/.config/nix
+git clone https://github.com/iamDrakkir/nix-ubuntu.git ~/.config/nix
 
-https://github.com/iamDrakkir/dotfiles ~/.dotfiles
+git clone https://github.com/iamDrakkir/dotfiles ~/.dotfiles
 
 sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake '.'
 
@@ -27,7 +27,18 @@ sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flat
 sudo tee /usr/share/wayland-sessions/hyprland.desktop > /dev/null <<EOF
 [Desktop Entry]
 Name=Hyprland
-Comment=An intelligent dynamic tiling Wayland compositor
+Comment=An dynamic tiling Wayland compositor
+Exec=/run/system-manager/sw/bin/Hyprland
+Type=Application
+EOF
+```
+
+
+```bash
+sudo tee /usr/share/wayland-sessions/niri.desktop > /dev/null <<EOF
+[Desktop Entry]
+Name=Niri
+Comment=An scrolling Wayland compositor
 Exec=/run/system-manager/sw/bin/Hyprland
 Type=Application
 EOF
