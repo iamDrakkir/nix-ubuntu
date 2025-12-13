@@ -45,7 +45,7 @@
       switch-input-source = [ "XF86Keyboard" ];
       switch-input-source-backward = [ "<Shift>XF86Keyboard" ];
     };
-    
+
     # Configure workspaces for Tactile
     "org/gnome/mutter" = {
       dynamic-workspaces = false;
@@ -55,42 +55,42 @@
       # Allow center-new-windows 
       center-new-windows = false;
     };
-    
+
     "org/gnome/desktop/wm/preferences" = {
       num-workspaces = 10;
       # Use click focus mode for better control
       focus-mode = "click";
       auto-raise = false;
     };
-    
+
     # Configure GNOME Shell extensions for Tactile
     "org/gnome/shell" = {
       enabled-extensions = [
         pkgs.gnomeExtensions.tactile.extensionUuid
       ];
     };
-    
+
     # Tactile configuration
     "org/gnome/shell/extensions/tactile" = {
       # Grid size (4x4 grid by default)
       col-count = 4;
       row-count = 4;
-      
+
       # Gap settings
       gap-size = 8;
-      
+
       # Show grid on Super+T
       show-grid-on-primary-display = true;
-      
+
       # Animation settings
       animation-duration = 200;
-      
+
       # Window behavior
       maximize-difference-threshold = 24;
-      
+
       # Grid appearance
       grid-opacity = 90;
-      
+
       # Keyboard shortcuts (Super+T is default to show grid)
       # After showing grid, type two tiles (or same tile twice) to position window
     };

@@ -45,7 +45,7 @@
       switch-input-source = [ "XF86Keyboard" ];
       switch-input-source-backward = [ "<Shift>XF86Keyboard" ];
     };
-    
+
     # Configure workspaces for Tiling Shell
     "org/gnome/mutter" = {
       dynamic-workspaces = false;
@@ -55,60 +55,60 @@
       # Allow center-new-windows 
       center-new-windows = true;
     };
-    
+
     "org/gnome/desktop/wm/preferences" = {
       num-workspaces = 10;
       # Use sloppy focus mode - works well with tiling
       focus-mode = "sloppy";
       auto-raise = false;
     };
-    
+
     # Configure GNOME Shell extensions for Tiling Shell
     "org/gnome/shell" = {
       enabled-extensions = [
         pkgs.gnomeExtensions.tiling-shell.extensionUuid
       ];
     };
-    
+
     # Tiling Shell configuration
     "org/gnome/shell/extensions/tilingshell" = {
       # Enable the tiling system (hold CTRL while moving)
       enable-tiling-system = true;
-      
+
       # Enable automatic tiling for new windows
       enable-autotiling = true;
-      
+
       # Gap settings
       inner-gaps = 8;
       outer-gaps = 8;
-      
+
       # Snap assistant settings
       enable-snap-assist = true;
       snap-assistant-threshold = 54;
-      
+
       # Enable keyboard shortcuts for window movement
       enable-move-keybindings = true;
-      
+
       # Enable spanning multiple tiles with ALT
       enable-span-multiple-tiles = true;
-      
+
       # Window management
       restore-window-original-size = true;
       resize-complementing-windows = true;
       enable-wraparound-focus = true;
-      
+
       # Screen edge features
       active-screen-edges = true;
       top-edge-maximize = false;
-      
+
       # Animation settings
       snap-assistant-animation-time = 180;
       tile-preview-animation-time = 100;
-      
+
       # Window suggestions for better tiling
       enable-tiling-system-windows-suggestions = true;
       enable-snap-assistant-windows-suggestions = true;
-      
+
       # UI settings
       show-indicator = true;
       override-window-menu = true;

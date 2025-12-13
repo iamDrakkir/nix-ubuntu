@@ -2,7 +2,6 @@
   description = "Nix configuration for Ubuntu with system-manager and home-manager";
 
   inputs = {
-    # Core
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
     # System management
@@ -48,25 +47,27 @@
     };
   };
 
-  outputs = { self, nixpkgs, home-manager, system-manager, nix-system-graphics, zen-browser, nix-flatpak, ... }:
+  outputs = inputs @ { self, nixpkgs, home-manager, system-manager, nix-system-graphics, ... }:
     let
       system = "x86_64-linux";
       username = "drakkir";
-      
+      homeDirectory = "/home/${username}";
+
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
     in
     {
-      # Expose home-manager package for convenience
-      packages.${system}.default = home-manager.packages.${system}.default;
+      # Formatter for `nix fmt`
+      formatter.${system} = pkgs.nixpkgs-fmt;
 
       # System-level configuration (requires sudo)
       systemConfigs.default = system-manager.lib.makeSystemConfig {
+        extraSpecialArgs = { inherit system; };
         modules = [
           nix-system-graphics.systemModules.default
-          (import ./modules/system/default.nix { inherit pkgs system; })
+          ./modules/system
         ];
       };
 
@@ -75,16 +76,14 @@
         inherit pkgs;
 
         extraSpecialArgs = {
-          inherit system zen-browser nix-flatpak;
+          inherit inputs system username homeDirectory;
         };
 
         modules = [
           ./home.nix
-          
+
           # Include system-manager CLI in user environment
-          {
-            home.packages = [ system-manager.packages.${system}.default ];
-          }
+          { home.packages = [ system-manager.packages.${system}.default ]; }
         ];
       };
     };

@@ -29,7 +29,7 @@
       # Pop-shell uses Super+f for fullscreen, not maximize  
       toggle-fullscreen = [ "<Super>f" ];
       # Disable show-desktop to prevent conflict with Discord shortcut
-      show-desktop = [];
+      show-desktop = [ ];
       # DISABLED - Let pop-shell.nix handle all workspace management
       switch-to-workspace-1 = [ "<Super>1" ];
       switch-to-workspace-2 = [ "<Super>2" ];
@@ -97,41 +97,41 @@
       show-mounts = false;
       show-trash = false;
       # Disable all dash-to-dock hotkeys to prevent conflicts
-      app-hotkey-1 = [];
-      app-hotkey-2 = [];
-      app-hotkey-3 = [];
-      app-hotkey-4 = [];
-      app-hotkey-5 = [];
-      app-hotkey-6 = [];
-      app-hotkey-7 = [];
-      app-hotkey-8 = [];
-      app-hotkey-9 = [];
-      app-hotkey-10 = [];
-      app-ctrl-hotkey-1 = [];
-      app-ctrl-hotkey-2 = [];
-      app-ctrl-hotkey-3 = [];
-      app-ctrl-hotkey-4 = [];
-      app-ctrl-hotkey-5 = [];
-      app-ctrl-hotkey-6 = [];
-      app-ctrl-hotkey-7 = [];
-      app-ctrl-hotkey-8 = [];
-      app-ctrl-hotkey-9 = [];
-      app-ctrl-hotkey-10 = [];
-      app-shift-hotkey-1 = [];
-      app-shift-hotkey-2 = [];
-      app-shift-hotkey-3 = [];
-      app-shift-hotkey-4 = [];
-      app-shift-hotkey-5 = [];
-      app-shift-hotkey-6 = [];
-      app-shift-hotkey-7 = [];
-      app-shift-hotkey-8 = [];
-      app-shift-hotkey-9 = [];
-      app-shift-hotkey-10 = [];
+      app-hotkey-1 = [ ];
+      app-hotkey-2 = [ ];
+      app-hotkey-3 = [ ];
+      app-hotkey-4 = [ ];
+      app-hotkey-5 = [ ];
+      app-hotkey-6 = [ ];
+      app-hotkey-7 = [ ];
+      app-hotkey-8 = [ ];
+      app-hotkey-9 = [ ];
+      app-hotkey-10 = [ ];
+      app-ctrl-hotkey-1 = [ ];
+      app-ctrl-hotkey-2 = [ ];
+      app-ctrl-hotkey-3 = [ ];
+      app-ctrl-hotkey-4 = [ ];
+      app-ctrl-hotkey-5 = [ ];
+      app-ctrl-hotkey-6 = [ ];
+      app-ctrl-hotkey-7 = [ ];
+      app-ctrl-hotkey-8 = [ ];
+      app-ctrl-hotkey-9 = [ ];
+      app-ctrl-hotkey-10 = [ ];
+      app-shift-hotkey-1 = [ ];
+      app-shift-hotkey-2 = [ ];
+      app-shift-hotkey-3 = [ ];
+      app-shift-hotkey-4 = [ ];
+      app-shift-hotkey-5 = [ ];
+      app-shift-hotkey-6 = [ ];
+      app-shift-hotkey-7 = [ ];
+      app-shift-hotkey-8 = [ ];
+      app-shift-hotkey-9 = [ ];
+      app-shift-hotkey-10 = [ ];
     };
 
     # Configure GNOME Shell extensions
     "org/gnome/shell" = {
-      disabled-extensions = [ 
+      disabled-extensions = [
         "ubuntu-dock@ubuntu.com"
         "desktop-icons@csoriano"
         "ding@rastersoft.com"
@@ -142,17 +142,17 @@
 
     # Disable GNOME shell application switching keybindings
     "org/gnome/shell/keybindings" = {
-      switch-to-application-1 = [];
-      switch-to-application-2 = [];
-      switch-to-application-3 = [];
-      switch-to-application-4 = [];
-      switch-to-application-5 = [];
-      switch-to-application-6 = [];
-      switch-to-application-7 = [];
-      switch-to-application-8 = [];
-      switch-to-application-9 = [];
-      open-application-menu = [];
-      toggle-overview = [];
+      switch-to-application-1 = [ ];
+      switch-to-application-2 = [ ];
+      switch-to-application-3 = [ ];
+      switch-to-application-4 = [ ];
+      switch-to-application-5 = [ ];
+      switch-to-application-6 = [ ];
+      switch-to-application-7 = [ ];
+      switch-to-application-8 = [ ];
+      switch-to-application-9 = [ ];
+      open-application-menu = [ ];
+      toggle-overview = [ ];
     };
 
     # Custom keybindings
@@ -193,7 +193,7 @@
     "org/gnome/desktop/background" = {
       show-desktop-icons = false;
     };
-    
+
     "org/gnome/nautilus/desktop" = {
       # Disable all desktop icons in Nautilus
       home-icon-visible = false;

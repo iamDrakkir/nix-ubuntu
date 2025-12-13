@@ -1,10 +1,11 @@
 { pkgs, ... }:
 
 let
-    wrapElectronApp = app: name: pkgs.writeShellScriptBin name ''
-      exec ${app}/bin/${name} --no-sandbox "$@"
-    '';
-in {
+  wrapElectronApp = app: name: pkgs.writeShellScriptBin name ''
+    exec ${app}/bin/${name} --no-sandbox "$@"
+  '';
+in
+{
   home.packages = with pkgs; [
     vlc
     hyprpanel

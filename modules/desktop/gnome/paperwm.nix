@@ -46,7 +46,7 @@
       switch-input-source = [ "XF86Keyboard" ];
       switch-input-source-backward = [ "<Shift>XF86Keyboard" ];
     };
-    
+
     # Configure workspaces for PaperWM
     "org/gnome/mutter" = {
       dynamic-workspaces = false;
@@ -56,21 +56,21 @@
       # Disable center-new-windows as paperWM manages window placement
       center-new-windows = false;
     };
-    
+
     "org/gnome/desktop/wm/preferences" = {
       num-workspaces = 10;
       # Use click focus mode - works better with paperWM
       focus-mode = "click";
       auto-raise = false;
     };
-    
+
     # Configure GNOME Shell extensions for PaperWM
     "org/gnome/shell" = {
       enabled-extensions = [
         pkgs.gnomeExtensions.paperwm.extensionUuid
       ];
     };
-    
+
     # PaperWM configuration
     "org/gnome/shell/extensions/paperwm" = {
       # Enable paperWM by default on all workspaces

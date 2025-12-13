@@ -1,33 +1,22 @@
-{
-  pkgs,
-  system,
-  zen-browser,
-  nix-flatpak,
-  ...
-}:
+{ pkgs, inputs, system, username, homeDirectory, ... }:
 {
   imports = [
     ./modules/home
     ./modules/desktop/gnome
     ./modules/desktop/hyprland
     ./modules/desktop/niri
-    nix-flatpak.homeManagerModules.nix-flatpak
-    # zen-browser.homeModules.beta
+    inputs.nix-flatpak.homeManagerModules.nix-flatpak
   ];
 
-  nixpkgs.config.allowUnfree = true;
-
   home = {
-    username = "drakkir";
-    homeDirectory = "/home/drakkir";
+    inherit username homeDirectory;
     stateVersion = "25.11";
   };
 
   # Zen browser
-  home.packages = with pkgs; [
-    zen-browser.packages."${system}".default
+  home.packages = [
+    inputs.zen-browser.packages.${system}.default
   ];
 
   programs.home-manager.enable = true;
-  # programs.zen-browser.enable = true;
 }
