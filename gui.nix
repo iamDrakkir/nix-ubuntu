@@ -21,6 +21,7 @@ in {
     qbittorrent
     (wrapElectronApp vscode "code")
     steam
+    _1password-cli
     (wrapElectronApp _1password-gui "1password")
     lutris
   ];
