@@ -17,10 +17,18 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # zen-browser = {
+    #   url = "github:0xc000022070/zen-browser-flake";
+    #   # url = "github:youwen5/zen-browser-flake";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
     zen-browser = {
-      url = "github:0xc000022070/zen-browser-flake";
-      # url = "github:youwen5/zen-browser-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:Gurjaka/zen-browser-nix";
+      # url = "github:0xc000022070/zen-browser-flake/fix/audio-codecs";
+      inputs = {
+        home-manager.follows = "home-manager";
+        nixpkgs.follows = "nixpkgs";
+      };
     };
 
     hyprland = {
@@ -76,18 +84,6 @@
                 wl-clipboard
                 auto-cpufreq
               ];
-
-              # Set up xdg-desktop-portal properly
-              environment.pathsToLink = [
-                "/share/xdg-desktop-portal"
-                "/share/dbus-1"
-              ];
-
-
-              # # Symlink the hyprland portal file to system location
-              # systemd.tmpfiles.rules = [
-              #   "L+ /usr/share/xdg-desktop-portal/portals/hyprland.portal - - - - ${pkgs.xdg-desktop-portal-hyprland}/share/xdg-desktop-portal/portals/hyprland.portal"
-              # ];
 
               environment.etc."apparmor.d/nix-bwrap".text = ''
                 abi <abi/4.0>,

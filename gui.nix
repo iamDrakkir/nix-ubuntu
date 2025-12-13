@@ -21,8 +21,8 @@ in {
     qbittorrent
     (wrapElectronApp vscode "code")
     steam
-    _1password
     (wrapElectronApp _1password-gui "1password")
+    lutris
   ];
 
   # Create desktop entries for wrapped applications
@@ -51,23 +51,23 @@ in {
       ];
     };
   };
-  programs.zen-browser.policies = {
-    AutofillAddressEnabled = true;
-    AutofillCreditCardEnabled = false;
-    DisableAppUpdate = true;
-    DisableFeedbackCommands = true;
-    DisableFirefoxStudies = true;
-    DisablePocket = true;
-    DisableTelemetry = true;
-    DontCheckDefaultBrowser = true;
-    NoDefaultBookmarks = true;
-    OfferToSaveLogins = false;
-    EnableTrackingProtection = {
-      Value = true;
-      Locked = true;
-      Cryptomining = true;
-      Fingerprinting = true;
-    };
-  };
+  # programs.zen-browser.policies = {
+  #   AutofillAddressEnabled = true;
+  #   AutofillCreditCardEnabled = false;
+  #   DisableAppUpdate = true;
+  #   DisableFeedbackCommands = true;
+  #   DisableFirefoxStudies = true;
+  #   DisablePocket = true;
+  #   DisableTelemetry = true;
+  #   DontCheckDefaultBrowser = true;
+  #   NoDefaultBookmarks = true;
+  #   OfferToSaveLogins = false;
+  #   EnableTrackingProtection = {
+  #     Value = true;
+  #     Locked = true;
+  #     Cryptomining = true;
+  #     Fingerprinting = true;
+  #   };
+  # };
 }
 

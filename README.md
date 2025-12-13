@@ -20,6 +20,10 @@ home-manager switch --flake '/home/drakkir/.config/nix/'
 
 sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
+sudo determinate-nixd upgrade
+
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
 
 # desktop gnome login
 

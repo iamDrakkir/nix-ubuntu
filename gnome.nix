@@ -205,6 +205,8 @@
     # Dark theme configuration
     "org/gnome/desktop/interface" = {
       gtk-theme = "Adwaita-dark";
+      icon-theme = "Adwaita";
+      cursor-theme = "Adwaita";
       color-scheme = "prefer-dark";
       # Better font rendering
       font-antialiasing = "rgba";
@@ -239,12 +241,25 @@
       # Sleep timeout (in seconds) - 30 minutes
       sleep-inactive-ac-timeout = 1800;
       sleep-inactive-battery-timeout = 900; # 15 minutes on battery
+      # Screen blanking timeout (0 = never)
+      sleep-inactive-ac-type = "nothing";
+      sleep-inactive-battery-type = "suspend";
     };
 
     # Session preferences
     "org/gnome/desktop/session" = {
-      # Disable idle delay
-      idle-delay = 300; # 5 minutes before screen dims
+      # Idle delay before screen locks (in seconds)
+      idle-delay = 1800; # 30 minutes before screen dims/locks
+    };
+
+    # Screen saver / screen blanking settings
+    "org/gnome/desktop/screensaver" = {
+      # Disable automatic lock screen
+      lock-enabled = false;
+      # Time before lock screen activates after idle (if enabled)
+      lock-delay = 1800; # 30 minutes
+      # Disable screen blanking entirely - set to 0 for never
+      idle-activation-enabled = false;
     };
 
     # Sound settings

@@ -9,7 +9,7 @@
     ./dotfiles.nix
     ./gui.nix
     ./gnome.nix
-    zen-browser.homeModules.beta
+    # zen-browser.homeModules.beta
   ];
 
   nixpkgs.config.allowUnfree = true;
@@ -21,80 +21,43 @@
   };
 
   # XDG Desktop Portal configuration
+  # Note: Hyprland module already installs xdg-desktop-portal-hyprland
+  # We just add GTK portal for GTK apps and configure the backends
+  wayland.windowManager.hyprland = {
+    enable = true;
+    package =  pkgs.hyprland;
+    extraConfig = builtins.readFile ./hyprland.conf;
+  };
   xdg.portal = {
     enable = true;
-    extraPortals = with pkgs; [
-      xdg-desktop-portal-hyprland
-      xdg-desktop-portal-gtk
+    extraPortals = with pkgs; [ 
+      xdg-desktop-portal-gtk 
+      xdg-desktop-portal-gnome
     ];
     config = {
       hyprland = {
         default = [ "hyprland" "gtk" ];
-        "org.freedesktop.impl.portal.ScreenCast" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.Screenshot" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.Inhibit" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.KeyboardGrab" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.PointerGrab" = [ "hyprland" ];
-        "org.freedesktop.impl.portal.Wallpaper" = [ "hyprland" ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
-    };
-    configPackages = with pkgs; [
-      xdg-desktop-portal-hyprland
-      xdg-desktop-portal-gtk
-    ];
-  };
-
-  # Systemd user services for portals only (use system pipewire)
-  systemd.user.services = {
-
-    # XDG Desktop Portal services
-    xdg-desktop-portal = {
-      Unit = {
-        Description = "XDG Desktop Portal";
-        After = [ "dbus.service" ];
-        Wants = [ "dbus.service" ];
-      };
-      Service = {
-        Type = "dbus";
-        BusName = "org.freedesktop.portal.Desktop";
-        ExecStart = "${pkgs.xdg-desktop-portal}/libexec/xdg-desktop-portal";
-        Restart = "on-failure";
-        Environment = [
-          "XDG_CURRENT_DESKTOP=Hyprland"
-        ];
-      };
-      Install = {
-        WantedBy = [ "default.target" ];
-      };
-    };
-
-    xdg-desktop-portal-hyprland = {
-      Unit = {
-        Description = "XDG Desktop Portal backend for Hyprland";
-        After = [ "dbus.service" ];
-        Before = [ "xdg-desktop-portal.service" ];
-        Wants = [ "dbus.service" ];
-      };
-      Service = {
-        Type = "dbus";
-        BusName = "org.freedesktop.impl.portal.desktop.hyprland";
-        ExecStart = "${pkgs.xdg-desktop-portal-hyprland}/libexec/xdg-desktop-portal-hyprland";
-        Restart = "on-failure";
-        Environment = [
-          "XDG_CURRENT_DESKTOP=Hyprland"
-        ];
-      };
-      Install = {
-        WantedBy = [ "default.target" ];
+      gnome = {
+        default = [ "gnome" "gtk" ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
     };
   };
 
-  # Session variables for proper portal integration
+  # Configure systemd user environment to find portal service files
+  # This ensures systemd can locate the portal services from nix store
+  # Following https://www.freedesktop.org/software/systemd/man/systemd-system.conf.html#ManagerEnvironment=
+  xdg.configFile."systemd/user.conf".text = ''
+    [Manager]
+    ManagerEnvironment="XDG_DATA_DIRS=/usr/local/share:/usr/share:/home/drakkir/.local/state/nix/profiles/profile/share/:/nix/var/nix/profiles/default/share"
+  '';
+
+
+  # Session variables - only set general Wayland variables
+  # Hyprland module will set XDG_CURRENT_DESKTOP automatically when in Hyprland
   home.sessionVariables = {
-    XDG_CURRENT_DESKTOP = "Hyprland";
-    XDG_SESSION_TYPE = "wayland";
-    XDG_SESSION_DESKTOP = "Hyprland";
     NIXOS_OZONE_WL = "1"; # For better Wayland support in Electron apps
   };
 
@@ -103,8 +66,9 @@
     grim
     slurp
     wl-clipboard
+    zen-browser.packages."${system}".default
   ];
 
   programs.home-manager.enable = true;
-  programs.zen-browser.enable = true;
+  # programs.zen-browser.enable = true;
 }
