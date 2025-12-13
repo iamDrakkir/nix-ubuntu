@@ -252,6 +252,11 @@
       idle-delay = 1800; # 30 minutes before screen dims/locks
     };
 
+    # Remove logout/shutdown confirmation delay
+    "org/gnome/SessionManager" = {
+      logout-prompt = false;
+    };
+
     # Screen saver / screen blanking settings
     "org/gnome/desktop/screensaver" = {
       # Disable automatic lock screen

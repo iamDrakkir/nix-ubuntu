@@ -77,31 +77,16 @@ nix shell 'nixpkgs#mesa-demos' --command glxgears
 
 ## Desktop Environment Setup
 
-### Hyprland Session
+The desktop session files for Hyprland and Niri are automatically created by home-manager in `~/.local/share/wayland-sessions/`. 
+
+**Important:** GDM doesn't follow symlinks to the Nix store, so the session files need to be copied (not symlinked) to the system directory. After running `home-manager switch`, use the included helper script:
 
 ```bash
-sudo tee /usr/share/wayland-sessions/hyprland.desktop > /dev/null <<EOF
-[Desktop Entry]
-Name=Hyprland
-Comment=An dynamic tiling Wayland compositor
-Exec=/run/system-manager/sw/bin/Hyprland
-Type=Application
-EOF
+# Copy session files to system directory (required after home-manager switch)
+install-wayland-sessions
 ```
 
-
-### Niri Session
-
-```bash
-sudo tee /usr/share/wayland-sessions/niri.desktop > /dev/null <<EOF
-[Desktop Entry]
-Name=Niri
-Comment=An scrolling Wayland compositor
-Exec=/run/system-manager/sw/bin/Hyprland
-Type=Application
-EOF
-```
-
+This will copy the session files to `/usr/share/wayland-sessions/` where GDM can detect them. Sessions will appear in the login screen after logout or restart.
 
 ## Updates
 

@@ -1,6 +1,8 @@
 {
   pkgs,
+  system,
   zen-browser,
+  nix-flatpak,
   ...
 }:
 {
@@ -8,6 +10,8 @@
     ./modules/home
     ./modules/desktop/gnome
     ./modules/desktop/hyprland
+    ./modules/desktop/niri
+    nix-flatpak.homeManagerModules.nix-flatpak
     # zen-browser.homeModules.beta
   ];
 

@@ -13,8 +13,6 @@
     environment.systemPackages = with pkgs; [
       git
       neovim
-      hyprland
-      niri
       ghostty
       flatpak
       pipewire
