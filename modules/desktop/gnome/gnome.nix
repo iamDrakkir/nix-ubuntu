@@ -1,29 +1,30 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
   imports = [
     ./pop-shell.nix
   ];
 
-  # GNOME-related packages
-  home.packages = with pkgs; [
-    # GNOME Extensions and tools
-    gnome-shell-extensions
-    gnome-browser-connector
-    # GNOME Extensions app for configuring extensions
-    gnome-extension-manager
-  ];
-
-  # Enable GNOME extensions program
-  programs.gnome-shell = {
-    enable = true;
-    extensions = [
-      # { package = pkgs.gnomeExtensions.forge; }
-      { package = pkgs.gnomeExtensions.pop-shell; }
+  config = lib.mkIf config.myConfig.desktop.gnome.enable {
+    # GNOME-related packages
+    home.packages = with pkgs; [
+      # GNOME Extensions and tools
+      gnome-shell-extensions
+      gnome-browser-connector
+      # GNOME Extensions app for configuring extensions
+      gnome-extension-manager
     ];
-  };
 
-  # GNOME keybindings and dconf configuration
-  dconf.settings = {
+    # Enable GNOME extensions program
+    programs.gnome-shell = {
+      enable = true;
+      extensions = [
+        # { package = pkgs.gnomeExtensions.forge; }
+        { package = pkgs.gnomeExtensions.pop-shell; }
+      ];
+    };
+
+    # GNOME keybindings and dconf configuration
+    dconf.settings = {
     "org/gnome/desktop/wm/keybindings" = {
       close = [ "<Super>q" ];
       # Pop-shell uses Super+f for fullscreen, not maximize  
@@ -311,5 +312,6 @@
       # Disable while typing
       disable-while-typing = true;
     };
+  };
   };
 }

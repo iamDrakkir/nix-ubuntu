@@ -1,9 +1,14 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 
 let
   wrapElectronApp = app: name: pkgs.writeShellScriptBin name ''
     exec ${app}/bin/${name} --no-sandbox "$@"
   '';
+  
+  gamingPackages = lib.optionals config.myConfig.features.gaming.enable [
+    pkgs.steam
+    pkgs.lutris
+  ];
 in
 {
   home.packages = with pkgs; [
@@ -21,11 +26,9 @@ in
     (wrapElectronApp discord "discord")
     qbittorrent
     (wrapElectronApp vscode "code")
-    steam
     _1password-cli
     (wrapElectronApp _1password-gui "1password")
-    lutris
-  ];
+  ] ++ gamingPackages;
 
   # Create desktop entries for wrapped applications
   xdg.desktopEntries = {

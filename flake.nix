@@ -76,6 +76,7 @@
 
         modules = [
           ./home.nix
+          ./modules/desktop
 
           # Include system-manager CLI in user environment
           { home.packages = [ system-manager.packages.${system}.default ]; }

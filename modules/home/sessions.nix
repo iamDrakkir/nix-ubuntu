@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, homeDirectory, ... }:
 
 {
   # Create desktop session files for Hyprland and Niri
@@ -8,7 +8,7 @@
     [Desktop Entry]
     Name=Hyprland
     Comment=An dynamic tiling Wayland compositor
-    Exec=${config.home.homeDirectory}/.nix-profile/bin/Hyprland
+    Exec=${homeDirectory}/.nix-profile/bin/Hyprland
     Type=Application
     DesktopNames=Hyprland
   '';
@@ -17,7 +17,7 @@
     [Desktop Entry]
     Name=Niri
     Comment=A scrollable-tiling Wayland compositor
-    Exec=${config.home.homeDirectory}/.nix-profile/bin/niri-session
+    Exec=${homeDirectory}/.nix-profile/bin/niri-session
     Type=Application
     DesktopNames=Niri
   '';

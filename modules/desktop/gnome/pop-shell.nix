@@ -1,21 +1,22 @@
-{ pkgs, ... }:
+{ config, lib, pkgs, ... }:
 {
-  # Pop Shell-specific packages
-  home.packages = with pkgs; [
-    gnomeExtensions.pop-shell
-  ];
-
-  # Enable Pop Shell extension
-  programs.gnome-shell = {
-    enable = true;
-    extensions = [
-      { package = pkgs.gnomeExtensions.pop-shell; }
+  config = lib.mkIf config.myConfig.desktop.gnome.enable {
+    # Pop Shell-specific packages
+    home.packages = with pkgs; [
+      gnomeExtensions.pop-shell
     ];
-  };
 
-  # Pop Shell-optimized GNOME configuration
+    # Enable Pop Shell extension
+    programs.gnome-shell = {
+      enable = true;
+      extensions = [
+        { package = pkgs.gnomeExtensions.pop-shell; }
+      ];
+    };
 
-  dconf.settings = {
+    # Pop Shell-optimized GNOME configuration
+
+    dconf.settings = {
     "org/gnome/desktop/wm/keybindings" = {
       close = [ "<Super>q" "<Alt>F4" ];
       minimize = [ "<Super>comma" ];
@@ -91,5 +92,6 @@
         pkgs.gnomeExtensions.pop-shell.extensionUuid
       ];
     };
+  };
   };
 }
