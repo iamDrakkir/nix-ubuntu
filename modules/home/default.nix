@@ -7,5 +7,6 @@
     ./dotfiles.nix
     ./flatpak.nix
     ./sessions.nix
+    ./programs/zen-browser.nix
   ];
 }

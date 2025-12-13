@@ -1,4 +1,4 @@
-{ pkgs, inputs, system, username, homeDirectory, ... }:
+{ inputs, username, homeDirectory, ... }:
 {
   imports = [
     ./modules/home
@@ -12,11 +12,6 @@
     inherit username homeDirectory;
     stateVersion = "25.11";
   };
-
-  # Zen browser
-  home.packages = [
-    inputs.zen-browser.packages.${system}.default
-  ];
 
   programs.home-manager.enable = true;
 }
