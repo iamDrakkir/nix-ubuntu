@@ -1,17 +1,14 @@
 # Nix Ubuntu Configuration
 
-Structured Nix configuration for managing system and user environments on Ubuntu with Nix.
+Structured Nix configuration for managing system and user environments on Ubuntu using system-manager and home-manager.
 
 ## Features
 
-- **Modular Design**: System, home, and desktop configurations are separated
-- **Easy Maintenance**: Update specific parts without touching others
-- **Multiple Desktop Environments**: Hyprland and GNOME with extensions
+- **Multiple Desktop Environments**: GNOME (with Pop Shell), Hyprland, and Niri
+- **Toggleable Features**: Enable/disable desktops and features via configuration flags
 - **Declarative Dotfiles**: Managed symlinks to external dotfiles repository
 
 ## Directory Structure
-
-See [STRUCTURE.md](STRUCTURE.md) for detailed directory layout.
 
 ```
 nix-ubuntu/
@@ -19,13 +16,38 @@ nix-ubuntu/
 ├── home.nix                 # Home Manager entry point
 └── modules/
     ├── system/              # System-level (system-manager)
+    │   └── default.nix     # System packages, services, Nix settings
     ├── home/                # User-level (home-manager)
-    │   ├── cli.nix         # CLI tools
+    │   ├── options.nix     # Feature toggles (gaming, development, desktop)
+    │   ├── cli.nix         # CLI tools and shell configuration
     │   ├── gui.nix         # GUI applications
-    │   └── dotfiles.nix    # Dotfile symlinks
+    │   ├── dotfiles.nix    # Dotfile symlinks
+    │   ├── flatpak.nix     # Flatpak packages
+    │   ├── sessions.nix    # Wayland session files
+    │   └── programs/       # Program-specific configs
     └── desktop/             # Desktop environments
+        ├── gnome/          # GNOME + Pop Shell
         ├── hyprland/       # Hyprland compositor
-        └── gnome/          # GNOME + extensions
+        └── niri/           # Niri compositor
+```
+
+## Configuration Options
+
+You can enable/disable features in `home.nix`:
+
+```nix
+# Enable desktop environments you want to use
+myConfig.desktop = {
+  gnome.enable = true;      # GNOME with Pop Shell
+  hyprland.enable = true;   # Hyprland compositor
+  niri.enable = true;       # Niri compositor
+};
+
+# Enable optional features
+myConfig.features = {
+  gaming.enable = true;     # Steam, Lutris
+  development.enable = true;
+};
 ```
 
 ## Installation
@@ -33,73 +55,74 @@ nix-ubuntu/
 ### Initial Setup
 
 ```bash
-# Install Nix
+# Install Nix with Determinate Systems installer
 wget -qO- https://install.determinate.systems/nix | sh -s -- install --determinate
 
+# Install git in temporary shell for cloning
 nix-shell -p git
 
 # Clone repositories
 git clone https://github.com/iamDrakkir/nix-ubuntu.git ~/.config/nix
 git clone https://github.com/iamDrakkir/dotfiles ~/.dotfiles
 
-# Initial system setup
-sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake '.'
+# Initial system setup (installs system packages and services)
+sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake ~/.config/nix
 
-# Setup home-manager
+# Setup home environment
 nix shell github:nix-community/home-manager
-home-manager switch --flake '/home/drakkir/.config/nix/'
+home-manager switch --flake ~/.config/nix
 
-# Setup flatpak
+# Setup flatpak remote
 sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
-# Configure AppArmor for bubblewrap
+# Configure AppArmor for bubblewrap (required for some sandboxed apps)
 sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 ```
 
 ## Usage
 
-### Rebuild Configurations
+### Daily Commands
 
 ```bash
-# System configuration (requires sudo)
-sudo env "PATH=$PATH" system-manager switch --flake '/home/drakkir/.config/nix/'
+# Update home configuration (most common)
+home-manager switch --flake ~/.config/nix
 
-# Home configuration
-home-manager switch --flake '/home/drakkir/.config/nix/'
+# Update system configuration (requires sudo, for system services/packages)
+cd ~/.config/nix
+sudo env "PATH=$PATH" system-manager switch --flake .
+
+# Format Nix files
+nix fmt
+
+# Check for errors
+nix flake check
 ```
 
-### Test nix-system-graphics
+### Desktop Environment Setup
 
-```bash
-# Test graphics
-nix shell 'nixpkgs#mesa-demos' --command glxgears
-```
-
-## Desktop Environment Setup
-
-The desktop session files for Hyprland and Niri are automatically created by home-manager in `~/.local/share/wayland-sessions/`. 
+Desktop session files for Hyprland and Niri are automatically created by home-manager in `~/.local/share/wayland-sessions/`. 
 
 **Important:** GDM doesn't follow symlinks to the Nix store, so the session files need to be copied (not symlinked) to the system directory. After running `home-manager switch`, use the included helper script:
 
 ```bash
-# Copy session files to system directory (required after home-manager switch)
+# Copy session files to system directory (makes them appear in GDM)
 install-wayland-sessions
 ```
 
-This will copy the session files to `/usr/share/wayland-sessions/` where GDM can detect them. Sessions will appear in the login screen after logout or restart.
+Sessions will appear in the login screen after logout or restart.
 
 ## Updates
 
 ```bash
-# Update Nix itself
-sudo -i nix upgrade-nix
-
-# Update flake inputs
+# Update all flake inputs
 nix flake update --flake ~/.config/nix
 
-# Rebuild with updates
+# Rebuild after updates
 home-manager switch --flake ~/.config/nix
-sudo env "PATH=$PATH" system-manager switch --flake ~/.config/nix
+cd ~/.config/nix && sudo env "PATH=$PATH" system-manager switch --flake .
+
+# Update Nix itself
+sudo -i nix upgrade-nix
 
 # Upgrade Nix daemon
 sudo determinate-nixd upgrade
