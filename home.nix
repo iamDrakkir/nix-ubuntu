@@ -24,4 +24,10 @@
   };
 
   programs.home-manager.enable = true;
+
+  # Automatic garbage collection
+  nix.gc = {
+    automatic = true;
+    options = "--delete-older-than 30d";
+  };
 }

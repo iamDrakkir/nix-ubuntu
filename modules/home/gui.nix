@@ -13,8 +13,6 @@ in
 {
   home.packages = with pkgs; [
     vlc
-    hyprpanel
-    hyprpaper
     rofi
     waybar
     walker

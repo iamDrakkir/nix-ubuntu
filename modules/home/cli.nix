@@ -2,12 +2,10 @@
 
 {
   home.packages = with pkgs; [
-    bat
     btop
     curl
     eza
     fd
-    fzf
     lazygit
     nerd-fonts.jetbrains-mono
     node2nix
@@ -15,7 +13,6 @@
     ripgrep
     stow
     uv
-    zoxide
     gnumake
     gcc
     fastfetch
