@@ -34,13 +34,8 @@
       '';
     };
 
-    # Session variables - only set general Wayland variables
-
-    # Wayland utilities
+    # Hyprland-specific packages
     home.packages = with pkgs; [
-      grim
-      slurp
-      wl-clipboard
       hyprpanel
       hyprpaper
     ];
