@@ -35,9 +35,6 @@
     };
 
     # Session variables - only set general Wayland variables
-    home.sessionVariables = {
-      NIXOS_OZONE_WL = "1"; # For better Wayland support in Electron apps
-    };
 
     # Wayland utilities
     home.packages = with pkgs; [

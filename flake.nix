@@ -24,16 +24,10 @@
     # Applications
     zen-browser = {
       url = "github:Gurjaka/zen-browser-nix";
-      inputs = {
-        home-manager.follows = "home-manager";
-        nixpkgs.follows = "nixpkgs";
-      };
-    };
-
-    nix-flatpak = {
-      url = "github:gmodena/nix-flatpak";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
 
     # Desktop environments
     hyprland = {
