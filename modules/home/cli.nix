@@ -106,5 +106,9 @@
     enableFishIntegration = true;
     enableZshIntegration = true;
   };
+
+  programs.opencode = {
+    enable = true;
+  };
 }
 
