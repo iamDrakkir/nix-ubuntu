@@ -6,8 +6,8 @@
 
     settings = {
       user = {
-        name = "iamDrakkir";
-        email = "Hagelin.Rickard@gmail.com";
+        name = config.profile.git.userName;
+        email = config.profile.git.userEmail;
         # signingkey = "YOUR_GPG_KEY";  # Uncomment to enable GPG signing
       };
 

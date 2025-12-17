@@ -39,12 +39,29 @@
   outputs = inputs @ { self, nixpkgs, home-manager, system-manager, nix-system-graphics, ... }:
     let
       system = "x86_64-linux";
-      username = "drakkir";
-      homeDirectory = "/home/${username}";
 
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
+      };
+
+      # Helper function to create home-manager configurations
+      mkHome = { username, hostname }: home-manager.lib.homeManagerConfiguration {
+        inherit pkgs;
+
+        extraSpecialArgs = {
+          inherit inputs system username;
+          homeDirectory = "/home/${username}";
+        };
+
+        modules = [
+          ./hosts/${hostname}.nix
+          ./home.nix
+          ./modules/desktop
+
+          # Include system-manager CLI in user environment
+          { home.packages = [ system-manager.packages.${system}.default ]; }
+        ];
       };
     in
     {
@@ -61,20 +78,24 @@
       };
 
       # User-level configuration
-      homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-
-        extraSpecialArgs = {
-          inherit inputs system username homeDirectory;
+      homeConfigurations = {
+        # Terra - Desktop 1 (drakkir user)
+        "drakkir@terra" = mkHome {
+          username = "drakkir";
+          hostname = "terra";
         };
 
-        modules = [
-          ./home.nix
-          ./modules/desktop
+        # Bigbox - Desktop 2 (drakkir user)
+        "drakkir@bigbox" = mkHome {
+          username = "drakkir";
+          hostname = "bigbox";
+        };
 
-          # Include system-manager CLI in user environment
-          { home.packages = [ system-manager.packages.${system}.default ]; }
-        ];
+        # Work laptop (rhaglin user)
+        "rhaglin@work-laptop" = mkHome {
+          username = "rhaglin";
+          hostname = "work-laptop";
+        };
       };
     };
 }
