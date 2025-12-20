@@ -9,13 +9,12 @@
     ./pop-shell.nix
   ];
 
-  config = lib.mkIf config.myConfig.desktop.gnome.enable {
-    # GNOME-related packages
-    home.packages = with pkgs; [
-      gnome-shell-extensions
-      gnome-browser-connector
-      gnome-extension-manager
-    ];
+  # GNOME-related packages
+  home.packages = with pkgs; [
+    gnome-shell-extensions
+    gnome-browser-connector
+    gnome-extension-manager
+  ];
 
     # GNOME dconf configuration
     dconf.settings = {
@@ -218,5 +217,4 @@
         disable-while-typing = true;
       };
     };
-  };
 }

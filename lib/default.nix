@@ -21,17 +21,20 @@
     # Usage: lib.custom.importForHost "terra" ./terra-config.nix
     importForHost = hostname: path: if isHost hostname then path else null;
 
+    # ========== Electron App Wrapper ==========
+    # Wraps Electron apps to run with --no-sandbox flag
+    # Usage: lib.custom.wrapElectronApp pkgs pkgs.discord "discord"
+    wrapElectronApp =
+      pkgs: app: name:
+      pkgs.writeShellScriptBin name ''
+        exec ${app}/bin/${name} --no-sandbox "$@"
+      '';
+
     # ========== Pretty Symlink Helpers ==========
     # Based on: https://blog.daniel-beskin.com/2025-10-18-symlinking-home-manager
     # These helpers provide a DRY way to create out-of-store symlinks with home-manager
 
     symlink = {
-      inherit (lib) # TODO: is this import necessary now that we refer to them with lib. ?
-        flatten
-        map
-        mergeAttrsList
-        ;
-
       # Flipped pipe for composing functions left-to-right
       # Usage: pipe [func1 func2 func3] value
       pipe = lib.flip lib.pipe;
@@ -75,8 +78,8 @@
           linkDir = name: {
             ${name} = {
               source = link name;
-              # Don't use recursive with out-of-store symlinks - just symlink the whole directory
-              # recursive = true; # TODO: is it true that we should not use recursive here?
+              # Note: recursive = true should NOT be used with out-of-store symlinks
+              # We symlink the whole directory, not its contents
             };
           };
 

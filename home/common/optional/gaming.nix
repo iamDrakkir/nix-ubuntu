@@ -6,16 +6,14 @@
 }:
 
 {
-  config = lib.mkIf config.myConfig.features.gaming.enable {
-    home.packages = with pkgs; [
-      steam
-      lutris
-      mangohud
-      gamemode
-    ];
+  home.packages = with pkgs; [
+    steam
+    lutris
+    mangohud
+    gamemode
+  ];
 
-    home.sessionVariables = {
-      MANGOHUD = "1";
-    };
+  home.sessionVariables = {
+    MANGOHUD = "1";
   };
 }

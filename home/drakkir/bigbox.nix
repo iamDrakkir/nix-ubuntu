@@ -8,17 +8,21 @@
 {
   imports = [
     ../common/core
-    ../common/optional
+    ./common/git.nix
+
+    # Desktop environments
+    ../common/optional/desktops/gnome
+    ../common/optional/desktops/hyprland
+    ../common/optional/desktops/niri
+
+    # Features
+    ../common/optional/development.nix
+    ../common/optional/gaming.nix
+    ../common/optional/tools
+
+    # System
+    ../common/optional/flatpak.nix
+    ../common/optional/sessions.nix
+    ../common/optional/programs
   ];
-
-  myConfig.desktop = {
-    gnome.enable = true;
-    hyprland.enable = true;
-    niri.enable = true;
-  };
-
-  myConfig.features = {
-    gaming.enable = true;
-    development.enable = true;
-  };
 }

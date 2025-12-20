@@ -7,10 +7,19 @@
 }:
 
 {
-  config = lib.mkIf config.myConfig.desktop.hyprland.enable {
-    wayland.windowManager.hyprland = {
-      enable = true;
-      package = pkgs.hyprland;
+  # Wayland utilities for Hyprland
+  home.packages = with pkgs; [
+    grim # Screenshot tool
+    slurp # Screen area selector
+    wl-clipboard # Clipboard utilities
+    wl-clipboard-x11 # X11 compatibility
+    hyprpanel
+    hyprpaper
+  ];
+
+  wayland.windowManager.hyprland = {
+    enable = true;
+    package = pkgs.hyprland;
       
       # Minimal settings to avoid warning about empty config
       settings = {
@@ -98,51 +107,44 @@
       extraConfig = ''
         # Autostart
         exec-once = hyprpanel &
-        exec-once = hyprpaper &
-        exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-      '';
-    };
+      exec-once = hyprpaper &
+      exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+    '';
+  };
 
-    # Symlink hyprland config from dotfiles repo
-    # Disabled: hyprland config files are missing from dotfiles
-    # home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "hypr" ];
+  # Symlink hyprland config from dotfiles repo
+  # Disabled: hyprland config files are missing from dotfiles
+  # home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "hypr" ];
 
-    xdg.portal = {
-      enable = true;
-      extraPortals = with pkgs; [
-        xdg-desktop-portal-gtk
-        xdg-desktop-portal-gnome
-      ];
-      config = {
-        hyprland = {
-          default = [
-            "hyprland"
-            "gtk"
-          ];
-          "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-        };
-        gnome = {
-          default = [
-            "gnome"
-            "gtk"
-          ];
-          "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
-        };
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-gtk
+      xdg-desktop-portal-gnome
+    ];
+    config = {
+      hyprland = {
+        default = [
+          "hyprland"
+          "gtk"
+        ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
+      };
+      gnome = {
+        default = [
+          "gnome"
+          "gtk"
+        ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
     };
+  };
 
-    # Configure systemd user environment to find portal service files
-    xdg.configFile."systemd/user.conf" = {
-      text = ''
-        [Manager]
-        ManagerEnvironment="XDG_DATA_DIRS=/usr/local/share:/usr/share:${homeDirectory}/.local/state/nix/profiles/profile/share/:/nix/var/nix/profiles/default/share"
-      '';
-    };
-
-    # Hyprland-specific packages
-    home.packages = with pkgs; [
-      hyprpanel
-      hyprpaper
-    ];
+  # Configure systemd user environment to find portal service files
+  xdg.configFile."systemd/user.conf" = {
+    text = ''
+      [Manager]
+      ManagerEnvironment="XDG_DATA_DIRS=/usr/local/share:/usr/share:${homeDirectory}/.local/state/nix/profiles/profile/share/:/nix/var/nix/profiles/default/share"
+    '';
   };
 }

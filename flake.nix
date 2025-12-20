@@ -79,7 +79,6 @@
               ;
           };
           modules = [
-            nix-system-graphics.systemModules.default # TODO: This should move to the host?
             ./hosts/${hostname}
           ];
         };
@@ -105,7 +104,6 @@
           };
 
           modules = [
-            ./modules/home-manager/options.nix
             ./home/${username}/${hostname}.nix
 
             # Include system-manager CLI in user environment
@@ -125,7 +123,6 @@
       homeConfigurations = {
         "drakkir@terra" = mkHomeConfig "drakkir" "terra";
         "drakkir@bigbox" = mkHomeConfig "drakkir" "bigbox";
-
         "rhagelin@work" = mkHomeConfig "rhagelin" "work";
       };
     };

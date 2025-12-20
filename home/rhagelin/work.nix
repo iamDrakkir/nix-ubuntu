@@ -7,22 +7,18 @@
 {
   imports = [
     ../common/core
-    ../common/optional
+    ./common/git.nix
+
+    # Desktop environment (only GNOME for work)
+    ../common/optional/desktops/gnome
+
+    # Features
+    ../common/optional/development.nix
+    ../common/optional/tools
+
+    # System
+    ../common/optional/flatpak.nix
+    ../common/optional/sessions.nix
+    ../common/optional/programs
   ];
-
-  programs.git.settings.user = { # TODO: setup for drakkir aswell and remove default from git.nix
-    name = "Rickard Hagelin";
-    email = "rickard.hagelin@company.com";
-  };
-
-  myConfig.desktop = {
-    gnome.enable = true;
-    hyprland.enable = false;
-    niri.enable = false;
-  };
-
-  myConfig.features = {
-    gaming.enable = false;
-    development.enable = true;
-  };
 }

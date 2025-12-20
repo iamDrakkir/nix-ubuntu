@@ -5,16 +5,15 @@
   ...
 }:
 {
-  config = lib.mkIf config.myConfig.desktop.gnome.enable {
-    # Enable Pop Shell extension
-    programs.gnome-shell = {
-      enable = true;
-      extensions = [
-        { package = pkgs.gnomeExtensions.pop-shell; }
-      ];
-    };
+  # Enable Pop Shell extension
+  programs.gnome-shell = {
+    enable = true;
+    extensions = [
+      { package = pkgs.gnomeExtensions.pop-shell; }
+    ];
+  };
 
-    dconf.settings = {
+  dconf.settings = {
       "org/gnome/desktop/wm/keybindings" = {
         close = [
           "<Super>q"
@@ -111,5 +110,4 @@
         ];
       };
     };
-  };
 }

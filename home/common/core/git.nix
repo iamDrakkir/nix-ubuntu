@@ -11,26 +11,18 @@
     enable = true;
 
     settings = {
-      user = {
-        name = lib.mkDefault "iamDrakkir";
-        email = lib.mkDefault "Hagelin.Rickard@gmail.com";
-        # signingkey = "YOUR_GPG_KEY";  # Uncomment to enable GPG signing
-      };
-
-      # Commit settings
       commit = {
         # gpgSign = true;  # Uncomment to enable GPG signing
         template = "${homeDirectory}/.config/git/template";
-        verbose = true; # Add more context to commit messages
+        verbose = true;
       };
 
-      # Core settings
       core = {
         editor = "nvim";
         autocrlf = "input"; 
         compression = 9; # Trade CPU for network
         whitespace = "error";
-        preloadindex = true; # Preload index for faster status
+        preloadindex = true;
       };
 
       credential.helper = "store";
