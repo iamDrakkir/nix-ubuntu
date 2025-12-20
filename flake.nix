@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 
-    # System management
     system-manager = {
       url = "github:numtide/system-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -15,66 +14,119 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # User environment
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Applications
     zen-browser = {
+      # url = "github:0xc000022070/zen-browser-flake"; # TODO: issue with no sound
       url = "github:Gurjaka/zen-browser-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     nix-flatpak.url = "github:gmodena/nix-flatpak";
 
-    # Desktop environments
     hyprland = {
       url = "github:hyprwm/Hyprland";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
-  outputs = inputs @ { self, nixpkgs, home-manager, system-manager, nix-system-graphics, ... }:
+  outputs =
+    inputs@{
+      self,
+      nixpkgs,
+      home-manager,
+      system-manager,
+      nix-system-graphics,
+      ...
+    }:
     let
+      inherit (self) outputs;
       system = "x86_64-linux";
-      username = "drakkir";
-      homeDirectory = "/home/${username}";
+
+      # ========== Extend lib with lib.custom and lib.hm ==========
+      lib = nixpkgs.lib.extend (
+        self: super: (import ./lib { lib = self; }) // {
+          # Import home-manager's lib.hm to fix missing lib.hm errors
+          hm = import "${home-manager}/modules/lib" { lib = self; };
+        }
+      );
+
+      # Custom packages overlay (empty for now, add custom packages to ./pkgs/default.nix)
+      customPackages = final: prev: (import ./pkgs { pkgs = prev; });
+
+      # Import overlays (empty for now, add custom overlays to ./overlays/default.nix)
+      overlays = [ customPackages ];
 
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
-      };
-    in
-    {
-      # Formatter for `nix fmt`
-      formatter.${system} = pkgs.nixpkgs-fmt;
-
-      # System-level configuration (requires sudo)
-      systemConfigs.default = system-manager.lib.makeSystemConfig {
-        extraSpecialArgs = { inherit system; };
-        modules = [
-          nix-system-graphics.systemModules.default
-          ./modules/system
-        ];
+        overlays = overlays;
       };
 
-      # User-level configuration
-      homeConfigurations.${username} = home-manager.lib.homeManagerConfiguration {
-        inherit pkgs;
-
-        extraSpecialArgs = {
-          inherit inputs system username homeDirectory;
+      # Helper function to create system configs for each host
+      mkSystemConfig =
+        hostname:
+        system-manager.lib.makeSystemConfig {
+          extraSpecialArgs = {
+            inherit
+              inputs
+              outputs
+              lib
+              system
+              ;
+          };
+          modules = [
+            nix-system-graphics.systemModules.default # TODO: This should move to the host?
+            ./hosts/${hostname}
+          ];
         };
 
-        modules = [
-          ./home.nix
-          ./modules/desktop
+      # Helper function to create home-manager configs for each user@host
+      mkHomeConfig =
+        username: hostname:
+        let
+          homeDirectory = "/home/${username}";
+        in
+        home-manager.lib.homeManagerConfiguration {
+          inherit pkgs;
 
-          # Include system-manager CLI in user environment
-          { home.packages = [ system-manager.packages.${system}.default ]; }
-        ];
+          extraSpecialArgs = {
+            inherit
+              inputs
+              outputs
+              system
+              username
+              homeDirectory
+              lib
+              ;
+          };
+
+          modules = [
+            ./modules/home-manager/options.nix
+            ./home/${username}/${hostname}.nix
+
+            # Include system-manager CLI in user environment
+            { home.packages = [ system-manager.packages.${system}.default ]; }
+          ];
+        };
+    in
+    {
+      formatter.${system} = pkgs.nixfmt-rfc-style;
+
+      systemConfigs = {
+        terra = mkSystemConfig "terra";
+        bigbox = mkSystemConfig "bigbox";
+        work = mkSystemConfig "work";
+      };
+
+      homeConfigurations = {
+        "drakkir@terra" = mkHomeConfig "drakkir" "terra";
+        "drakkir@bigbox" = mkHomeConfig "drakkir" "bigbox";
+
+        "rhagelin@work" = mkHomeConfig "rhagelin" "work";
       };
     };
 }

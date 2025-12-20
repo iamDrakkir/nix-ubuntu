@@ -5,8 +5,8 @@ result-*
 # Nix garbage collection roots
 .gcroots
 
-# Nix shell environment
-shell.nix
+# Nix shell environment (only at root level)
+/shell.nix
 .envrc
 .direnv/
 

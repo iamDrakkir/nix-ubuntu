@@ -1,54 +1,64 @@
-# Nix Ubuntu Configuration
+# Nix Configuration
 
 Structured Nix configuration for managing system and user environments on Ubuntu using system-manager and home-manager.
 
+Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-config) 
+
 ## Features
 
+- **Multi-host Support**: Separate configurations for terra, bigbox, and work with auto-detection
 - **Multiple Desktop Environments**: GNOME (with Pop Shell), Hyprland, and Niri
 - **Toggleable Features**: Enable/disable desktops and features via configuration flags
 - **Declarative Dotfiles**: Managed symlinks to external dotfiles repository
+- **Core vs Optional Philosophy**: Strict separation between always-present and optional configs
 
-## Directory Structure
+## Structure
+
+Following EmergentMind's organizational principles with adaptations for system-manager:
 
 ```
-nix-ubuntu/
-├── flake.nix                # Main flake configuration
-├── home.nix                 # Home Manager entry point
-└── modules/
-    ├── system/              # System-level (system-manager)
-    │   └── default.nix     # System packages, services, Nix settings
-    ├── home/                # User-level (home-manager)
-    │   ├── options.nix     # Feature toggles (gaming, development, desktop)
-    │   ├── cli.nix         # CLI tools and shell configuration
-    │   ├── gui.nix         # GUI applications
-    │   ├── dotfiles.nix    # Dotfile symlinks
-    │   ├── flatpak.nix     # Flatpak packages
-    │   ├── sessions.nix    # Wayland session files
-    │   └── programs/       # Program-specific configs
-    └── desktop/             # Desktop environments
-        ├── gnome/          # GNOME + Pop Shell
-        ├── hyprland/       # Hyprland compositor
-        └── niri/           # Niri compositor
+hosts/                   # System-level configurations (system-manager)
+├── common/
+│   ├── core/            # Always present on ALL hosts
+│   ├── optional/        # Optional system configs
+│   └── users/           # User definitions (EmergentMind pattern)
+│       └── drakkir/     # drakkir user definition
+│           ├── default.nix  # User creation, shell, groups
+│           └── keys/        # SSH public keys
+├── terra/               # Host-specific configs
+└── work/
+
+home/                    # Home-manager configurations
+├── common/
+│   ├── core/            # Always present on ALL users
+│   └── optional/        # Optional user configs
+│       ├── desktops/    # Desktop environment configs
+│       └── programs/    # Program-specific configs
+├── drakkir/             # User settings per machine
+│   ├── terra.nix        # Host-specific user config for terra
+│   ├── bigbox.nix       # Host-specific user config for bigbox
+│   └── work.nix         # Host-specific user config for work
+
+modules/                 # Custom modules
+├── home-manager/        # Home-manager specific modules
+│   └── options.nix      # Feature toggle options
+├── system/              # System-manager specific modules (legacy)
+└── common/              # Shared modules (future)
+
+lib/                     # Custom library functions
+overlays/                # Custom modifications to upstream packages 
+pkgs/                    # Custom packages
+scripts/                 # Helper scripts
 ```
 
-## Configuration Options
 
-You can enable/disable features in `home.nix`:
+### Building for Specific Users
 
-```nix
-# Enable desktop environments you want to use
-myConfig.desktop = {
-  gnome.enable = true;      # GNOME with Pop Shell
-  hyprland.enable = true;   # Hyprland compositor
-  niri.enable = true;       # Niri compositor
-};
-
-# Enable optional features
-myConfig.features = {
-  gaming.enable = true;     # Steam, Lutris
-  development.enable = true;
-};
+```bash
+just home  # Auto-detects current user and hostname
 ```
+
+The `just` commands automatically detect the current `$USER` and hostname, so they work seamlessly regardless of which user you're logged in as.
 
 ## Installation
 
@@ -62,15 +72,19 @@ wget -qO- https://install.determinate.systems/nix | sh -s -- install --determina
 nix-shell -p git
 
 # Clone repositories
-git clone https://github.com/iamDrakkir/nix-ubuntu.git ~/.config/nix
+git clone https://github.com/iamDrakkir/nix-config.git ~/.config/nix
 git clone https://github.com/iamDrakkir/dotfiles ~/.dotfiles
 
 # Initial system setup (installs system packages and services)
-sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake ~/.config/nix
+cd ~/.config/nix
+sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake .#terra
 
-# Setup home environment
+# Setup home environment for your host
 nix shell github:nix-community/home-manager
-home-manager switch --flake ~/.config/nix
+home-manager switch --flake ~/.config/nix#drakkir@terra
+
+# After this, 'just' commands and shell aliases will be available!
+# You can now use: just home, just system, hm-switch, etc.
 
 # Setup flatpak remote
 sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -81,21 +95,34 @@ sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
 ## Usage
 
-### Daily Commands
+### Quick Commands with Just
+
+After the initial setup, you can use the included [just](https://github.com/casey/just) task runner for convenient commands:
 
 ```bash
-# Update home configuration (most common)
-home-manager switch --flake ~/.config/nix
+# Show all available commands
+just --list
 
-# Update system configuration (requires sudo, for system services/packages)
-cd ~/.config/nix
-sudo env "PATH=$PATH" system-manager switch --flake .
+# freqeuntly used commands:
+just home          # Rebuild home-manager (auto-detects user@hostname)
+just system        # Rebuild system-manager (auto-detects hostname)
+just rebuild       # Full rebuild (both home and system)
+just update        # Update flake inputs
+just clean-all     # Full cleanup (careful!)
 
-# Format Nix files
-nix fmt
+```
 
-# Check for errors
-nix flake check
+The `just` commands automatically detect your hostname and username, so you don't need to specify them manually.
+
+### Shell Aliases
+
+Convenient shell aliases are also available after home-manager setup:
+
+```bash
+# Quick rebuild commands (auto-detect hostname)
+hm-switch          # Home-manager switch
+sys-switch         # System-manager switch (requires sudo)
+nix-rebuild        # Both home and system
 ```
 
 ### Desktop Environment Setup
@@ -111,15 +138,41 @@ install-wayland-sessions
 
 Sessions will appear in the login screen after logout or restart.
 
+## Configuration
+
+### Enabling/Disabling Features
+
+Edit your host-specific file (e.g., `home/drakkir/terra.nix`):
+
+```nix
+# Enable desktop environments you want to use
+myConfig.desktop = {
+  gnome.enable = true;      # GNOME with Pop Shell
+  hyprland.enable = true;   # Hyprland compositor
+  niri.enable = true;       # Niri compositor
+};
+
+# Enable optional features
+myConfig.features = {
+  gaming.enable = true;     # Steam, Lutris
+  development.enable = true; # Dev tools
+};
+```
+
+### Adding a New Host
+
+1. Create system config: `hosts/newhost/default.nix`
+2. Create user config: `home/drakkir/newhost.nix`
+3. Add to `flake.nix`:
+   ```nix
+   systemConfigs.newhost = mkSystemConfig "newhost";
+   homeConfigurations."drakkir@newhost" = mkHomeConfig "newhost";
+   ```
+
 ## Updates
 
 ```bash
-# Update all flake inputs
-nix flake update --flake ~/.config/nix
-
-# Rebuild after updates
-home-manager switch --flake ~/.config/nix
-cd ~/.config/nix && sudo env "PATH=$PATH" system-manager switch --flake .
+just update
 
 # Update Nix itself
 sudo -i nix upgrade-nix
@@ -127,3 +180,7 @@ sudo -i nix upgrade-nix
 # Upgrade Nix daemon
 sudo determinate-nixd upgrade
 ```
+
+## Acknowledgements
+
+- [EmergentMind's nix-config](https://github.com/EmergentMind/nix-config) - Structure inspiration
