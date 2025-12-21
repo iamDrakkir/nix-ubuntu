@@ -48,7 +48,9 @@
 
       # ========== Extend lib with lib.custom and lib.hm ==========
       lib = nixpkgs.lib.extend (
-        self: super: (import ./lib { lib = self; }) // {
+        self: super:
+        (import ./lib { lib = self; })
+        // {
           # Import home-manager's lib.hm to fix missing lib.hm errors
           hm = import "${home-manager}/modules/lib" { lib = self; };
         }
@@ -98,6 +100,7 @@
               outputs
               system
               username
+              hostname
               homeDirectory
               lib
               ;

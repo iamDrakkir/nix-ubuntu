@@ -11,5 +11,8 @@
 
     # Rust
     cargo
+
+    # C/C++
+    gcc
   ];
 }
