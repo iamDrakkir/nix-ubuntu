@@ -8,6 +8,16 @@
 {
   # Centralized shell aliases for all shells
   home.shellAliases = {
+    vim = "nvim";
+    vi = "nvim";
+    v = "nvim";
+
+    # Quick directory navigation
+    cdd = "cd $HOME/.dotfiles";
+    cdn = "cd $HOME/.dotfiles/nvim/.config/nvim";
+    cdg = "cd $HOME/git";
+    cdw = "cd $HOME/git/work";
+
     ls = "eza";
     ll = "eza -l";
     la = "eza -la";
