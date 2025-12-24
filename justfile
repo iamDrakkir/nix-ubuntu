@@ -4,12 +4,12 @@ default:
   @just --list
 
 [group('build')]
-home:
-  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}}
+home *ARGS:
+  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}} {{ARGS}}
 
 [group('build')]
-home-trace:
-  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}} --show-trace
+home-trace *ARGS:
+  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}} --show-trace {{ARGS}}
 
 # Rebuild system-manager configuration
 [group('build')]

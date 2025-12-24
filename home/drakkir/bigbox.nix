@@ -25,4 +25,7 @@
     ../common/optional/sessions.nix
     ../common/optional/programs
   ];
+
+  # Symlink .face file for user avatar
+  home.file.".face".source = ../../.face;
 }
