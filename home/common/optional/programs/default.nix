@@ -3,6 +3,7 @@
 {
   imports = [
     ./alacritty.nix
+    ./noctalia.nix
     ./swaync.nix
     ./tmux.nix
     ./waybar.nix

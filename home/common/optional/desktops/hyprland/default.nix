@@ -13,24 +13,67 @@ let
   # Create the full modifier string with proper spacing
   browserPersonalBind = if isWorkHost then "$mainMod SHIFT, B" else "$mainMod, B";
   browserWorkBind = if isWorkHost then "$mainMod, B" else "$mainMod SHIFT, B";
+
+  # Conditionally use Noctalia keybindings or fallback to traditional commands
+  noctaliaEnabled = config.myConfig.programs.noctalia.enable or false;
+  kb = config.myConfig.programs.noctalia.keybindings or { };
+
+  # Fallback keybindings when Noctalia is disabled
+  fallbackBinds = {
+    launcher = "$mainMod, SPACE, exec, $menu";
+    lockScreen = "$mainMod, L, exec, hyprlock";
+    brightnessUp = ",XF86MonBrightnessUp, exec, brightnessctl -q s +10%";
+    brightnessDown = ",XF86MonBrightnessDown, exec, brightnessctl -q s 10%-";
+    volumeUp = ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+";
+    volumeDown = ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
+    volumeMute = ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
+    micMute = ",XF86AudioMicMute, exec, pactl set-source-mute @DEFAULT_SOURCE@ toggle";
+    lockKey = ",XF86Lock, exec, hyprlock";
+  };
+
+  # Select keybindings based on Noctalia status
+  binds =
+    if noctaliaEnabled then
+      {
+        launcher = kb.launcher.hyprland or fallbackBinds.launcher;
+        calendar = kb.calendar.hyprland or "";
+        clipboard = kb.clipboard.hyprland or "";
+        lockScreen = kb.lockScreen.hyprland or fallbackBinds.lockScreen;
+        brightnessUp = kb.brightnessUp.hyprland or fallbackBinds.brightnessUp;
+        brightnessDown = kb.brightnessDown.hyprland or fallbackBinds.brightnessDown;
+        volumeUp = kb.volumeUp.hyprland or fallbackBinds.volumeUp;
+        volumeDown = kb.volumeDown.hyprland or fallbackBinds.volumeDown;
+        volumeMute = kb.volumeMute.hyprland or fallbackBinds.volumeMute;
+        micMute = kb.micMute.hyprland or fallbackBinds.micMute;
+        lockKey = kb.lockKey.hyprland or fallbackBinds.lockKey;
+      }
+    else
+      fallbackBinds;
 in
 
 {
+  # Enable Noctalia (can be overridden per host)
+  myConfig.programs.noctalia.enable = lib.mkDefault true;
+
   # Wayland utilities for Hyprland
-  home.packages = with pkgs; [
-    grim # Screenshot tool
-    slurp # Screen area selector
-    wl-clipboard # Clipboard utilities
-    wl-clipboard-x11 # X11 compatibility
-    cliphist # Clipboard history
-    hyprpanel # Panel
-    hyprpaper # Wallpaper
-    hypridle # Idle management
-    hyprlock # Lock screen
-    brightnessctl # Brightness control
-    playerctl # Media player control
-    emote # Emoji picker
-  ];
+  home.packages =
+    with pkgs;
+    [
+      grim # Screenshot tool
+      slurp # Screen area selector
+      wl-clipboard # Clipboard utilities
+      wl-clipboard-x11 # X11 compatibility
+      cliphist # Clipboard history
+      hyprpaper # Wallpaper
+      hypridle # Idle management
+      playerctl # Media player control
+      emote # Emoji picker
+    ]
+    ++ lib.optionals (!noctaliaEnabled) [
+      # Only include these when Noctalia is disabled
+      hyprlock # Lock screen (Noctalia provides its own)
+      brightnessctl # Brightness control (Noctalia handles this)
+    ];
 
   wayland.windowManager.hyprland = {
     enable = true;
@@ -192,6 +235,15 @@ in
         "$mainMod, D, exec, discord"
         "$mainMod, period, exec, emote"
 
+        # Launcher / menu
+        binds.launcher
+      ]
+      # Noctalia-specific keybindings (only if enabled)
+      ++ lib.optionals noctaliaEnabled [
+        binds.calendar
+        binds.clipboard
+      ]
+      ++ [
         # Window management
         "$mainMod, Q, killactive"
         "$mainMod, F, fullscreen, 1"
@@ -199,6 +251,8 @@ in
         "$mainMod, T, togglefloating"
         "$mainMod, J, togglesplit"
         "$mainMod, G, togglegroup"
+
+        "$mainMod, M, exec, command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"
 
         # Window navigation
         "$mainMod, left, movefocus, l"
@@ -214,12 +268,8 @@ in
         "$mainMod SHIFT, up, resizeactive, 0 -100"
         "$mainMod SHIFT, down, resizeactive, 0 100"
 
-        # Rofi menus
-        "$mainMod, SPACE, exec, $menu"
-        "$mainMod, V, exec, cliphist list | rofi -dmenu -p cliphist | cliphist decode | wl-copy"
-
         # Actions
-        "$mainMod, L, exec, hyprlock"
+        binds.lockScreen
 
         # Workspace switching
         "$mainMod, 1, workspace, 1"
@@ -249,15 +299,15 @@ in
         "$mainMod SHIFT, 0, movetoworkspace, 10"
 
         # Fn keys
-        ",XF86MonBrightnessUp, exec, brightnessctl -q s +10%"
-        ",XF86MonBrightnessDown, exec, brightnessctl -q s 10%-"
-        ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+        binds.brightnessUp
+        binds.brightnessDown
+        binds.volumeMute
         ",XF86AudioPlay, exec, playerctl play-pause"
         ",XF86AudioPause, exec, playerctl pause"
         ",XF86AudioNext, exec, playerctl next"
         ",XF86AudioPrev, exec, playerctl previous"
-        ",XF86AudioMicMute, exec, pactl set-source-mute @DEFAULT_SOURCE@ toggle"
-        ",XF86Lock, exec, hyprlock"
+        binds.micMute
+        binds.lockKey
 
         # Passthrough SUPER KEY to Virtual Machine
         "$mainMod, Z, submap, passthru"
@@ -269,8 +319,8 @@ in
 
       # Audio volume control (repeatable)
       binde = [
-        ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
-        ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-"
+        binds.volumeUp
+        binds.volumeDown
       ];
 
       # Mouse bindings
@@ -289,8 +339,7 @@ in
 
     # Autostart programs
     extraConfig = ''
-      # Panel and wallpaper
-      exec-once = hyprpanel
+      # Wallpaper
       exec-once = hyprpaper
 
       # Clipboard history
@@ -306,6 +355,10 @@ in
 
       # Environment
       exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+    ''
+    + lib.optionalString noctaliaEnabled ''
+      # Noctalia shell
+      exec-once = noctalia-shell
     '';
   };
 
