@@ -3,6 +3,7 @@
   lib,
   pkgs,
   inputs,
+  homeDirectory,
   ...
 }:
 
@@ -104,6 +105,8 @@ let
       };
     };
   };
+
+  dotfilesPath = "${homeDirectory}/.config/nix/dotfiles/noctalia";
 in
 
 {
@@ -118,16 +121,12 @@ in
   config = {
     programs.noctalia-shell.enable = true;
 
-    # # Symlink the entire noctalia folder from the dotfiles repo
-    # xdg.configFile =
-    #   let
-    #     helpers =
-    #       lib.custom.symlink.mkHelpers config "${config.home.homeDirectory}/.config/nix/dotfiles"
-    #         null;
-    #   in
-    #   helpers.linkDir "noctalia";
+    xdg.configFile = {
+      "noctalia/colors.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/colors.json";
+      "noctalia/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/settings.json";
+      "noctalia/plugins.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/plugins.json";
+    };
 
-    # Export keybindings for compositors to use
     myConfig.programs.noctalia.keybindings = keybinds;
   };
 }

@@ -149,8 +149,6 @@ in
 
   config = {
     programs.dank-material-shell.enable = true;
-
-    # Export keybindings for compositors to use
     myConfig.programs.dms.keybindings = keybinds;
   };
 }
