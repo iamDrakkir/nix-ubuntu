@@ -7,8 +7,6 @@
 }:
 
 let
-  cfg = config.myConfig.programs.noctalia;
-
   # Helper function for Noctalia IPC commands
   noctaliaIPC =
     cmd:
@@ -111,16 +109,13 @@ in
 {
   imports = [ inputs.noctalia.homeModules.default ];
 
-  options.myConfig.programs.noctalia = {
-    enable = lib.mkEnableOption "Noctalia shell";
-    keybindings = lib.mkOption {
-      type = lib.types.attrs;
-      default = { };
-      description = "Keybinding definitions for Noctalia IPC commands";
-    };
+  options.myConfig.programs.noctalia.keybindings = lib.mkOption {
+    type = lib.types.attrs;
+    default = { };
+    description = "Keybinding definitions for Noctalia IPC commands";
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     programs.noctalia-shell.enable = true;
 
     # # Symlink the entire noctalia folder from the dotfiles repo

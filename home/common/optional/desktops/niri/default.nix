@@ -8,15 +8,12 @@
 
 let
   # Conditionally use Noctalia keybindings
-  noctaliaEnabled = config.myConfig.programs.noctalia.enable or false;
   kb = config.myConfig.programs.noctalia.keybindings or { };
+  noctaliaEnabled = kb != { };
 in
 
 {
   imports = [ inputs.niri.homeModules.niri ];
-
-  # Enable Noctalia (can be overridden per host)
-  myConfig.programs.noctalia.enable = lib.mkDefault true;
 
   home.packages = with pkgs; [
     niri

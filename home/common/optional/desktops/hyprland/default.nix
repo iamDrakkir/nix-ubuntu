@@ -14,11 +14,17 @@ let
   browserPersonalBind = if isWorkHost then "$mainMod SHIFT, B" else "$mainMod, B";
   browserWorkBind = if isWorkHost then "$mainMod, B" else "$mainMod SHIFT, B";
 
-  # Conditionally use Noctalia keybindings or fallback to traditional commands
-  noctaliaEnabled = config.myConfig.programs.noctalia.enable or false;
-  kb = config.myConfig.programs.noctalia.keybindings or { };
+  # Check which shell is enabled (use whichever has keybindings)
+  noctaliaKb = config.myConfig.programs.noctalia.keybindings or { };
+  dmsKb = config.myConfig.programs.dms.keybindings or { };
+  hasNoctalia = noctaliaKb != { };
+  hasDms = dmsKb != { };
+  shellEnabled = hasNoctalia || hasDms;
 
-  # Fallback keybindings when Noctalia is disabled
+  # Get keybindings from the enabled shell (prioritize Noctalia)
+  shellKb = if hasNoctalia then noctaliaKb else dmsKb;
+
+  # Fallback keybindings when no shell is enabled
   fallbackBinds = {
     launcher = "$mainMod, SPACE, exec, $menu";
     lockScreen = "$mainMod, L, exec, hyprlock";
@@ -31,30 +37,37 @@ let
     lockKey = ",XF86Lock, exec, hyprlock";
   };
 
-  # Select keybindings based on Noctalia status
+  # Select keybindings based on shell status
   binds =
-    if noctaliaEnabled then
+    if shellEnabled then
       {
-        launcher = kb.launcher.hyprland or fallbackBinds.launcher;
-        calendar = kb.calendar.hyprland or "";
-        clipboard = kb.clipboard.hyprland or "";
-        lockScreen = kb.lockScreen.hyprland or fallbackBinds.lockScreen;
-        brightnessUp = kb.brightnessUp.hyprland or fallbackBinds.brightnessUp;
-        brightnessDown = kb.brightnessDown.hyprland or fallbackBinds.brightnessDown;
-        volumeUp = kb.volumeUp.hyprland or fallbackBinds.volumeUp;
-        volumeDown = kb.volumeDown.hyprland or fallbackBinds.volumeDown;
-        volumeMute = kb.volumeMute.hyprland or fallbackBinds.volumeMute;
-        micMute = kb.micMute.hyprland or fallbackBinds.micMute;
-        lockKey = kb.lockKey.hyprland or fallbackBinds.lockKey;
+        launcher = shellKb.launcher.hyprland or shellKb.spotlight.hyprland or fallbackBinds.launcher;
+        calendar = shellKb.calendar.hyprland or "";
+        clipboard = shellKb.clipboard.hyprland or "";
+        dashboard = shellKb.dashboard.hyprland or "";
+        controlCenter = shellKb.controlCenter.hyprland or "";
+        lockScreen = shellKb.lockScreen.hyprland or fallbackBinds.lockScreen;
+        brightnessUp = shellKb.brightnessUp.hyprland or fallbackBinds.brightnessUp;
+        brightnessDown = shellKb.brightnessDown.hyprland or fallbackBinds.brightnessDown;
+        volumeUp = shellKb.volumeUp.hyprland or fallbackBinds.volumeUp;
+        volumeDown = shellKb.volumeDown.hyprland or fallbackBinds.volumeDown;
+        volumeMute = shellKb.volumeMute.hyprland or fallbackBinds.volumeMute;
+        micMute = shellKb.micMute.hyprland or fallbackBinds.micMute;
+        lockKey = shellKb.lockKey.hyprland or fallbackBinds.lockKey;
+        mediaPlay = shellKb.mediaPlay.hyprland or ",XF86AudioPlay, exec, playerctl play-pause";
+        mediaNext = shellKb.mediaNext.hyprland or ",XF86AudioNext, exec, playerctl next";
+        mediaPrev = shellKb.mediaPrev.hyprland or ",XF86AudioPrev, exec, playerctl previous";
       }
     else
-      fallbackBinds;
+      fallbackBinds
+      // {
+        mediaPlay = ",XF86AudioPlay, exec, playerctl play-pause";
+        mediaNext = ",XF86AudioNext, exec, playerctl next";
+        mediaPrev = ",XF86AudioPrev, exec, playerctl previous";
+      };
 in
 
 {
-  # Enable Noctalia (can be overridden per host)
-  myConfig.programs.noctalia.enable = lib.mkDefault true;
-
   # Wayland utilities for Hyprland
   home.packages =
     with pkgs;
@@ -69,10 +82,10 @@ in
       playerctl # Media player control
       emote # Emoji picker
     ]
-    ++ lib.optionals (!noctaliaEnabled) [
-      # Only include these when Noctalia is disabled
-      hyprlock # Lock screen (Noctalia provides its own)
-      brightnessctl # Brightness control (Noctalia handles this)
+    ++ lib.optionals (!shellEnabled) [
+      # Only include these when no shell is enabled
+      hyprlock # Lock screen (shells provide their own)
+      brightnessctl # Brightness control (shells handle this)
     ];
 
   wayland.windowManager.hyprland = {
@@ -238,11 +251,15 @@ in
         # Launcher / menu
         binds.launcher
       ]
-      # Noctalia-specific keybindings (only if enabled)
-      ++ lib.optionals noctaliaEnabled [
-        binds.calendar
-        binds.clipboard
-      ]
+      # Shell-specific keybindings (only if enabled)
+      ++ lib.optionals shellEnabled (
+        lib.filter (s: s != "") [
+          binds.calendar
+          binds.clipboard
+          binds.dashboard
+          binds.controlCenter
+        ]
+      )
       ++ [
         # Window management
         "$mainMod, Q, killactive"
@@ -302,10 +319,10 @@ in
         binds.brightnessUp
         binds.brightnessDown
         binds.volumeMute
-        ",XF86AudioPlay, exec, playerctl play-pause"
+        binds.mediaPlay
         ",XF86AudioPause, exec, playerctl pause"
-        ",XF86AudioNext, exec, playerctl next"
-        ",XF86AudioPrev, exec, playerctl previous"
+        binds.mediaNext
+        binds.mediaPrev
         binds.micMute
         binds.lockKey
 
@@ -339,6 +356,8 @@ in
 
     # Autostart programs
     extraConfig = ''
+      exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
       # Wallpaper
       exec-once = hyprpaper
 
@@ -352,13 +371,14 @@ in
       # Applications
       exec-once = 1password --silent
       exec-once = corectrl
-
-      # Environment
-      exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
     ''
-    + lib.optionalString noctaliaEnabled ''
+    + lib.optionalString hasNoctalia ''
       # Noctalia shell
       exec-once = noctalia-shell
+    ''
+    + lib.optionalString (hasDms && !hasNoctalia) ''
+      # DankMaterialShell
+      exec-once = dms run
     '';
   };
 

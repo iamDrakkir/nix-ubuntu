@@ -18,7 +18,6 @@
 
   # Essential system packages present on all hosts
   environment.systemPackages = with pkgs; [
-    git
     neovim
     pipewire
     wireplumber
