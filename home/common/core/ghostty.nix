@@ -1,16 +1,36 @@
-{
-  config,
-  lib,
-  pkgs,
-  homeDirectory,
-  ...
-}:
+{ config, ... }:
 
 {
-  # Install ghostty package but don't use the programs.ghostty module
-  # since we're managing the config via dotfiles symlinks
-  home.packages = [ pkgs.ghostty ];
+  programs.ghostty = {
+    enable = true;
 
-  # Symlink config from dotfiles repo
-  home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "ghostty" ];
+    settings = {
+      # Font configuration
+      font-feature = [
+        "-liga"
+        "-calt"
+        "-dlig"
+      ];
+
+      # Window decoration
+      gtk-titlebar = false;
+      window-decoration = false;
+
+      # Theme
+      theme = "Catppuccin Mocha";
+
+      # Behavior
+      confirm-close-surface = false;
+
+      # Custom shader
+      custom-shader = "shaders/cursor_warp.glsl";
+
+      # Default shell
+      command = "fish";
+    };
+  };
+
+  # Copy shader files to config directory
+  xdg.configFile."ghostty/shaders/cursor_warp.glsl".source =
+    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix/dotfiles/ghostty/shaders/cursor_warp.glsl";
 }

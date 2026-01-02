@@ -49,18 +49,16 @@
       # Create out-of-store symlink helpers
       # config: home-manager config object (for mkOutOfStoreSymlink)
       # sourceRoot: absolute path to source directory
-      # pathTransform: optional function to transform name to source path (default: identity)
       mkHelpers =
-        config: sourceRoot: pathTransform:
+        config: sourceRoot:
         let
           inherit (config.lib.file) mkOutOfStoreSymlink;
           pipe = lib.flip lib.pipe;
-          transform = if pathTransform != null then pathTransform else (name: name);
         in
         rec {
           # Create a symlink source path by appending to sourceRoot
           # Usage: toSourcePath "nvim"
-          toSourcePath = name: "${sourceRoot}/${transform name}";
+          toSourcePath = name: "${sourceRoot}/${name}";
 
           # Create out-of-store symlink
           # Usage: link "nvim"
@@ -110,22 +108,26 @@
         };
 
       # High-level helper for common dotfiles pattern
-      # Handles the typical ~/.dotfiles/<name>/.config/<name> -> ~/.config/<name> pattern
-      # Usage: mkDotfilesLinks config homeDirectory ["nvim" "rofi" "lazygit"]
+      # Links dotfiles/<name> -> ~/.config/<name>
+      # Usage: mkDotfilesLinks config ["nvim" "rofi" "lazygit"]
       mkDotfilesLinks =
-        config: homeDirectory: names:
+        config: names:
         let
-          inherit (lib) last splitString;
-          # Extract base name from .config/name -> name
-          baseName = path: last (splitString "/" path);
-          # Transform: .config/nvim -> nvim/.config/nvim
-          dotfileTransform = name: "${baseName name}/${name}";
-          # Create helpers with the dotfiles root and transform
-          helpers = symlink.mkHelpers config "${homeDirectory}/.dotfiles" dotfileTransform;
-          # Prepend .config/ to each name
+          # Get the flake root directory (where the dotfiles folder is)
+          flakeRoot = config.home.homeDirectory + "/.config/nix";
+          # Create helpers with the dotfiles root
+          helpers = symlink.mkHelpers config "${flakeRoot}/dotfiles";
+          # Prepend .config/ to each name for home.file attribute paths
           confPaths = lib.map (name: ".config/${name}") names;
         in
-        symlink.flatMerge [ (helpers.linkConfDirs confPaths) ];
+        # linkConfDirs expects the name as it appears in dotfiles/, not with .config/ prefix
+        # So we need to pass the original names, not confPaths
+        lib.listToAttrs (
+          lib.imap0 (i: name: {
+            name = ".config/${name}";
+            value.source = helpers.link name;
+          }) names
+        );
     };
   };
 }

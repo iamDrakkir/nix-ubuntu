@@ -2,7 +2,6 @@
   config,
   lib,
   pkgs,
-  homeDirectory,
   ...
 }:
 
@@ -12,5 +11,5 @@
   home.packages = [ pkgs.rofi ];
 
   # Symlink config from dotfiles repo
-  home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "rofi" ];
+  home.file = lib.custom.symlink.mkDotfilesLinks config [ "rofi" ];
 }

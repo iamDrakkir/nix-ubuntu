@@ -131,6 +131,7 @@ in
       env = [
         "QT_QPA_PLATFORM,wayland"
         "XDG_CURRENT_DESKTOP,Hyprland"
+        "XDG_DATA_DIRS,/run/system-manager/sw/share:$XDG_DATA_DIRS"
       ];
 
       # Monitor configuration

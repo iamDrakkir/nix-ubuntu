@@ -13,8 +13,8 @@
     v = "nvim";
 
     # Quick directory navigation
-    cdd = "cd $HOME/.dotfiles";
-    cdn = "cd $HOME/.dotfiles/nvim/.config/nvim";
+    cdd = "cd $HOME/.config/nix/dotfiles";
+    cdn = "cd $HOME/.config/nix/dotfiles/nvim/.config/nvim";
     cdg = "cd $HOME/git";
     cdw = "cd $HOME/git/work";
 
@@ -56,15 +56,15 @@
     nerd-fonts.jetbrains-mono
     just
   ];
-  
+
   programs.fastfetch = {
     enable = true;
   };
-  
+
   programs.ripgrep = {
     enable = true;
   };
-  
+
   programs.fd = {
     enable = true;
   };
@@ -99,7 +99,6 @@
       zoxide init fish | source
     '';
   };
-
 
   programs.zsh = {
     enable = true;

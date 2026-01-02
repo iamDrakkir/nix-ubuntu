@@ -38,12 +38,15 @@
   systemd.user.services.nix-setup-environment = {
     Unit = {
       Description = "Set up nix environment for user session";
-      Before = [ "basic.target" "default.target" ];
+      Before = [
+        "basic.target"
+        "default.target"
+      ];
       DefaultDependencies = false;
     };
     Service = {
       Type = "oneshot";
-      ExecStart = "${lib.getBin pkgs.systemd}/bin/systemctl --user set-environment PATH=${homeDirectory}/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\${PATH}";
+      ExecStart = "${lib.getBin pkgs.systemd}/bin/systemctl --user set-environment PATH=/run/system-manager/sw/bin:${homeDirectory}/.nix-profile/bin:/nix/var/nix/profiles/default/bin:\${PATH}";
     };
     Install = {
       WantedBy = [ "default.target" ];

@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  homeDirectory,
   ...
 }:
 
@@ -10,5 +9,5 @@
   # This module only handles the config symlink
 
   # Symlink config from dotfiles repo
-  home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "nvim" ];
+  home.file = lib.custom.symlink.mkDotfilesLinks config [ "nvim" ];
 }

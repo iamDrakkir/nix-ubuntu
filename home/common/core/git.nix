@@ -19,7 +19,7 @@
 
       core = {
         editor = "nvim";
-        autocrlf = "input"; 
+        autocrlf = "input";
         compression = 9; # Trade CPU for network
         whitespace = "error";
         preloadindex = true;
