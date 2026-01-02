@@ -3,7 +3,7 @@
 {
   imports = [
     ../common/core
-    ../common/optional
+    ../common/optional/corectrl.nix
     ../common/users/drakkir
   ];
 }
