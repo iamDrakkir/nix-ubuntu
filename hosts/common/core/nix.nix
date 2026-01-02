@@ -21,8 +21,19 @@
     enable = true;
     description = "auto-cpufreq - Automatic CPU speed & power optimizer";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
-    path = with pkgs; [ bash coreutils ];
+    after = [
+      "network.target"
+      "system-manager.target"
+    ];
+    conflicts = [ "power-profiles-daemon.service" ];
+    path = with pkgs; [
+      bash
+      coreutils
+      gawk
+      gnugrep
+      gnused
+      util-linux
+    ];
     serviceConfig = {
       Type = "simple";
       ExecStart = "${pkgs.auto-cpufreq}/bin/auto-cpufreq --daemon";
@@ -30,6 +41,9 @@
       RestartSec = "5s";
     };
   };
+
+  # Mask power-profiles-daemon to prevent conflicts with auto-cpufreq
+  systemd.services.power-profiles-daemon.enable = false;
 
   # Essential system packages present on all hosts
   environment.systemPackages = with pkgs; [
