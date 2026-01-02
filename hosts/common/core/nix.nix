@@ -16,11 +16,27 @@
     };
   };
 
+  # Auto-cpufreq systemd service
+  systemd.services.auto-cpufreq = {
+    enable = true;
+    description = "auto-cpufreq - Automatic CPU speed & power optimizer";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    path = with pkgs; [ bash coreutils ];
+    serviceConfig = {
+      Type = "simple";
+      ExecStart = "${pkgs.auto-cpufreq}/bin/auto-cpufreq --daemon";
+      Restart = "on-failure";
+      RestartSec = "5s";
+    };
+  };
+
   # Essential system packages present on all hosts
   environment.systemPackages = with pkgs; [
     neovim
     pipewire
     wireplumber
+    auto-cpufreq
   ];
 
   # Link share directories so desktop files and other resources are available
