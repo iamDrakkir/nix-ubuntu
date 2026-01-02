@@ -9,7 +9,7 @@ Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-conf
 - **Multi-host Support**: Separate configurations for terra, bigbox, and work with auto-detection
 - **Multiple Desktop Environments**: GNOME (with Pop Shell), Hyprland, and Niri
 - **Toggleable Features**: Enable/disable desktops and features via configuration flags
-- **Declarative Dotfiles**: Managed symlinks to external dotfiles repository
+- **Declarative Dotfiles**: Managed via out-of-store symlinks to in-repo dotfiles
 - **Core vs Optional Philosophy**: Strict separation between always-present and optional configs
 
 ## Structure
@@ -49,6 +49,7 @@ lib/                     # Custom library functions
 overlays/                # Custom modifications to upstream packages 
 pkgs/                    # Custom packages
 scripts/                 # Helper scripts
+dotfiles/                # Application dotfiles (symlinked to ~/.config)
 ```
 
 
@@ -71,9 +72,8 @@ wget -qO- https://install.determinate.systems/nix | sh -s -- install --determina
 # Install git in temporary shell for cloning
 nix-shell -p git
 
-# Clone repositories
+# Clone repository
 git clone https://github.com/iamDrakkir/nix-config.git ~/.config/nix
-git clone https://github.com/iamDrakkir/dotfiles ~/.dotfiles
 
 # Initial system setup (installs system packages and services)
 cd ~/.config/nix
@@ -138,6 +138,22 @@ install-wayland-sessions
 
 Sessions will appear in the login screen after logout or restart.
 
+### CoreCtrl Setup (AMD GPU Control)
+
+CoreCtrl is automatically installed and configured for password-less operation (for sudo group members). The required D-Bus and polkit files are automatically installed during system rebuild.
+
+**For full GPU control** (overclocking, custom power profiles, fan curves), add the AMD GPU kernel parameter to GRUB:
+
+1. Edit `/etc/default/grub`
+2. Find `GRUB_CMDLINE_LINUX_DEFAULT` and append `amdgpu.ppfeaturemask=0xffffffff`
+   ```bash
+   GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amdgpu.ppfeaturemask=0xffffffff"
+   ```
+3. Update GRUB: `sudo update-grub`
+4. Reboot
+
+CoreCtrl will autostart with Hyprland and be available in the application launcher.
+
 ## Configuration
 
 ### Enabling/Disabling Features
@@ -180,6 +196,31 @@ sudo -i nix upgrade-nix
 # Upgrade Nix daemon
 sudo determinate-nixd upgrade
 ```
+
+## Troubleshooting
+
+### System-Manager Packages Not Available in Hyprland Autostart
+
+If programs installed via system-manager's `environment.systemPackages` don't autostart in Hyprland or aren't visible in application launchers, ensure both of these are configured:
+
+1. **PATH for systemd user session** - In `home/common/core/home.nix`, the `nix-setup-environment` service must include `/run/system-manager/sw/bin` in PATH:
+   ```nix
+   ExecStart = "systemctl --user set-environment PATH=/run/system-manager/sw/bin:${homeDirectory}/.nix-profile/bin:...";
+   ```
+
+2. **XDG_DATA_DIRS for desktop files** - In `home/common/optional/desktops/hyprland/default.nix`, add to the `env` array:
+   ```nix
+   env = [
+     "XDG_DATA_DIRS,/run/system-manager/sw/share:$XDG_DATA_DIRS"
+   ];
+   ```
+
+Additionally, system-manager must be configured to link share directories in `hosts/common/core/nix.nix`:
+```nix
+environment.pathsToLink = [ "/bin" "/share" ];
+```
+
+This ensures programs in `environment.systemPackages` are accessible to Hyprland's `exec-once` commands and visible in application launchers.
 
 ## Acknowledgements
 
