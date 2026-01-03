@@ -105,6 +105,7 @@
     enableCompletion = true;
     autosuggestion.enable = true;
     syntaxHighlighting.enable = true;
+    dotDir = "${config.xdg.configHome}/zsh";
     initContent = ''
       # Initialize zoxide
       eval "$(zoxide init zsh)"
