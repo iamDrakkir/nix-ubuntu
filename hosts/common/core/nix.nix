@@ -79,4 +79,12 @@
       include if exists <local/bwrap>
     }
   '';
+
+  # Configure sudo to include system-manager paths
+  environment.etc."sudoers.d/system-manager-path" = {
+    text = ''
+      Defaults secure_path="/run/system-manager/sw/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin"
+    '';
+    mode = "0440";
+  };
 }
