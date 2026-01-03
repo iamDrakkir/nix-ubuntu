@@ -81,6 +81,7 @@ in
       hypridle # Idle management
       playerctl # Media player control
       emote # Emoji picker
+      satty
     ]
     ++ lib.optionals (!shellEnabled) [
       # Only include these when no shell is enabled
@@ -228,6 +229,9 @@ in
         "$mainMod SHIFT, P, exec, 1password --quick-access"
         "$mainMod, D, exec, discord"
         "$mainMod, period, exec, emote"
+
+        # Screenshot
+        "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"
 
         # Launcher / menu
         binds.launcher
