@@ -24,5 +24,8 @@
       "inode/directory"
       "application/x-code-workspace"
     ];
+    settings = {
+      StartupWMClass = "Code";
+    };
   };
 }
