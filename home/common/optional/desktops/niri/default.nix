@@ -1,5 +1,6 @@
 {
   config,
+  hostname,
   inputs,
   lib,
   pkgs,
@@ -10,6 +11,11 @@ let
   # Conditionally use Noctalia keybindings
   kb = config.myConfig.programs.noctalia.keybindings or { };
   noctaliaEnabled = kb != { };
+
+  # Swap browser profile shortcuts based on host
+  isWorkHost = hostname == "work";
+  browserPersonalProfile = "Personal";
+  browserWorkProfile = "Work";
 in
 
 {
@@ -22,6 +28,7 @@ in
     slurp # Screen area selector
     wl-clipboard # Clipboard utilities
     wl-clipboard-x11 # X11 compatibility
+    satty
   ];
 
   # Configure Niri window manager
@@ -39,24 +46,53 @@ in
         };
         touchpad = {
           tap = true;
-          natural-scroll = true;
+          natural-scroll = false;
+        };
+        focus-follows-mouse = {
+          enable = true;
+          max-scroll-amount = "90%";
         };
       };
 
       # Layout configuration
       layout = {
-        gaps = 8;
+        gaps = 16;
         center-focused-column = "never";
-        default-column-width = { };
+        default-column-width = {
+          proportion = 0.5;
+        };
         preset-column-widths = [
           { proportion = 0.33333; }
           { proportion = 0.5; }
           { proportion = 0.66667; }
         ];
+
+        # Focus ring configuration
+        focus-ring = {
+          width = 4.0;
+          active.color = "#7fc8ff";
+          inactive.color = "#505050";
+        };
+
+        # Border configuration (disabled by default)
+        border = {
+          enable = false;
+        };
       };
 
       # Window rules
-      window-rules = [ ];
+      window-rules = [
+        # Enable rounded corners for all windows
+        {
+          geometry-corner-radius = {
+            top-left = 12.0;
+            top-right = 12.0;
+            bottom-left = 12.0;
+            bottom-right = 12.0;
+          };
+          clip-to-geometry = true;
+        }
+      ];
 
       # Keybindings
       binds =
@@ -79,6 +115,13 @@ in
           "${kb.micMute.niri.key}".action.spawn = kb.micMute.niri.action;
         }
         // {
+          # Overview and hotkeys
+          "Mod+O" = {
+            action.toggle-overview = [ ];
+            repeat = false;
+          };
+          "Mod+Shift+Slash".action.show-hotkey-overlay = [ ];
+
           # Terminal
           "Mod+Return".action.spawn = [ "ghostty" ];
           "Mod+Shift+Return".action.spawn = [ "kitty" ];
@@ -88,12 +131,17 @@ in
           "Mod+B".action.spawn = [
             "zen"
             "-p"
-            "Personal"
+            (if isWorkHost then browserWorkProfile else browserPersonalProfile)
           ];
           "Mod+Shift+B".action.spawn = [
             "zen"
             "-p"
-            "Work"
+            (if isWorkHost then browserPersonalProfile else browserWorkProfile)
+          ];
+          "Mod+Ctrl+Shift+B".action.spawn = [
+            "zen"
+            "-p"
+            "Work_Admin"
           ];
           "Mod+P".action.spawn = [ "1password" ];
           "Mod+Shift+P".action.spawn = [
@@ -103,14 +151,28 @@ in
           "Mod+D".action.spawn = [ "discord" ];
 
           # Window management
-          "Mod+Q".action.close-window = [ ];
-          "Mod+F".action.fullscreen-window = [ ];
-          "Mod+T".action.set-window-height = [
-            "+10%"
-          ];
-          "Mod+Shift+T".action.set-window-height = [
-            "-10%"
-          ];
+          "Mod+Q" = {
+            action.close-window = [ ];
+            repeat = false;
+          };
+          "Mod+F".action.maximize-column = [ ];
+          "Mod+Shift+F".action.fullscreen-window = [ ];
+          "Mod+T".action.toggle-window-floating = [ ];
+          "Mod+C".action.center-column = [ ];
+          "Mod+Ctrl+C".action.center-visible-columns = [ ];
+          "Mod+W".action.toggle-column-tabbed-display = [ ];
+
+          # Column width presets
+          "Mod+R".action.switch-preset-column-width = [ ];
+          "Mod+Shift+R".action.switch-preset-window-height = [ ];
+          "Mod+Ctrl+R".action.reset-window-height = [ ];
+          "Mod+Ctrl+F".action.expand-column-to-available-width = [ ];
+
+          # Finer adjustments
+          "Mod+Minus".action.set-column-width = [ "-10%" ];
+          "Mod+Equal".action.set-column-width = [ "+10%" ];
+          "Mod+Shift+Minus".action.set-window-height = [ "-10%" ];
+          "Mod+Shift+Equal".action.set-window-height = [ "+10%" ];
 
           # Focus movement
           "Mod+Left".action.focus-column-left = [ ];
@@ -132,19 +194,73 @@ in
           "Mod+Ctrl+K".action.move-window-up = [ ];
           "Mod+Ctrl+J".action.move-window-down = [ ];
 
-          # Window sizing
-          "Mod+Shift+Left".action.set-column-width = [
-            "-10%"
-          ];
-          "Mod+Shift+Right".action.set-column-width = [
-            "+10%"
-          ];
-          "Mod+Shift+H".action.set-column-width = [
-            "-10%"
-          ];
-          "Mod+Shift+R".action.set-column-width = [
-            "+10%"
-          ];
+          # Monitor focus
+          "Mod+Shift+Left".action.focus-monitor-left = [ ];
+          "Mod+Shift+Right".action.focus-monitor-right = [ ];
+          "Mod+Shift+Up".action.focus-monitor-up = [ ];
+          "Mod+Shift+Down".action.focus-monitor-down = [ ];
+          "Mod+Shift+H".action.focus-monitor-left = [ ];
+          "Mod+Shift+L".action.focus-monitor-right = [ ];
+          "Mod+Shift+K".action.focus-monitor-up = [ ];
+          "Mod+Shift+J".action.focus-monitor-down = [ ];
+
+          # Move to monitor
+          "Mod+Shift+Ctrl+Left".action.move-column-to-monitor-left = [ ];
+          "Mod+Shift+Ctrl+Right".action.move-column-to-monitor-right = [ ];
+          "Mod+Shift+Ctrl+Up".action.move-column-to-monitor-up = [ ];
+          "Mod+Shift+Ctrl+Down".action.move-column-to-monitor-down = [ ];
+          "Mod+Shift+Ctrl+H".action.move-column-to-monitor-left = [ ];
+          "Mod+Shift+Ctrl+L".action.move-column-to-monitor-right = [ ];
+          "Mod+Shift+Ctrl+K".action.move-column-to-monitor-up = [ ];
+          "Mod+Shift+Ctrl+J".action.move-column-to-monitor-down = [ ];
+
+          # Workspace navigation
+          "Mod+Page_Down".action.focus-workspace-down = [ ];
+          "Mod+Page_Up".action.focus-workspace-up = [ ];
+          "Mod+U".action.focus-workspace-down = [ ];
+          "Mod+I".action.focus-workspace-up = [ ];
+          "Mod+Ctrl+Page_Down".action.move-column-to-workspace-down = [ ];
+          "Mod+Ctrl+Page_Up".action.move-column-to-workspace-up = [ ];
+          "Mod+Ctrl+U".action.move-column-to-workspace-down = [ ];
+          "Mod+Ctrl+I".action.move-column-to-workspace-up = [ ];
+          "Mod+Shift+Page_Down".action.move-workspace-down = [ ];
+          "Mod+Shift+Page_Up".action.move-workspace-up = [ ];
+          "Mod+Shift+U".action.move-workspace-down = [ ];
+          "Mod+Shift+I".action.move-workspace-up = [ ];
+
+          # Mouse wheel workspace switching
+          "Mod+WheelScrollDown" = {
+            action.focus-workspace-down = [ ];
+            cooldown-ms = 150;
+          };
+          "Mod+WheelScrollUp" = {
+            action.focus-workspace-up = [ ];
+            cooldown-ms = 150;
+          };
+          "Mod+Ctrl+WheelScrollDown" = {
+            action.move-column-to-workspace-down = [ ];
+            cooldown-ms = 150;
+          };
+          "Mod+Ctrl+WheelScrollUp" = {
+            action.move-column-to-workspace-up = [ ];
+            cooldown-ms = 150;
+          };
+
+          # Mouse wheel column navigation
+          "Mod+WheelScrollRight".action.focus-column-right = [ ];
+          "Mod+WheelScrollLeft".action.focus-column-left = [ ];
+          "Mod+Ctrl+WheelScrollRight".action.move-column-right = [ ];
+          "Mod+Ctrl+WheelScrollLeft".action.move-column-left = [ ];
+          "Mod+Shift+WheelScrollDown".action.focus-column-right = [ ];
+          "Mod+Shift+WheelScrollUp".action.focus-column-left = [ ];
+          "Mod+Ctrl+Shift+WheelScrollDown".action.move-column-right = [ ];
+          "Mod+Ctrl+Shift+WheelScrollUp".action.move-column-left = [ ];
+
+          # Consume/expel windows
+          "Mod+BracketLeft".action.consume-or-expel-window-left = [ ];
+          "Mod+BracketRight".action.consume-or-expel-window-right = [ ];
+          "Mod+Comma".action.consume-window-into-column = [ ];
+          "Mod+Period".action.expel-window-from-column = [ ];
 
           # Workspace switching
           "Mod+1".action.focus-workspace = [ 1 ];
@@ -158,23 +274,44 @@ in
           "Mod+9".action.focus-workspace = [ 9 ];
           "Mod+0".action.focus-workspace = [ 10 ];
 
-          # Move window to workspace
-          "Mod+Shift+1".action.move-window-to-workspace = [ 1 ];
-          "Mod+Shift+2".action.move-window-to-workspace = [ 2 ];
-          "Mod+Shift+3".action.move-window-to-workspace = [ 3 ];
-          "Mod+Shift+4".action.move-window-to-workspace = [ 4 ];
-          "Mod+Shift+5".action.move-window-to-workspace = [ 5 ];
-          "Mod+Shift+6".action.move-window-to-workspace = [ 6 ];
-          "Mod+Shift+7".action.move-window-to-workspace = [ 7 ];
-          "Mod+Shift+8".action.move-window-to-workspace = [ 8 ];
-          "Mod+Shift+9".action.move-window-to-workspace = [ 9 ];
-          "Mod+Shift+0".action.move-window-to-workspace = [ 10 ];
+          # Move column to workspace
+          "Mod+Shift+1".action.move-column-to-workspace = [ 1 ];
+          "Mod+Shift+2".action.move-column-to-workspace = [ 2 ];
+          "Mod+Shift+3".action.move-column-to-workspace = [ 3 ];
+          "Mod+Shift+4".action.move-column-to-workspace = [ 4 ];
+          "Mod+Shift+5".action.move-column-to-workspace = [ 5 ];
+          "Mod+Shift+6".action.move-column-to-workspace = [ 6 ];
+          "Mod+Shift+7".action.move-column-to-workspace = [ 7 ];
+          "Mod+Shift+8".action.move-column-to-workspace = [ 8 ];
+          "Mod+Shift+9".action.move-column-to-workspace = [ 9 ];
 
           # Screenshots
-          "Print".action.screenshot = [ ];
-          "Shift+Print".action.screenshot-screen = [ ];
-          "Mod+Print".action.screenshot-window = [ ];
+          "Mod+Shift+S".action.screenshot = [ ];
+
+          # Miscellaneous
+          "Mod+Escape" = {
+            action.toggle-keyboard-shortcuts-inhibit = [ ];
+            allow-inhibiting = false;
+          };
+          "Mod+Shift+E".action.quit = [ ];
+          "Ctrl+Alt+Delete".action.quit = [ ];
         };
+
+      # Hotkey overlay
+      hotkey-overlay = {
+        skip-at-startup = false;
+      };
+
+      # Prefer no CSD (client-side decorations)
+      prefer-no-csd = true;
+
+      # Screenshot path
+      screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
+
+      # Animations
+      animations = {
+        # slowdown = 1.0;
+      };
     };
   };
 }
