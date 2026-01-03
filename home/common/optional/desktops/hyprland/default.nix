@@ -169,15 +169,6 @@ in
       # Decoration
       decoration = {
         rounding = 10;
-        blur = {
-          enabled = true;
-          size = 6;
-          passes = 2;
-          new_optimizations = true;
-          ignore_opacity = true;
-          xray = true;
-          blurls = "waybar";
-        };
         active_opacity = 1.0;
         inactive_opacity = 1.0;
         fullscreen_opacity = 1.0;
@@ -217,23 +208,12 @@ in
 
       # Window rules
       windowrule = [
-        "float,title:^(pavucontrol)$"
-        "float,title:^(blueman-manager)$"
-        "float,title:^(nm-connection-editor)$"
-        "float,title:^(dotfiles-floating)$"
-        "opacity 1 override,title:^(firefox)$"
-        "opacity 1 override,title:^(zen-alpha)$"
       ];
 
       windowrulev2 = [
-        "bordercolor $mauve, fullscreen:1"
-        "stayfocused, title:^()$,class:^(steam)$"
-        "minsize 1 1, title:^()$,class:^(steam)$"
       ];
 
       layerrule = [
-        "blur, gtk-layer-shell"
-        "blur, logout_dialog"
       ];
 
       # Keybindings - Applications
