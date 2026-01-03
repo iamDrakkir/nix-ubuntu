@@ -4,16 +4,18 @@
   nixpkgs.hostPlatform = system;
   system-manager.allowAnyDistro = true;
 
-  # Nix configuration
+  # Nix configuration - Determinate Nix manages nix.conf, we add customizations
   nix = {
-    package = pkgs.nix;
-    settings = {
-      experimental-features = [
-        "nix-command"
-        "flakes"
-      ];
-      auto-optimise-store = true;
-    };
+    enable = false; # Let Determinate Nix manage /etc/nix/nix.conf
+  };
+
+  # Add our custom Nix settings via nix.custom.conf (included by Determinate Nix)
+  environment.etc."nix/nix.custom.conf" = {
+    text = ''
+      experimental-features = nix-command flakes
+      auto-optimise-store = true
+      warn-dirty = false
+    '';
   };
 
   # Auto-cpufreq systemd service
