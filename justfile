@@ -14,7 +14,7 @@ home-trace *ARGS:
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  cd ~/.config/nix && sudo env "PATH=$PATH" system-manager switch --flake .#{{`hostname`}}
+  system-manager switch --sudo --flake ~/.config/nix#{{`hostname`}}
 
 # Full rebuild (both home and system)
 [group('build')]

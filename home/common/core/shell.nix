@@ -47,8 +47,8 @@
     gu = "git pull";
 
     hms = "home-manager switch --flake ~/.config/nix#\$USER@(hostname)";
-    syss = "cd ~/.config/nix && sudo env PATH=\$PATH system-manager switch --flake .#(hostname)";
-    nix-rebuild = "home-manager switch --flake ~/.config/nix#\$USER@(hostname) && cd ~/.config/nix && sudo env PATH=\$PATH system-manager switch --flake .#(hostname)";
+    syss = "system-manager switch --sudo --flake ~/.config/nix#(hostname)";
+    nix-rebuild = "home-manager switch --flake ~/.config/nix#\$USER@(hostname) && system-manager switch --sudo --flake ~/.config/nix#(hostname)";
   };
 
   home.packages = with pkgs; [

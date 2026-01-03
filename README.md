@@ -77,7 +77,7 @@ git clone https://github.com/iamDrakkir/nix-config.git ~/.config/nix
 
 # Initial system setup (installs system packages and services)
 cd ~/.config/nix
-sudo env "PATH=$PATH" nix run 'github:numtide/system-manager' -- switch --flake .#terra
+nix run 'github:numtide/system-manager' -- switch --sudo --flake .#terra
 
 # Setup home environment for your host
 nix shell github:nix-community/home-manager
@@ -120,8 +120,8 @@ Convenient shell aliases are also available after home-manager setup:
 
 ```bash
 # Quick rebuild commands (auto-detect hostname)
-hm-switch          # Home-manager switch
-sys-switch         # System-manager switch (requires sudo)
+hms                # Home-manager switch
+syss               # System-manager switch (uses --sudo flag)
 nix-rebuild        # Both home and system
 ```
 
