@@ -29,6 +29,7 @@ in
     wl-clipboard # Clipboard utilities
     wl-clipboard-x11 # X11 compatibility
     satty
+    xwayland-satellite
   ];
 
   # Configure Niri window manager
