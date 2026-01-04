@@ -17,7 +17,7 @@
       window-decoration = false;
 
       # Theme
-      theme = "Catppuccin Mocha";
+      theme = "noctalia";
 
       # Behavior
       confirm-close-surface = false;
