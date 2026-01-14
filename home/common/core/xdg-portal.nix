@@ -22,6 +22,13 @@
         ];
         "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
       };
+      niri = {
+        default = [
+          "gnome"
+          "gtk"
+        ];
+        "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
+      };
     };
   };
 
