@@ -8,6 +8,7 @@
   services.flatpak = {
     enable = true;
     packages = [
+      "com.vysp3r.ProtonPlus"
       "net.davidotek.pupgui2"
       "com.usebottles.bottles"
     ];
