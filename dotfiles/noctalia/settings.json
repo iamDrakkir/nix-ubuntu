@@ -97,12 +97,6 @@
                     "showVisualizer": true,
                     "useFixedWidth": false,
                     "visualizerType": "linear"
-                },
-                {
-                    "colorName": "primary",
-                    "hideWhenIdle": false,
-                    "id": "AudioVisualizer",
-                    "width": 200
                 }
             ],
             "right": [

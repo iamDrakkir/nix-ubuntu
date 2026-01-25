@@ -5,8 +5,9 @@
 }:
 
 {
-  home.packages = [
-    pkgs.proton-pass
-    pkgs.protonvpn-gui
+  home.packages = with pkgs; [
+    proton-pass
+    protonvpn-gui
+    proton-pass-cli
   ];
 }
