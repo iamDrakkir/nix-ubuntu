@@ -52,9 +52,9 @@ let
     };
 
     lockScreen = {
-      hyprland = "$mainMod, L, exec, ${pkgs.lib.concatStringsSep " " (dmsIPC "lockScreen lock")}";
+      hyprland = "$mainMod, X, exec, ${pkgs.lib.concatStringsSep " " (dmsIPC "lockScreen lock")}";
       niri = {
-        key = "Mod+L";
+        key = "Mod+X";
         action = dmsIPC "lockScreen lock";
       };
     };

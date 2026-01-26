@@ -35,8 +35,13 @@ in
   # Configure Niri window manager
   programs.niri = {
     settings = {
-      # Conditionally spawn Noctalia on startup
-      spawn-at-startup = lib.optionals noctaliaEnabled [ { command = [ "noctalia-shell" ]; } ];
+      # Spawn applications at startup
+      spawn-at-startup =
+        [
+          { command = [ "corectrl" ]; }
+          { command = [ "proton-pass" ]; }
+        ]
+        ++ lib.optionals noctaliaEnabled [ { command = [ "noctalia-shell" ]; } ];
 
       # Input configuration
       input = {
@@ -144,11 +149,7 @@ in
             "-p"
             "Work_Admin"
           ];
-          "Mod+P".action.spawn = [ "1password" ];
-          "Mod+Shift+P".action.spawn = [
-            "1password"
-            "--quick-access"
-          ];
+          "Mod+P".action.spawn = [ "proton-pass" ];
           "Mod+D".action.spawn = [ "discord" ];
 
           # Window management

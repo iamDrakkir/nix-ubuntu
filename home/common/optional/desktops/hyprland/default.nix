@@ -27,7 +27,7 @@ let
   # Fallback keybindings when no shell is enabled
   fallbackBinds = {
     launcher = "$mainMod, SPACE, exec, $menu";
-    lockScreen = "$mainMod, L, exec, hyprlock";
+    lockScreen = "$mainMod, X, exec, hyprlock";
     brightnessUp = ",XF86MonBrightnessUp, exec, brightnessctl -q s +10%";
     brightnessDown = ",XF86MonBrightnessDown, exec, brightnessctl -q s 10%-";
     volumeUp = ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+";
@@ -224,8 +224,7 @@ in
         "$mainMod, S, exec, foot"
         "$mainMod, E, exec, nautilus"
         "$mainMod CTRL SHIFT, B, exec, $browser -p Work_Admin"
-        "$mainMod, P, exec, 1password"
-        "$mainMod SHIFT, P, exec, 1password --quick-access"
+        "$mainMod, P, exec, proton-pass"
         "$mainMod, D, exec, discord"
         "$mainMod, period, exec, emote"
 
@@ -353,7 +352,7 @@ in
       exec-once = hypridle
 
       # Applications
-      exec-once = 1password --silent
+      exec-once = proton-pass
       exec-once = corectrl
     ''
     + lib.optionalString hasNoctalia ''

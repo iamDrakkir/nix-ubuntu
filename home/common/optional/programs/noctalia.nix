@@ -45,9 +45,9 @@ let
     };
 
     lockScreen = {
-      hyprland = "$mainMod, L, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "lockScreen lock")}";
+      hyprland = "$mainMod, X, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "lockScreen lock")}";
       niri = {
-        key = "Mod+L";
+        key = "Mod+X";
         action = noctaliaIPC "lockScreen lock";
       };
     };
