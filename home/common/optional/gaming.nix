@@ -10,6 +10,7 @@
     steam
     lutris
     gamemode
+    wowup-cf
   ];
 
   programs.mangohud = {

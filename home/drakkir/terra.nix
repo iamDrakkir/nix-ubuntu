@@ -12,7 +12,7 @@
 
     # Desktop environments
     ../common/optional/desktops/gnome
-    ../common/optional/desktops/hyprland
+    #../common/optional/desktops/hyprland
     ../common/optional/desktops/niri
 
     # Features
@@ -23,7 +23,9 @@
     # System
     ../common/optional/flatpak.nix
     ../common/optional/sessions.nix
-    ../common/optional/programs
+    #../common/optional/programs
+    ../common/optional/programs/zen-browser.nix
+    ../common/optional/programs/noctalia.nix
   ];
 
   # Symlink .face file for user avatar

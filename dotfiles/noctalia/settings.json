@@ -105,16 +105,18 @@
             ],
             "right": [
                 {
-                    "icon": "rocket",
-                    "id": "Launcher",
-                    "usePrimaryColor": false
-                },
-                {
                     "defaultSettings": {
+                        "activeColor": "primary",
                         "hideInactive": false,
+                        "inactiveColor": "none",
                         "removeMargins": false
                     },
                     "id": "plugin:privacy-indicator"
+                },
+                {
+                    "icon": "rocket",
+                    "id": "Launcher",
+                    "usePrimaryColor": false
                 },
                 {
                     "deviceNativePath": "",
@@ -561,13 +563,13 @@
         "transitionEdgeSmoothness": 0.05,
         "transitionType": "random",
         "useSolidColor": false,
-        "useWallhaven": false,
+        "useWallhaven": true,
         "viewMode": "single",
         "wallhavenApiKey": "",
-        "wallhavenCategories": "111",
+        "wallhavenCategories": "100",
         "wallhavenOrder": "desc",
         "wallhavenPurity": "100",
-        "wallhavenQuery": "",
+        "wallhavenQuery": "abstract forest",
         "wallhavenRatios": "",
         "wallhavenResolutionHeight": "",
         "wallhavenResolutionMode": "atleast",
