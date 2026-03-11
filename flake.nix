@@ -46,6 +46,13 @@
       url = "github:AvengeMedia/DankMaterialShell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # PAM shim for non-NixOS systems
+    # Using 'next' branch for full libpam.so.0 API coverage
+    pam-shim = {
+      url = "github:Cu3PO42/pam_shim/next";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs =
@@ -123,6 +130,9 @@
 
           modules = [
             ./home/${username}/${hostname}.nix
+
+            # PAM shim module for non-NixOS authentication support
+            inputs.pam-shim.homeModules.default
 
             # Include system-manager CLI in user environment
             { home.packages = [ system-manager.packages.${system}.default ]; }

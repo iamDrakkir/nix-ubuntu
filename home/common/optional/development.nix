@@ -4,7 +4,7 @@
   home.packages = with pkgs; [
     # Node.js
     nodejs_24
-    node2nix
+    # node2nix # TODO: broken on current nixpkgs-unstable (missing npm in build)
 
     # Python
     uv

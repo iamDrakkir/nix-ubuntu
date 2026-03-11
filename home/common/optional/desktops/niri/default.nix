@@ -22,7 +22,7 @@ in
   imports = [ inputs.niri.homeModules.niri ];
 
   home.packages = with pkgs; [
-    niri
+    # niri
     # Wayland utilities for Niri
     grim # Screenshot tool
     slurp # Screen area selector
@@ -30,18 +30,94 @@ in
     wl-clipboard-x11 # X11 compatibility
     satty
     xwayland-satellite
+    xtrayhide # X11 tray to SNI bridge (hides X11 tray windows)
   ];
+
+  # Import niri systemd service from the package
+  # The niri home module doesn't automatically set this up, so we do it manually
+  # Note: This service is started by niri-session, not automatically
+  systemd.user.services.niri = {
+    Unit = {
+      Description = "A scrollable-tiling Wayland compositor";
+      BindsTo = "graphical-session.target";
+      Before = "graphical-session.target";
+      Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+      After = "graphical-session-pre.target";
+    };
+    Service = {
+      Slice = "session.slice";
+      Type = "notify";
+      ExecStart = "${config.programs.niri.package}/bin/niri --session";
+    };
+    Install = {
+      # Don't auto-start - niri-session handles starting this service
+      WantedBy = lib.mkForce [ ];
+    };
+  };
+
+  systemd.user.targets.niri-shutdown = {
+    Unit.Description = "niri shutdown target";
+  };
+
+  # X11 System Tray to StatusNotifierItem bridge
+  # xtrayhide captures X11 tray icons, hides them, and exposes them as SNI
+  # This prevents the black container window issue with Wine/Battle.net
+  systemd.user.services.xtrayhide = {
+    Unit = {
+      Description = "X11 System Tray to StatusNotifierItem bridge (with hidden windows)";
+      After = [ "graphical-session.target" ];
+      PartOf = [ "graphical-session.target" ];
+      ConditionEnvironment = "WAYLAND_DISPLAY";
+    };
+    Service = {
+      Type = "simple";
+      ExecStart = "${pkgs.xtrayhide}/bin/xtrayhide";
+      Restart = "on-failure";
+      RestartSec = 3;
+    };
+    Install = {
+      WantedBy = [ "graphical-session.target" ];
+    };
+  };
 
   # Configure Niri window manager
   programs.niri = {
+    package = pkgs.niri;
+    enable = true;
     settings = {
       # Spawn applications at startup
       spawn-at-startup =
         [
           { command = [ "corectrl" ]; }
-          { command = [ "proton-pass" ]; }
+          # { command = [ "proton-pass" ]; } # can not start minimized.
         ]
         ++ lib.optionals noctaliaEnabled [ { command = [ "noctalia-shell" ]; } ];
+
+      # Output configuration
+      outputs = {
+        "DP-1" = {
+          mode = {
+            width = 1920;
+            height = 1080;
+            refresh = 119.982;
+          };
+          position = {
+            x = 0;
+            y = 0;
+          };
+        };
+        "DP-2" = {
+          mode = {
+            width = 2560;
+            height = 1440;
+            refresh = 143.998;
+          };
+          position = {
+            x = 1920;
+            y = 0;
+          };
+        };
+      };
 
       # Input configuration
       input = {
@@ -308,7 +384,7 @@ in
       prefer-no-csd = true;
 
       # Screenshot path
-      screenshot-path = "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png";
+      screenshot-path = "~/Pictures/Screenshots/Screenshot_%Y-%m-%d %H-%M-%S.png";
 
       # Animations
       animations = {

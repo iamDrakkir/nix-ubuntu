@@ -23,6 +23,7 @@
     # System
     ../common/optional/flatpak.nix
     ../common/optional/sessions.nix
+    ../common/optional/pam-shim.nix
     ../common/optional/programs
   ];
 
