@@ -59,7 +59,7 @@ dotfiles/                # Application dotfiles (symlinked to ~/.config)
 just home  # Auto-detects current user and hostname
 ```
 
-The `just` commands automatically detect the current `$USER` and hostname, so they work seamlessly regardless of which user you're logged in as.
+The `just` commands automatically detect the current hostname and derive the flake user from the login name. Domain-qualified usernames such as `user@example.com` are normalized to `user` for flake selection.
 
 ## Installation
 
@@ -112,7 +112,7 @@ just clean-all     # Full cleanup (careful!)
 
 ```
 
-The `just` commands automatically detect your hostname and username, so you don't need to specify them manually.
+The `just` commands automatically detect your hostname and derive the flake user from your login name, so you don't need to specify them manually.
 
 ### Shell Aliases
 

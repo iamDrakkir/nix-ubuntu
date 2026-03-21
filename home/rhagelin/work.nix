@@ -8,17 +8,21 @@
   imports = [
     ../common/core
     ./common/git.nix
+    ./common/ssh.nix
 
-    # Desktop environment (only GNOME for work)
+    # Desktop environment
     ../common/optional/desktops/gnome
+    ../common/optional/desktops/niri
 
     # Features
     ../common/optional/development.nix
-    ../common/optional/tools
+    ../common/optional/tools/proton.nix
+    ../common/optional/tools/vscode.nix
+    ../common/optional/programs/noctalia.nix
+    ../common/optional/programs/zen-browser.nix
 
     # System
-    ../common/optional/flatpak.nix
     ../common/optional/sessions.nix
-    ../common/optional/programs
+    #../common/optional/programs
   ];
 }

@@ -3,8 +3,8 @@
 {
   imports = [
     ../common/core
-    ../common/optional/auto-cpufreq.nix
-    ../common/optional/apparmor.nix
+    #../common/optional/auto-cpufreq.nix
+    #../common/optional/apparmor.nix
     ../common/users/rhagelin
   ];
 

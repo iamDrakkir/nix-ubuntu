@@ -1,20 +1,26 @@
 # Nix Configuration Justfile
 
+config-user := `id -un | sed 's/@.*//'`
+
+# Map real hostnames to flake config names
+# Add new entries as: *'<real-hostname>') echo '<config-name>' ;;
+config-host := `case "$(hostname)" in *'CTEKLIN'*) echo 'work' ;; *) hostname ;; esac`
+
 default:
   @just --list
 
 [group('build')]
 home *ARGS:
-  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}} {{ARGS}}
+  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} {{ARGS}}
 
 [group('build')]
 home-trace *ARGS:
-  home-manager switch --flake ~/.config/nix#{{env_var('USER')}}@{{`hostname`}} --show-trace {{ARGS}}
+  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} --show-trace {{ARGS}}
 
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  system-manager switch --sudo --flake ~/.config/nix#{{`hostname`}}
+  system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
 
 # Full rebuild (both home and system)
 [group('build')]
@@ -39,7 +45,9 @@ update-rebuild: update rebuild
 info:
   @echo "User: {{env_var('USER')}}"
   @echo "Hostname: {{`hostname`}}"
-  @echo "Config: ~/.config/nix#{{env_var('USER')}}@{{`hostname`}}"
+  @echo "Config Host: {{config-host}}"
+  @echo "Config User: {{config-user}}"
+  @echo "Config: ~/.config/nix#{{config-user}}@{{config-host}}"
 
 [group('cleanup')]
 clean-home:

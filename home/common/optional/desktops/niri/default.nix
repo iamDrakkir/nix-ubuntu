@@ -95,6 +95,18 @@ in
 
       # Output configuration
       outputs = {
+        "eDP-1" = {
+          mode = {
+            width = 1920;
+            height = 1080;
+            refresh = 60.00;
+          };
+          scale = 1.0;
+          position = {
+            x = 0;
+            y = 0;
+          };
+        };
         "DP-1" = {
           mode = {
             width = 1920;
@@ -140,6 +152,7 @@ in
       layout = {
         gaps = 16;
         center-focused-column = "never";
+        always-center-single-column = true;
         default-column-width = {
           proportion = 0.5;
         };
@@ -377,7 +390,7 @@ in
 
       # Hotkey overlay
       hotkey-overlay = {
-        skip-at-startup = false;
+        skip-at-startup = true;
       };
 
       # Prefer no CSD (client-side decorations)

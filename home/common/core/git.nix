@@ -122,6 +122,7 @@
       # URL shortcuts
       "url \"git@github.com:\"".insteadOf = "gh:";
       "url \"git@github.com:iamDrakkir\"".insteadOf = "drakkir:";
+      "url \"git@ssh.dev.azure.com:v3/CTEKSwedenAB/CTEK/\"".insteadOf = "ctek:";
     };
   };
 

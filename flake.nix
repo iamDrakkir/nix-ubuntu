@@ -107,12 +107,16 @@
           ];
         };
 
-      # Helper function to create home-manager configs for each user@host
+      # Helper function to create home-manager configs for each user@host.
+      # configUser selects the repo path/flake attribute, while username and
+      # homeDirectory can be overridden for domain-backed logins.
       mkHomeConfig =
-        username: hostname:
-        let
-          homeDirectory = "/home/${username}";
-        in
+        {
+          configUser,
+          hostname,
+          username ? configUser,
+          homeDirectory ? "/home/${username}",
+        }:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
 
@@ -122,6 +126,7 @@
               outputs
               system
               username
+              configUser
               hostname
               homeDirectory
               lib
@@ -129,7 +134,7 @@
           };
 
           modules = [
-            ./home/${username}/${hostname}.nix
+            ./home/${configUser}/${hostname}.nix
 
             # PAM shim module for non-NixOS authentication support
             inputs.pam-shim.homeModules.default
@@ -149,9 +154,20 @@
       };
 
       homeConfigurations = {
-        "drakkir@terra" = mkHomeConfig "drakkir" "terra";
-        "drakkir@bigbox" = mkHomeConfig "drakkir" "bigbox";
-        "rhagelin@work" = mkHomeConfig "rhagelin" "work";
+        "drakkir@terra" = mkHomeConfig {
+          configUser = "drakkir";
+          hostname = "terra";
+        };
+        "drakkir@bigbox" = mkHomeConfig {
+          configUser = "drakkir";
+          hostname = "bigbox";
+        };
+        "rhagelin@work" = mkHomeConfig {
+          configUser = "rhagelin";
+          hostname = "work";
+          username = "rhagelin@creatorctek.local";
+          homeDirectory = "/home/rhagelin.creatorctek.local";
+        };
       };
     };
 }

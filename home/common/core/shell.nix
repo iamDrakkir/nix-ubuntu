@@ -46,6 +46,8 @@
     gs = "git status --short";
     gu = "git pull";
 
+    pre = "uvx --with pre-commit-uv pre-commit run --all-files";
+
     hms = "home-manager switch --flake ~/.config/nix#\$USER@(hostname)";
     syss = "system-manager switch --sudo --flake ~/.config/nix#(hostname)";
     nix-rebuild = "home-manager switch --flake ~/.config/nix#\$USER@(hostname) && system-manager switch --sudo --flake ~/.config/nix#(hostname)";
