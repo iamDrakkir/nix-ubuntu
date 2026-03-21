@@ -6,7 +6,6 @@ result-*
 .gcroots
 
 # Nix shell environment
-shell.nix
 .envrc
 .direnv/
 
