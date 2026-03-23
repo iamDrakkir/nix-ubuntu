@@ -20,8 +20,15 @@
     };
 
     zen-browser = {
-      # url = "github:0xc000022070/zen-browser-flake"; # TODO: issue with no sound
-      url = "github:Gurjaka/zen-browser-nix";
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        home-manager.follows = "home-manager";
+      };
+    };
+
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -138,6 +145,9 @@
 
             # PAM shim module for non-NixOS authentication support
             inputs.pam-shim.homeModules.default
+
+            # Zen Browser Home Manager module (provides programs.zen-browser)
+            inputs.zen-browser.homeModules.beta
 
             # Include system-manager CLI in user environment
             { home.packages = [ system-manager.packages.${system}.default ]; }

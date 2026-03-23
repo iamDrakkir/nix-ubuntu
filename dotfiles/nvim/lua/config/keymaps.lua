@@ -47,10 +47,10 @@ map("n", "<leader>xl", "<cmd>lopen<cr>", { desc = "Location List" })
 map("n", "<leader>xq", "<cmd>copen<cr>", { desc = "Quickfix List" })
 map("n", "<leader>xx", "<cmd>cclose<cr><cmd>lclose<cr>", { desc = "Close Lists" })
 -- Diagnostic
-map('n', '[d', vim.diagnostic.goto_prev, { desc = 'Previous [D]iagnostic message' })
-map('n', ']d', vim.diagnostic.goto_next, { desc = 'Next [D]iagnostic message' })
+map('n', '[d', function() vim.diagnostic.jump({ count = -1 }) end, { desc = 'Previous [D]iagnostic message' })
+map('n', ']d', function() vim.diagnostic.jump({ count = 1 }) end, { desc = 'Next [D]iagnostic message' })
 map('n', '<leader>xe', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-map('n', '<leader>xq', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+map('n', '<leader>xd', vim.diagnostic.setloclist, { desc = 'Open diagnostic list' })
 -- windows
 map("n", "<leader>ww", "<C-W>p", { desc = "Other window" })
 map("n", "<leader>wd", "<C-W>c", { desc = "Delete window" })
@@ -64,4 +64,14 @@ map("n", "<leader><tab>]", "<cmd>tabnext<cr>", { desc = "Next Tab" })
 map("n", "<leader><tab>d", "<cmd>tabclose<cr>", { desc = "Close Tab" })
 map("n", "<leader><tab>[", "<cmd>tabprevious<cr>", { desc = "Previous Tab" })
 -- save file
-map({ "i", "v", "n", "s" }, "<C-s>", "<cmd>w<cr><esc>", { desc = "Save file" })
+map({ "n", "v", "s" }, "<C-s>", "<cmd>w<cr>", { desc = "Save file" })
+map("i", "<C-s>", "<esc><cmd>w<cr>", { desc = "Save file" })
+-- Clear search highlight
+map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight" })
+-- Buffer delete
+map("n", "<leader>bd", function() Snacks.bufdelete() end, { desc = "Delete Buffer" })
+map("n", "<leader>bD", function() Snacks.bufdelete({ force = true }) end, { desc = "Delete Buffer (force)" })
+-- Toggle inlay hints
+map("n", "<leader>uh", function()
+  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+end, { desc = "Toggle Inlay Hints" })

@@ -4,10 +4,16 @@ return {
   event = "VeryLazy",
   config = function()
     local wk = require("which-key")
+    wk.setup {
+      preset = 'helix',
+      show_help = false,
+      show_keys = false,
+    }
     wk.add({
       mode = { "n", "v" },
       { "<leader><tab>", group = "tabs" },
       { "<leader>a",     group = "ai" },
+      { "<leader>b",     group = "buffer" },
       { "<leader>c",     group = "code" },
       { "<leader>f",     group = "file/find" },
       { "<leader>g",     group = "git" },
@@ -23,10 +29,5 @@ return {
       { "g",             group = "goto" },
       { "gz",            group = "surround" },
     })
-    wk.setup {
-      preset = 'helix',
-      show_help = false,
-      show_keys = false,
-    }
   end,
 }

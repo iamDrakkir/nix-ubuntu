@@ -14,8 +14,8 @@ let
 
   # Swap browser profile shortcuts based on host
   isWorkHost = hostname == "work";
-  browserPersonalProfile = "Personal";
-  browserWorkProfile = "Work";
+  browserPersonalProfile = "personal";
+  browserWorkProfile = "work";
 in
 
 {
@@ -187,6 +187,13 @@ in
           };
           clip-to-geometry = true;
         }
+        # World of Warcraft: 1440p fullscreen
+        {
+          matches = [ { title = "^World of Warcraft$"; } ];
+          default-column-width = { fixed = 2560; };
+          default-window-height = { fixed = 1440; };
+          open-fullscreen = true;
+        }
       ];
 
       # Keybindings
@@ -224,17 +231,17 @@ in
           # Applications
           "Mod+E".action.spawn = [ "nautilus" ];
           "Mod+B".action.spawn = [
-            "zen"
+            "zen-beta"
             "-p"
             (if isWorkHost then browserWorkProfile else browserPersonalProfile)
           ];
           "Mod+Shift+B".action.spawn = [
-            "zen"
+            "zen-beta"
             "-p"
             (if isWorkHost then browserPersonalProfile else browserWorkProfile)
           ];
           "Mod+Ctrl+Shift+B".action.spawn = [
-            "zen"
+            "zen-beta"
             "-p"
             "Work_Admin"
           ];
