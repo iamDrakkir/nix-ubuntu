@@ -18,6 +18,7 @@
     ../common/optional/development.nix
     ../common/optional/tools/proton.nix
     ../common/optional/tools/vscode.nix
+    ../common/optional/pam-shim.nix
     ../common/optional/programs/noctalia.nix
     ../common/optional/programs/zen-browser.nix
 
