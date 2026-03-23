@@ -24,17 +24,17 @@ return {
 		signature = {
 			enabled = true,
 			window = {
-				border = "single",
+				border = "rounded",
 			},
 		},
 		completion = {
 			menu = {
-				border = "single",
+				border = "rounded",
 			},
 			documentation = {
 				auto_show = true,
 				auto_show_delay_ms = 500,
-				window = { border = "single" },
+				window = { border = "rounded" },
 			},
 			ghost_text = {
 				enabled = true,

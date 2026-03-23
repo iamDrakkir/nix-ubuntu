@@ -38,7 +38,9 @@ return {
 				end)
 			end
 
+			local copilot_augroup = vim.api.nvim_create_augroup("LualineCopilotStatus", { clear = true })
 			vim.api.nvim_create_autocmd("LspAttach", {
+				group = copilot_augroup,
 				callback = function(ev)
 					local client = vim.lsp.get_client_by_id(ev.data.client_id)
 					if client and client.name == "copilot" then
@@ -47,6 +49,7 @@ return {
 				end,
 			})
 			vim.api.nvim_create_autocmd("LspDetach", {
+				group = copilot_augroup,
 				callback = function(ev)
 					local client = vim.lsp.get_client_by_id(ev.data.client_id)
 					if client and client.name == "copilot" then
@@ -60,22 +63,32 @@ return {
 			end
 		end)()
 
-		local function lsp_provider()
-			local clients = vim.lsp.get_clients({ bufnr = 0 })
-			if #clients == 0 then
-				return ""
-			end
-
-			local c = {}
-			for _, client in pairs(clients) do
-				if client.name ~= "copilot" then
-					table.insert(c, client.name)
+		-- Cache LSP client names per buffer, updated on LspAttach/LspDetach/BufDelete
+		local lsp_cache = {} -- [bufnr] -> string
+		local lsp_cache_augroup = vim.api.nvim_create_augroup("LualineLspCache", { clear = true })
+		vim.api.nvim_create_autocmd({ "LspAttach", "LspDetach" }, {
+			group = lsp_cache_augroup,
+			callback = function(ev)
+				local bufnr = ev.buf
+				local clients = vim.lsp.get_clients({ bufnr = bufnr })
+				local c = {}
+				for _, client in pairs(clients) do
+					if client.name ~= "copilot" then
+						table.insert(c, client.name)
+					end
 				end
-			end
-			if #c == 0 then
-				return ""
-			end
-			return " " .. table.concat(c, " - ")
+				lsp_cache[bufnr] = #c > 0 and (" " .. table.concat(c, " - ")) or ""
+			end,
+		})
+		vim.api.nvim_create_autocmd({ "BufDelete", "BufWipeout" }, {
+			group = lsp_cache_augroup,
+			callback = function(ev)
+				lsp_cache[ev.buf] = nil
+			end,
+		})
+
+		local function lsp_provider()
+			return lsp_cache[vim.api.nvim_get_current_buf()] or ""
 		end
 
 		local function formatter()

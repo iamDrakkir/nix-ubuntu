@@ -1,11 +1,7 @@
 local function map(mode, lhs, rhs, opts)
-  local keys = require("lazy.core.handler").handlers.keys
-  -- do not create the keymap if a lazy keys handler exists
-  if not keys.active[keys.parse({ lhs, mode = mode }).id] then
-    opts = opts or {}
-    opts.silent = opts.silent ~= false
-    vim.keymap.set(mode, lhs, rhs, opts)
-  end
+	opts = opts or {}
+	opts.silent = opts.silent ~= false
+	vim.keymap.set(mode, lhs, rhs, opts)
 end
 
 -- Better window navigation
@@ -47,10 +43,14 @@ map("n", "<leader>xl", "<cmd>lopen<cr>", { desc = "Location List" })
 map("n", "<leader>xq", "<cmd>copen<cr>", { desc = "Quickfix List" })
 map("n", "<leader>xx", "<cmd>cclose<cr><cmd>lclose<cr>", { desc = "Close Lists" })
 -- Diagnostic
-map('n', '[d', function() vim.diagnostic.jump({ count = -1 }) end, { desc = 'Previous [D]iagnostic message' })
-map('n', ']d', function() vim.diagnostic.jump({ count = 1 }) end, { desc = 'Next [D]iagnostic message' })
-map('n', '<leader>xe', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-map('n', '<leader>xd', vim.diagnostic.setloclist, { desc = 'Open diagnostic list' })
+map("n", "[d", function()
+	vim.diagnostic.jump({ count = -1 })
+end, { desc = "Previous [D]iagnostic message" })
+map("n", "]d", function()
+	vim.diagnostic.jump({ count = 1 })
+end, { desc = "Next [D]iagnostic message" })
+map("n", "<leader>xe", vim.diagnostic.open_float, { desc = "Show diagnostic [E]rror messages" })
+map("n", "<leader>xd", vim.diagnostic.setloclist, { desc = "Open diagnostic list" })
 -- windows
 map("n", "<leader>ww", "<C-W>p", { desc = "Other window" })
 map("n", "<leader>wd", "<C-W>c", { desc = "Delete window" })
@@ -69,9 +69,13 @@ map("i", "<C-s>", "<esc><cmd>w<cr>", { desc = "Save file" })
 -- Clear search highlight
 map("n", "<Esc>", "<cmd>nohlsearch<cr>", { desc = "Clear search highlight" })
 -- Buffer delete
-map("n", "<leader>bd", function() Snacks.bufdelete() end, { desc = "Delete Buffer" })
-map("n", "<leader>bD", function() Snacks.bufdelete({ force = true }) end, { desc = "Delete Buffer (force)" })
--- Toggle inlay hints
+map("n", "<leader>bd", function()
+	Snacks.bufdelete()
+end, { desc = "Delete Buffer" })
+map("n", "<leader>bD", function()
+	Snacks.bufdelete({ force = true })
+end, { desc = "Delete Buffer (force)" })
+-- Toggle inlay hints (buffer-scoped to match per-buffer enable on LspAttach)
 map("n", "<leader>uh", function()
-  vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled())
+	vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = 0 }), { bufnr = 0 })
 end, { desc = "Toggle Inlay Hints" })

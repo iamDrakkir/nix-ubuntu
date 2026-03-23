@@ -1,7 +1,7 @@
 return {
 	"mason-org/mason-lspconfig.nvim",
 	cond = vim.g.vscode == nil,
-	event = "VimEnter",
+	event = { "BufReadPre", "BufNewFile" },
 	opts = {}, -- automatic_enable = true is the default
 	dependencies = {
 		{
@@ -14,6 +14,7 @@ return {
 		},
 		{ "neovim/nvim-lspconfig" },
 		{ "j-hui/fidget.nvim", opts = {} },
+		{ "b0o/schemastore.nvim" },
 		{
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
 			opts = {
@@ -34,6 +35,7 @@ return {
 					"copilot-language-server",
 					"shfmt",
 					"stylua",
+					"nixfmt",
 				},
 				auto_update = false,
 				run_on_start = true,
@@ -45,5 +47,16 @@ return {
 		{ "<leader>cl", "<cmd>LspInfo<cr>", desc = "LspInfo open" },
 		{ "<leader>cm", "<cmd>Mason<cr>", desc = "Mason open" },
 	},
-	-- opts is passed to mason-lspconfig.setup() automatically by lazy.nvim
+	config = function(_, opts)
+		-- Wire jsonls to schemastore now that the dependency is loaded
+		vim.lsp.config("jsonls", {
+			settings = {
+				json = {
+					schemas = require("schemastore").json.schemas(),
+					validate = { enable = true },
+				},
+			},
+		})
+		require("mason-lspconfig").setup(opts)
+	end,
 }

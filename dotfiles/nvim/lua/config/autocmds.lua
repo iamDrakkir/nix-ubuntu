@@ -2,7 +2,7 @@ local augroup = vim.api.nvim_create_augroup
 local autocmd = vim.api.nvim_create_autocmd
 
 -- Highlight yanked text
-local yankGroup = augroup("HighlightYank", {})
+local yankGroup = augroup("HighlightYank", { clear = true })
 autocmd("TextYankPost", {
 	group = yankGroup,
 	pattern = "*",
@@ -26,10 +26,16 @@ autocmd("BufReadPost", {
 	end,
 })
 
--- Remove trailing whitespaces
-local removeTrailingGroup = augroup("RemoveTrailing", {})
+-- Remove trailing whitespaces for filetypes not handled by conform.nvim
+-- (conform formatters already strip trailing whitespace for configured filetypes)
+local removeTrailingGroup = augroup("RemoveTrailing", { clear = true })
 local function trim_trailing_whitespaces()
 	if not vim.o.binary and vim.o.filetype ~= "diff" then
+		-- Skip if conform has a formatter for this buffer
+		local ok, conform = pcall(require, "conform")
+		if ok and #conform.list_formatters_for_buffer(0) > 0 then
+			return
+		end
 		local current_view = vim.fn.winsaveview()
 		vim.api.nvim_command([[keeppatterns %s/\s\+$//e]])
 		vim.fn.winrestview(current_view)
@@ -43,7 +49,7 @@ autocmd({ "BufWritePre" }, {
 })
 
 -- spell correction and wrap for git commits and markdown files
-local wrapSpellGroup = augroup("WrapSpell", {})
+local wrapSpellGroup = augroup("WrapSpell", { clear = true })
 autocmd("FileType", {
 	group = wrapSpellGroup,
 	pattern = { "gitcommit", "markdown" },
@@ -55,23 +61,23 @@ autocmd("FileType", {
 })
 
 -- Remove some formatoptions
+-- NOTE: removing "q" would disable `gq` manual reflow — only strip auto-comment flags
 local formatOptionsGroup = augroup("FormatOptions", { clear = true })
 autocmd("FileType", {
 	group = formatOptionsGroup,
 	pattern = "*",
-	desc = "Remove some formatoptions",
+	desc = "Remove auto-comment continuation formatoptions",
 	callback = function()
 		vim.opt_local.formatoptions:remove({
 			"c", -- No autowrap comments
-			"r", -- No commet leader on 'enter'
+			"r", -- No comment leader on 'enter'
 			"o", -- No comment leader on o/O
-			"q", -- No formatting of comments
 		})
 	end,
 })
 
 -- Close more filetypes with <q> and <esc>
-local closeWithQGroup = augroup("CloseWithQ", {})
+local closeWithQGroup = augroup("CloseWithQ", { clear = true })
 autocmd("FileType", {
 	group = closeWithQGroup,
 	pattern = {
@@ -79,18 +85,17 @@ autocmd("FileType", {
 		"help",
 		"man",
 		"lspinfo",
-		"spectre_panel",
 		"startuptime",
-		"tsplayground",
-		"PlenaryTestPopup",
 		"lazy",
 		"minifiles",
 		"lazygit",
+		"DiffviewFiles",
+		"DiffviewFileHistory",
 	},
 	desc = "Close more filetypes with <q> and <esc>",
 	callback = function(event)
 		vim.bo[event.buf].buflisted = false
-		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, silent = true })
-		vim.keymap.set("n", "<esc>", "<cmd>close<cr>", { buffer = event.buf, silent = true })
+		vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = event.buf, silent = true, desc = "Close window" })
+		vim.keymap.set("n", "<esc>", "<cmd>close<cr>", { buffer = event.buf, silent = true, desc = "Close window" })
 	end,
 })
