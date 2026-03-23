@@ -12,6 +12,10 @@
         };
       };
 
+      "github.com" = {
+        identityAgent = "/run/user/1000/proton-pass-agent";
+      };
+
       "ssh.dev.azure.com" = {
         identityFile = "~/.ssh/id_rsa";
         identitiesOnly = true;

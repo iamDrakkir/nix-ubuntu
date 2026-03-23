@@ -9,6 +9,7 @@
   imports = [
     ../common/core
     ./common/git.nix
+    ./common/ssh.nix
 
     # Desktop environments
     ../common/optional/desktops/gnome
