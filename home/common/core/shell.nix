@@ -47,16 +47,13 @@
     gu = "git pull";
 
     pre = "uvx --with pre-commit-uv pre-commit run --all-files";
-
-    hms = "home-manager switch --flake ~/.config/nix#\$USER@(hostname)";
-    syss = "system-manager switch --sudo --flake ~/.config/nix#(hostname)";
-    nix-rebuild = "home-manager switch --flake ~/.config/nix#\$USER@(hostname) && system-manager switch --sudo --flake ~/.config/nix#(hostname)";
   };
 
   home.packages = with pkgs; [
     curl
     nerd-fonts.jetbrains-mono
     just
+    nix-output-monitor
   ];
 
   programs.fastfetch = {
@@ -97,6 +94,9 @@
   programs.fish = {
     enable = true;
     interactiveShellInit = ''
+      # Enable vi mode
+      fish_vi_key_bindings
+
       # Initialize zoxide
       zoxide init fish | source
     '';

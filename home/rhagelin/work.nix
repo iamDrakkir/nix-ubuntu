@@ -21,9 +21,14 @@
     ../common/optional/pam-shim.nix
     ../common/optional/programs/noctalia.nix
     ../common/optional/programs/zen-browser.nix
+    ../common/optional/programs/teams.nix
 
     # System
     ../common/optional/sessions.nix
     #../common/optional/programs
   ];
+
+  # Symlink .face file for user avatar
+  home.file.".face".source = ../../.face;
+
 }

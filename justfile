@@ -11,16 +11,16 @@ default:
 
 [group('build')]
 home *ARGS:
-  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} {{ARGS}}
+  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} {{ARGS}} |& nom
 
 [group('build')]
 home-trace *ARGS:
-  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} --show-trace {{ARGS}}
+  home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} --show-trace {{ARGS}} |& nom
 
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
+  system-manager switch --sudo --flake ~/.config/nix#{{config-host}} |& nom
 
 # Full rebuild (both home and system)
 [group('build')]
