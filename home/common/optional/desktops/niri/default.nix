@@ -237,7 +237,7 @@ in
           "Mod+Shift+Slash".action.show-hotkey-overlay = [ ];
 
           # Terminal
-          "Mod+Return".action.spawn = [ "ghostty" ];
+          "Mod+Return".action.spawn = [ "env" "GTK_IM_MODULE=simple" "ghostty" ];
           "Mod+Shift+Return".action.spawn = [ "kitty" ];
 
           # Applications

@@ -132,6 +132,7 @@ in
       env = [
         "QT_QPA_PLATFORM,wayland"
         "XDG_CURRENT_DESKTOP,Hyprland"
+        "GTK_IM_MODULE,simple" # Fix dead keys on GTK 4.20+ / Wayland
       ];
 
       # Monitor configuration

@@ -1,4 +1,4 @@
-{ config, ... }:
+{ config, pkgs, ... }:
 
 {
   programs.ghostty = {
@@ -27,6 +27,24 @@
 
       # Default shell
       command = "fish";
+    };
+  };
+
+  # Override desktop entry to fix dead keys on GTK 4.20+ / Wayland
+  # See: https://github.com/ghostty-org/ghostty/discussions/8899
+  xdg.desktopEntries.com-mitchellh-ghostty = {
+    name = "Ghostty";
+    comment = "A fast, feature-rich, and cross-platform terminal emulator";
+    exec = "env GTK_IM_MODULE=simple ghostty %U";
+    icon = "com.mitchellh.ghostty";
+    type = "Application";
+    categories = [
+      "System"
+      "TerminalEmulator"
+    ];
+    startupNotify = true;
+    settings = {
+      Keywords = "terminal;tty;pty;";
     };
   };
 

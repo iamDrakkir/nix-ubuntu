@@ -122,7 +122,7 @@ in
 
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
       binding = "<Super>Return";
-      command = "ghostty";
+      command = "env GTK_IM_MODULE=simple ghostty";
       name = "Open Ghostty Terminal";
     };
 
