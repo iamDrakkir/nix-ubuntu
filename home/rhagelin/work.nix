@@ -1,4 +1,5 @@
 {
+  pkgs,
   username,
   homeDirectory,
   ...
@@ -26,6 +27,12 @@
     # System
     ../common/optional/sessions.nix
     #../common/optional/programs
+  ];
+
+  # PKCS#11 / Smartcard support
+  home.packages = with pkgs; [
+    opensc # OpenSC PKCS#11 provider (opensc-pkcs11)
+    libp11 # OpenSSL PKCS#11 engine (libengine-pkcs11-openssl)
   ];
 
   # Symlink .face file for user avatar
