@@ -12,8 +12,6 @@
 
   services.proton-pass-agent = {
     enable = true;
-    enableFishIntegration = true;
-    enableZshIntegration = true;
   };
 
   # The agent fails on boot if not logged in yet; keep retrying until it succeeds
