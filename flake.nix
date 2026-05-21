@@ -88,7 +88,7 @@
       # Custom packages overlay (empty for now, add custom packages to ./pkgs/default.nix)
       customPackages = final: prev: (import ./pkgs { pkgs = prev; });
 
-      # Import overlays (empty for now, add custom overlays to ./overlays/default.nix)
+      # Import overlays
       overlays = [ customPackages ];
 
       pkgs = import nixpkgs {
@@ -101,7 +101,7 @@
       mkSystemConfig =
         hostname:
         system-manager.lib.makeSystemConfig {
-          extraSpecialArgs = {
+          specialArgs = {
             inherit
               inputs
               outputs
@@ -175,6 +175,7 @@
         "rhagelin@work" = mkHomeConfig {
           configUser = "rhagelin";
           hostname = "work";
+          # username = "rickard.hagelin@ctek.com";
           username = "rhagelin@creatorctek.local";
           homeDirectory = "/home/rhagelin.creatorctek.local";
         };

@@ -50,7 +50,8 @@
   };
 
   home.packages = with pkgs; [
-    curl
+    curl.dev
+    systemd.dev
     nerd-fonts.jetbrains-mono
     just
     nix-output-monitor

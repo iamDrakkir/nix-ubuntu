@@ -9,7 +9,11 @@ let
     force = true;
     engines = {
       "Nix Packages" = {
-        urls = [{ template = "https://search.nixos.org/packages?channel=25.11&query={searchTerms}"; }];
+        urls = [
+          {
+            template = "https://search.nixos.org/packages?channel=unstable&include_home_manager_options=1&include_modular_service_options=1&include_nixos_options=1&query={searchTerms}";
+          }
+        ];
         icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
         definedAliases = [ "n" ];
       };
@@ -53,17 +57,20 @@ in
     profiles = {
       personal = {
         id = 0;
-        isDefault = true;
+        isDefault = false;
         settings = commonSettings;
         search = commonSearch;
-        extensions.packages = commonExtensions ++ (with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
-          augmented-steam
-          facebook-container
-        ]);
+        extensions.packages =
+          commonExtensions
+          ++ (with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
+            augmented-steam
+            facebook-container
+          ]);
       };
 
       work = {
         id = 1;
+        isDefault = true;
         settings = commonSettings;
         search = commonSearch;
         extensions.packages = commonExtensions;

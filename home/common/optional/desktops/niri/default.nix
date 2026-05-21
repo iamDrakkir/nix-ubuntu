@@ -53,7 +53,10 @@ in
       Description = "A scrollable-tiling Wayland compositor";
       BindsTo = "graphical-session.target";
       Before = "graphical-session.target";
-      Wants = [ "graphical-session-pre.target" "xdg-desktop-autostart.target" ];
+      Wants = [
+        "graphical-session-pre.target"
+        "xdg-desktop-autostart.target"
+      ];
       After = "graphical-session-pre.target";
     };
     Service = {
@@ -98,12 +101,11 @@ in
     enable = true;
     settings = {
       # Spawn applications at startup
-      spawn-at-startup =
-        [
-          { command = [ "corectrl" ]; }
-          # { command = [ "proton-pass" ]; } # can not start minimized.
-        ]
-        ++ lib.optionals noctaliaEnabled [ noctaliaSpawn ];
+      spawn-at-startup = [
+        { command = [ "corectrl" ]; }
+        # { command = [ "proton-pass" ]; } # can not start minimized.
+      ]
+      ++ lib.optionals noctaliaEnabled [ noctaliaSpawn ];
 
       # Output configuration
       outputs = {
@@ -156,7 +158,7 @@ in
         };
         focus-follows-mouse = {
           enable = true;
-          max-scroll-amount = "90%";
+          max-scroll-amount = "10%";
         };
       };
 
@@ -202,8 +204,12 @@ in
         # World of Warcraft: 1440p fullscreen
         {
           matches = [ { title = "^World of Warcraft$"; } ];
-          default-column-width = { fixed = 2560; };
-          default-window-height = { fixed = 1440; };
+          default-column-width = {
+            fixed = 2560;
+          };
+          default-window-height = {
+            fixed = 1440;
+          };
           open-fullscreen = true;
         }
       ];
@@ -237,7 +243,11 @@ in
           "Mod+Shift+Slash".action.show-hotkey-overlay = [ ];
 
           # Terminal
-          "Mod+Return".action.spawn = [ "env" "GTK_IM_MODULE=simple" "ghostty" ];
+          "Mod+Return".action.spawn = [
+            "env"
+            "GTK_IM_MODULE=simple"
+            "ghostty"
+          ];
           "Mod+Shift+Return".action.spawn = [ "kitty" ];
 
           # Applications

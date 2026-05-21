@@ -142,6 +142,7 @@
                 {
                     "defaultSettings": {
                         "activeColor": "primary",
+                        "camFilterRegex": "",
                         "enableToast": true,
                         "hideInactive": false,
                         "iconSpacing": 4,
@@ -730,7 +731,7 @@
         "wallhavenCategories": "100",
         "wallhavenOrder": "desc",
         "wallhavenPurity": "100",
-        "wallhavenQuery": "island",
+        "wallhavenQuery": "forest abstract",
         "wallhavenRatios": "",
         "wallhavenResolutionHeight": "",
         "wallhavenResolutionMode": "atleast",

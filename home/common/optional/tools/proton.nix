@@ -7,7 +7,7 @@
 {
   home.packages = with pkgs; [
     proton-pass
-    protonvpn-gui
+    proton-vpn
   ];
 
   services.proton-pass-agent = {
