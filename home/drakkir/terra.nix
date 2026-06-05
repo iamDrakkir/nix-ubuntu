@@ -13,7 +13,7 @@
 
     # Desktop environments
     ../common/optional/desktops/gnome
-    #../common/optional/desktops/hyprland
+    ../common/optional/desktops/hyprland
     ../common/optional/desktops/niri
 
     # Features

@@ -129,9 +129,9 @@ if vim.g.vscode == nil then
 	})
 
 	-- Rounded border on hover (signatureHelp is handled by blink.cmp's own window)
-	vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
-		border = "rounded",
-	})
+	vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
+		return vim.lsp.handlers.hover(err, result, ctx, vim.tbl_deep_extend("force", config or {}, { border = "rounded" }))
+	end
 
 	-- Compat shims: LspInfo/LspRestart/LspLog were removed in nvim-lspconfig for 0.12
 	vim.api.nvim_create_user_command("LspInfo", "checkhealth vim.lsp", {

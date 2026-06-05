@@ -1,8 +1,10 @@
 {
   config,
   hostname,
+  inputs,
   lib,
   pkgs,
+  system,
   homeDirectory,
   ...
 }:
@@ -91,7 +93,7 @@ in
 
   wayland.windowManager.hyprland = {
     enable = true;
-    package = pkgs.hyprland;
+    package = inputs.hyprland.packages.${system}.hyprland;
 
     settings = {
       # Variables
@@ -197,7 +199,6 @@ in
 
       # Layout
       dwindle = {
-        pseudotile = true;
         preserve_split = true;
       };
 
