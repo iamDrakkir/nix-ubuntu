@@ -1,5 +1,5 @@
 {
-  description = "Nix configuration for Ubuntu with system-manager and home-manager";
+  description = "Nix configuration for Ubuntu/NixOS with system-manager and home-manager";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -54,6 +54,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # PAM shim for non-NixOS systems
     # Using 'next' branch for full libpam.so.0 API coverage
     pam-shim = {
@@ -74,6 +79,7 @@
     let
       inherit (self) outputs;
       system = "x86_64-linux";
+      systemAarch64 = "aarch64-linux";
 
       # ========== Extend lib with lib.custom and lib.hm ==========
       lib = nixpkgs.lib.extend (
@@ -91,11 +97,16 @@
       # Import overlays
       overlays = [ customPackages ];
 
-      pkgs = import nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays = overlays;
-      };
+      # Helper to build a pkgs instance for any system
+      mkPkgs =
+        sys:
+        import nixpkgs {
+          system = sys;
+          config.allowUnfree = true;
+          overlays = overlays;
+        };
+
+      pkgs = mkPkgs system;
 
       # Helper function to create system configs for each host
       mkSystemConfig =
@@ -149,8 +160,67 @@
             # Zen Browser Home Manager module (provides programs.zen-browser)
             inputs.zen-browser.homeModules.beta
 
+            # nix-index-database (provides programs.nix-index-database.comma)
+            inputs.nix-index-database.homeModules.nix-index
+
             # Include system-manager CLI in user environment
             { home.packages = [ system-manager.packages.${system}.default ]; }
+          ];
+        };
+
+      # Helper function to create NixOS configurations with home-manager as a module.
+      # Used for hosts that actually run NixOS (e.g. Raspberry Pi).
+      mkNixosConfig =
+        {
+          hostname,
+          sys ? systemAarch64,
+          configUser ? "drakkir",
+          username ? configUser,
+          homeDirectory ? "/home/${username}",
+        }:
+        nixpkgs.lib.nixosSystem {
+          system = sys;
+          specialArgs = {
+            inherit
+              inputs
+              outputs
+              lib
+              sys
+              hostname
+              configUser
+              username
+              homeDirectory
+              ;
+          };
+          modules = [
+            ./hosts/${hostname}
+
+            # Integrate home-manager as a NixOS module
+            home-manager.nixosModules.home-manager
+            {
+              home-manager = {
+                useGlobalPkgs = true;
+                useUserPackages = true;
+                extraSpecialArgs = {
+                  inherit
+                    inputs
+                    outputs
+                    lib
+                    hostname
+                    configUser
+                    username
+                    homeDirectory
+                    ;
+                  system = sys;
+                };
+                users.${username} = {
+                  imports = [
+                    ./home/${configUser}/${hostname}.nix
+                    inputs.nix-index-database.homeModules.nix-index
+                  ];
+                };
+              };
+            }
           ];
         };
     in
@@ -178,6 +248,13 @@
           # username = "rickard.hagelin@ctek.com";
           username = "rhagelin@creatorctek.local";
           homeDirectory = "/home/rhagelin.creatorctek.local";
+        };
+      };
+
+      nixosConfigurations = {
+        pi = mkNixosConfig {
+          hostname = "pi";
+          configUser = "drakkir";
         };
       };
     };

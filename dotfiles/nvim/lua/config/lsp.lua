@@ -111,4 +111,41 @@ if vim.g.vscode == nil then
 			end
 		end,
 	})
+
+	-- Built-in LSP progress (replaces fidget.nvim)
+	vim.api.nvim_create_autocmd("LspProgress", {
+		group = vim.api.nvim_create_augroup("LspProgressEcho", { clear = true }),
+		callback = function(ev)
+			local value = ev.data.params.value
+			vim.api.nvim_echo({ { value.message or "done" } }, false, {
+				id = "lsp." .. ev.data.client_id,
+				kind = "progress",
+				source = "vim.lsp",
+				title = value.title,
+				status = value.kind ~= "end" and "running" or "success",
+				percent = value.percentage,
+			})
+		end,
+	})
+
+	-- Rounded border on hover (signatureHelp is handled by blink.cmp's own window)
+	vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, {
+		border = "rounded",
+	})
+
+	-- Compat shims: LspInfo/LspRestart/LspLog were removed in nvim-lspconfig for 0.12
+	vim.api.nvim_create_user_command("LspInfo", "checkhealth vim.lsp", {
+		desc = "Show LSP info (via checkhealth)",
+	})
+
+	vim.api.nvim_create_user_command("LspRestart", "lsp restart", {
+		desc = "Restart LSP servers",
+	})
+
+	vim.api.nvim_create_user_command("LspLog", function(_)
+		local log_path = vim.fs.joinpath(vim.fn.stdpath("state"), "lsp.log")
+		vim.cmd("edit " .. log_path)
+	end, {
+		desc = "Open LSP log file",
+	})
 end

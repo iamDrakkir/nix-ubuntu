@@ -13,7 +13,6 @@ return {
 			},
 		},
 		{ "neovim/nvim-lspconfig" },
-		{ "j-hui/fidget.nvim", opts = {} },
 		{ "b0o/schemastore.nvim" },
 		{
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
@@ -42,7 +41,7 @@ return {
 			},
 		},
 	},
-	cmd = { "LspInfo", "LspInstall", "LspUninstall" },
+	cmd = { "LspInstall", "LspUninstall" },
 	keys = {
 		{ "<leader>cl", "<cmd>LspInfo<cr>", desc = "LspInfo open" },
 		{ "<leader>cm", "<cmd>Mason<cr>", desc = "Mason open" },

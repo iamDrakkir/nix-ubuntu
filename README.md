@@ -1,54 +1,59 @@
 # Nix Configuration
 
-Structured Nix configuration for managing system and user environments on Ubuntu using system-manager and home-manager.
+Structured Nix configuration for managing system and user environments across multiple machines. Ubuntu/non-NixOS hosts use system-manager + home-manager; NixOS hosts (e.g. Raspberry Pi) use a full NixOS configuration with home-manager as a module.
 
-Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-config) 
+Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-config)
+
+## Hosts
+
+| Host | OS | Architecture | Role |
+|------|----|--------------|------|
+| `terra` | Ubuntu | x86_64 | Desktop — GNOME + Niri |
+| `bigbox` | Ubuntu | x86_64 | Desktop — GNOME + Hyprland + Niri |
+| `work` | Ubuntu | x86_64 | Work laptop — GNOME |
+| `pi` | NixOS | aarch64 | Raspberry Pi 4/5 — headless server |
 
 ## Features
 
-- **Multi-host Support**: Separate configurations for terra, bigbox, and work with auto-detection
-- **Multiple Desktop Environments**: GNOME (with Pop Shell), Hyprland, and Niri
-- **Toggleable Features**: Enable/disable desktops and features via configuration flags
+- **Multi-host Support**: Separate configurations per host with auto-detection via `just`
+- **Dual-mode system management**: system-manager on Ubuntu; native NixOS on the Pi
+- **Multiple Desktop Environments**: GNOME, Hyprland, and Niri (desktop hosts only)
 - **Declarative Dotfiles**: Managed via out-of-store symlinks to in-repo dotfiles
 - **Core vs Optional Philosophy**: Strict separation between always-present and optional configs
 
 ## Structure
 
-Following EmergentMind's organizational principles with adaptations for system-manager:
-
 ```
-hosts/                   # System-level configurations (system-manager)
+hosts/                   # System-level configurations
 ├── common/
-│   ├── core/            # Always present on ALL hosts
-│   ├── optional/        # Optional system configs
-│   └── users/           # User definitions (EmergentMind pattern)
-│       └── drakkir/     # drakkir user definition
-│           ├── default.nix  # User creation, shell, groups
-│           └── keys/        # SSH public keys
-├── terra/               # Host-specific configs
-└── work/
+│   ├── core/            # Always present on ALL system-manager hosts
+│   ├── optional/        # Optional system configs (flatpak, corectrl)
+│   └── users/           # User definitions for system-manager hosts
+│       └── drakkir/
+├── terra/               # Ubuntu desktop
+├── bigbox/              # Ubuntu desktop
+├── work/                # Ubuntu work laptop
+└── pi/                  # NixOS Raspberry Pi 4/5 (aarch64)
 
 home/                    # Home-manager configurations
 ├── common/
-│   ├── core/            # Always present on ALL users
+│   ├── core/            # Always present on ALL users/hosts
 │   └── optional/        # Optional user configs
-│       ├── desktops/    # Desktop environment configs
-│       └── programs/    # Program-specific configs
-├── drakkir/             # User settings per machine
-│   ├── terra.nix        # Host-specific user config for terra
-│   ├── bigbox.nix       # Host-specific user config for bigbox
-│   └── work.nix         # Host-specific user config for work
-
-modules/                 # Custom modules
-├── home-manager/        # Home-manager specific modules
-│   └── options.nix      # Feature toggle options
-├── system/              # System-manager specific modules (legacy)
-└── common/              # Shared modules (future)
+│       ├── desktops/    # Desktop environment configs (gnome, hyprland, niri)
+│       ├── programs/    # Program-specific configs
+│       └── tools/       # Tool configs (1password, vscode, etc.)
+├── drakkir/
+│   ├── terra.nix        # Desktops + dev + gaming
+│   ├── bigbox.nix       # Desktops + dev + gaming + all programs
+│   ├── pi.nix           # Minimal headless: shell + dev tools
+│   └── common/          # Shared identity (git, ssh)
+└── rhagelin/
+    ├── work.nix
+    └── common/
 
 lib/                     # Custom library functions
-overlays/                # Custom modifications to upstream packages 
+overlays/                # Package overrides
 pkgs/                    # Custom packages
-scripts/                 # Helper scripts
 dotfiles/                # Application dotfiles (symlinked to ~/.config)
 ```
 
@@ -63,7 +68,7 @@ The `just` commands automatically detect the current hostname and derive the fla
 
 ## Installation
 
-### Initial Setup
+### Ubuntu / non-NixOS hosts (terra, bigbox, work)
 
 ```bash
 # Install Nix with Determinate Systems installer
@@ -76,21 +81,37 @@ nix-shell -p git
 git clone https://github.com/iamDrakkir/nix-config.git ~/.config/nix
 
 # Initial system setup (installs system packages and services)
-cd ~/.config/nix
-nix run 'github:numtide/system-manager' -- switch --sudo --flake .#terra
+nix run 'github:numtide/system-manager' -- switch --sudo --flake ~/.config/nix#terra
 
 # Setup home environment for your host
 nix shell github:nix-community/home-manager
 home-manager switch --flake ~/.config/nix#drakkir@terra
 
 # After this, 'just' commands and shell aliases will be available!
-# You can now use: just home, just system, hm-switch, etc.
 
 # Setup flatpak remote
 sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
 # Configure AppArmor for bubblewrap (required for some sandboxed apps)
 sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+```
+
+### NixOS hosts (pi)
+
+The Pi uses a full NixOS configuration. Build the SD card image from any x86_64 machine with cross-compilation (or natively on another aarch64 machine):
+
+```bash
+# Build the SD card image
+nix build .#nixosConfigurations.pi.config.system.build.sdImage
+
+# Flash to SD card (replace /dev/sdX with your card)
+zstdcat result/sd-image/*.img.zst | sudo dd of=/dev/sdX bs=4M status=progress
+```
+
+On first boot, add your SSH public key to `hosts/pi/default.nix` under `openssh.authorizedKeys.keys` before building the image. Once the Pi is running, rebuild from the Pi itself:
+
+```bash
+just nixos  # or: sudo nixos-rebuild switch --flake ~/.config/nix#pi
 ```
 
 ## Usage
@@ -103,16 +124,16 @@ After the initial setup, you can use the included [just](https://github.com/case
 # Show all available commands
 just --list
 
-# freqeuntly used commands:
+# Frequently used commands:
 just home          # Rebuild home-manager (auto-detects user@hostname)
-just system        # Rebuild system-manager (auto-detects hostname)
-just rebuild       # Full rebuild (both home and system)
+just system        # Rebuild system-manager (Ubuntu hosts only)
+just nixos         # Rebuild NixOS (pi and other NixOS hosts)
+just rebuild       # Full rebuild — dispatches to nixos or system automatically
 just update        # Update flake inputs
 just clean-all     # Full cleanup (careful!)
-
 ```
 
-The `just` commands automatically detect your hostname and derive the flake user from your login name, so you don't need to specify them manually.
+The `just` commands automatically detect your hostname and derive the flake user from your login name, so you don't need to specify them manually. On NixOS hosts `just rebuild` runs `nixos-rebuild`; on Ubuntu hosts it runs system-manager.
 
 ### Shell Aliases
 
@@ -156,34 +177,49 @@ CoreCtrl will autostart with Hyprland and be available in the application launch
 
 ## Configuration
 
-### Enabling/Disabling Features
+### Customising a Host
 
-Edit your host-specific file (e.g., `home/drakkir/terra.nix`):
+Each host config (e.g. `home/drakkir/terra.nix`) controls which optional modules are imported. Add or remove imports to enable/disable features:
 
 ```nix
-# Enable desktop environments you want to use
-myConfig.desktop = {
-  gnome.enable = true;      # GNOME with Pop Shell
-  hyprland.enable = true;   # Hyprland compositor
-  niri.enable = true;       # Niri compositor
-};
+imports = [
+  ../common/core          # Always included
 
-# Enable optional features
-myConfig.features = {
-  gaming.enable = true;     # Steam, Lutris
-  development.enable = true; # Dev tools
-};
+  # Desktops (pick what you need)
+  ../common/optional/desktops/gnome
+  ../common/optional/desktops/hyprland
+  ../common/optional/desktops/niri
+
+  # Features
+  ../common/optional/development.nix
+  ../common/optional/gaming.nix
+
+  # Programs
+  ../common/optional/programs/zen-browser.nix
+];
 ```
 
 ### Adding a New Host
 
+#### Ubuntu / non-NixOS host
+
 1. Create system config: `hosts/newhost/default.nix`
-2. Create user config: `home/drakkir/newhost.nix`
-3. Add to `flake.nix`:
+2. Create home config: `home/drakkir/newhost.nix`
+3. Register in `flake.nix`:
    ```nix
    systemConfigs.newhost = mkSystemConfig "newhost";
-   homeConfigurations."drakkir@newhost" = mkHomeConfig "newhost";
+   homeConfigurations."drakkir@newhost" = mkHomeConfig { configUser = "drakkir"; hostname = "newhost"; };
    ```
+
+#### NixOS host
+
+1. Create system config: `hosts/newhost/default.nix`
+2. Create home config: `home/drakkir/newhost.nix`
+3. Register in `flake.nix`:
+   ```nix
+   nixosConfigurations.newhost = mkNixosConfig { hostname = "newhost"; configUser = "drakkir"; };
+   ```
+   Pass `sys = "x86_64-linux"` if it's not an aarch64 machine.
 
 ## Updates
 

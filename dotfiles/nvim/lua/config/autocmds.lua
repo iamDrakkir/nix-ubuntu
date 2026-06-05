@@ -84,7 +84,6 @@ autocmd("FileType", {
 		"qf",
 		"help",
 		"man",
-		"lspinfo",
 		"startuptime",
 		"lazy",
 		"minifiles",

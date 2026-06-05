@@ -6,6 +6,9 @@ config-user := `id -un | sed 's/@.*//'`
 # Add new entries as: *'<real-hostname>') echo '<config-name>' ;;
 config-host := `case "$(hostname)" in *'CTEKLIN'*) echo 'work' ;; *) hostname ;; esac`
 
+# Detect if this is a NixOS host
+is-nixos := `[ -f /etc/NIXOS ] && echo 'true' || echo 'false'`
+
 default:
   @just --list
 
@@ -22,9 +25,16 @@ home-trace *ARGS:
 system:
   system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
 
-# Full rebuild (both home and system)
+# Rebuild NixOS configuration (for NixOS hosts like pi)
 [group('build')]
-rebuild: system home
+nixos:
+  sudo nixos-rebuild switch --flake ~/.config/nix#{{config-host}}
+
+# Full rebuild — uses NixOS rebuild on NixOS, otherwise home + system-manager
+[group('build')]
+rebuild:
+  @if [ "{{is-nixos}}" = "true" ]; then just nixos; else just system; fi
+  just home
 
 [group('maintenance')]
 check:

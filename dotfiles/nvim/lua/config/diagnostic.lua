@@ -1,9 +1,6 @@
 vim.diagnostic.config({
 	virtual_text = false,
-	-- virtual_text = {
-	--   prefix = '●', -- Could be '●', '▎', 'x'
-	--   source = true,
-	-- }, -- handled by tiny-inline-diagnostic.nvim",
+	virtual_lines = { current_line = true },
 	update_in_insert = false,
 	severity_sort = true,
 	float = {

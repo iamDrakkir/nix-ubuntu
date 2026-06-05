@@ -84,3 +84,17 @@ vim.api.nvim_create_autocmd("FileType", {
 		})
 	end,
 })
+
+-- Enable UI2: eliminates "Press Enter" prompts; long output goes to a real buffer (g< to review)
+if vim.g.vscode == nil then
+	require("vim._core.ui2").enable({
+		enable = true,
+		msg = {
+			targets = "cmd",
+			cmd = { height = 0.5 },
+			dialog = { height = 0.5 },
+			msg = { height = 0.5, timeout = 4000 },
+			pager = { height = 0.5 },
+		},
+	})
+end
