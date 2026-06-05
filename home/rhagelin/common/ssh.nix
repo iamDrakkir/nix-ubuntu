@@ -13,7 +13,7 @@
       };
 
       "github.com" = {
-        identityAgent = "/run/user/1000/proton-pass-agent";
+        identityAgent = "/run/user/1735616652/proton-pass-agent";
       };
 
       "ssh.dev.azure.com" = {
@@ -32,6 +32,7 @@
       "192.168.17.*" = {
         identityFile = "~/.ssh/id_ed25519";
         identitiesOnly = false;
+        identityAgent = "/run/user/1735616652/gnupg/S.gpg-agent.ssh";
       };
     };
   };

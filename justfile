@@ -20,11 +20,11 @@ home-trace *ARGS:
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  system-manager switch --sudo --flake ~/.config/nix#{{config-host}} |& nom
+  system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
 
 # Full rebuild (both home and system)
 [group('build')]
-rebuild: home system
+rebuild: system home
 
 [group('maintenance')]
 check:
