@@ -35,6 +35,7 @@ in
   gtk.enable = true;
   home.packages = [ selected.package ];
   home.pointerCursor = {
+    enable = true;
     gtk.enable = true;
     hyprcursor.enable = true;
     name = selected.name;
