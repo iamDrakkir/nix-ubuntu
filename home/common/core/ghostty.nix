@@ -1,54 +1,53 @@
-{ config, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   programs.ghostty = {
     enable = true;
 
     settings = {
+      # Default shell
+      command = "fish";
+      # Behavior
+      confirm-close-surface = false;
+      # Custom shader
+      custom-shader = "shaders/cursor_warp.glsl";
       # Font configuration
       font-feature = [
         "-liga"
         "-calt"
         "-dlig"
       ];
-
       # Window decoration
       gtk-titlebar = false;
-      window-decoration = false;
-
       # Theme
       theme = "noctalia";
-
-      # Behavior
-      confirm-close-surface = false;
-
-      # Custom shader
-      custom-shader = "shaders/cursor_warp.glsl";
-
-      # Default shell
-      command = "fish";
+      window-decoration = false;
     };
   };
-
+  # Symlink shader from dotfiles repo (out-of-store, edits apply without rebuild)
+  xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [
+    "ghostty/shaders/cursor_warp.glsl"
+  ];
   # Override desktop entry to fix dead keys on GTK 4.20+ / Wayland
   # See: https://github.com/ghostty-org/ghostty/discussions/8899
   xdg.desktopEntries.com-mitchellh-ghostty = {
-    name = "Ghostty";
-    comment = "A fast, feature-rich, and cross-platform terminal emulator";
-    exec = "env GTK_IM_MODULE=simple ghostty %U";
-    icon = "com.mitchellh.ghostty";
-    type = "Application";
     categories = [
       "System"
       "TerminalEmulator"
     ];
-    startupNotify = true;
+    comment = "A fast, feature-rich, and cross-platform terminal emulator";
+    exec = "env GTK_IM_MODULE=simple ghostty %U";
+    icon = "com.mitchellh.ghostty";
+    name = "Ghostty";
     settings = {
       Keywords = "terminal;tty;pty;";
     };
+    startupNotify = true;
+    type = "Application";
   };
-
-  # Copy shader files to config directory
-  xdg.configFile."ghostty/shaders/cursor_warp.glsl".source =
-    config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/.config/nix/dotfiles/ghostty/shaders/cursor_warp.glsl";
 }

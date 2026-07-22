@@ -1,8 +1,8 @@
 {
   config,
+  homeDirectory,
   lib,
   pkgs,
-  homeDirectory,
   ...
 }:
 
@@ -11,114 +11,93 @@
     enable = true;
 
     settings = {
-      commit = {
-        # gpgSign = true;  # Uncomment to enable GPG signing
-        template = "${homeDirectory}/.config/git/template";
-        verbose = true;
-      };
-
-      core = {
-        editor = "nvim";
-        autocrlf = "input";
-        compression = 9; # Trade CPU for network
-        whitespace = "error";
-        preloadindex = true;
-      };
-
-      credential.helper = "store";
-
       advice = {
         addEmptyPathspec = false;
         pushNonFastForward = false;
         statusHints = false;
       };
-
       blame = {
         coloring = "highlightRecent";
         date = "relative";
       };
-
+      branch.sort = "-committerdate";
+      "color.branch" = {
+        current = "magenta";
+        local = "default";
+        plain = "blue";
+        remote = "yellow";
+        upstream = "green";
+      };
+      "color.decorate" = {
+        HEAD = "red";
+        branch = "blue";
+        remoteBranch = "magenta";
+        tag = "yellow";
+      };
+      "color.diff" = {
+        context = "white";
+        frag = "magenta";
+        meta = "black bold";
+        old = "red";
+        whitespace = "yellow reverse";
+      };
+      commit = {
+        # gpgSign = true;  # Uncomment to enable GPG signing
+        template = "${homeDirectory}/.config/git/template";
+        verbose = true;
+      };
+      core = {
+        autocrlf = "input";
+        compression = 9; # Trade CPU for network
+        editor = "nvim";
+        preloadindex = true;
+        whitespace = "error";
+      };
+      credential.helper = "store";
       diff = {
         context = 3;
-        renames = "copies";
         interHunkContext = 10;
+        renames = "copies";
       };
-
+      fetch.fsckObjects = true;
       init.defaultBranch = "main";
-
+      interactive.singlekey = true;
       log = {
         abbrevCommit = true;
         graphColors = "blue,yellow,cyan,magenta,green,red";
       };
-
+      pack = {
+        packSizeLimit = "1g";
+        threads = 0; # Use all available threads
+        windowMemory = "1g";
+      };
+      pager = {
+        branch = false;
+        tag = false;
+      };
+      pull = {
+        default = "current";
+        rebase = true;
+      };
+      push = {
+        autoSetupRemote = true;
+        default = "current";
+        followTags = true;
+      };
+      rebase = {
+        autoStash = true;
+        missingCommitsCheck = "warn";
+      };
+      receive.fsckObjects = true;
       status = {
         branch = true;
         short = true;
         showStash = true;
         showUntrackedFiles = "all";
       };
-
-      pager = {
-        branch = false;
-        tag = false;
-      };
-
-      push = {
-        autoSetupRemote = true;
-        default = "current";
-        followTags = true;
-      };
-
-      pull = {
-        rebase = true;
-        default = "current";
-      };
-
       submodule.fetchJobs = 16;
-
-      rebase = {
-        autoStash = true;
-        missingCommitsCheck = "warn";
-      };
-
-      pack = {
-        threads = 0; # Use all available threads
-        windowMemory = "1g";
-        packSizeLimit = "1g";
-      };
-
-      transfer.fsckObjects = true;
-      receive.fsckObjects = true;
-      fetch.fsckObjects = true;
-
-      branch.sort = "-committerdate";
       tag.sort = "-taggerdate";
-
-      "color.branch" = {
-        current = "magenta";
-        local = "default";
-        remote = "yellow";
-        upstream = "green";
-        plain = "blue";
-      };
-
-      "color.diff" = {
-        meta = "black bold";
-        frag = "magenta";
-        context = "white";
-        whitespace = "yellow reverse";
-        old = "red";
-      };
-
-      "color.decorate" = {
-        HEAD = "red";
-        branch = "blue";
-        tag = "yellow";
-        remoteBranch = "magenta";
-      };
-
-      interactive.singlekey = true;
-
+      transfer.fsckObjects = true;
       # URL shortcuts
       "url \"git@github.com:\"".insteadOf = "gh:";
       "url \"git@github.com:iamDrakkir\"".insteadOf = "drakkir:";
@@ -127,6 +106,7 @@
   };
 
   xdg.configFile."git/template" = {
+    force = true;
     text = ''
       # feat: ✨ new feature
       # feat: 🔍 search/find feature
@@ -158,6 +138,5 @@
       # BREAKING CHANGE: 🚨 breaking change
       # BREAKING CHANGE: 💥 major breaking change
     '';
-    force = true;
   };
 }

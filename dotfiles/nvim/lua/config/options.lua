@@ -25,7 +25,7 @@ opt.listchars = {
 	extends = ">",
 	precedes = "<",
 	nbsp = "+",
-	space = "⋅",
+	-- space = "⋅",
 	trail = "⋅",
 	-- eol = "↴",
 }

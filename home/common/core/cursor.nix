@@ -19,36 +19,33 @@ let
   # ======================================
 
   themes = {
-    rose-pine = {
-      package = pkgs.rose-pine-cursor;
-      name = "BreezeX-RosePine-Linux";
-    };
     bibata = {
-      package = pkgs.bibata-cursors;
       name = "Bibata-Modern-Ice";
+      package = pkgs.bibata-cursors;
+    };
+    rose-pine = {
+      name = "BreezeX-RosePine-Linux";
+      package = pkgs.rose-pine-cursor;
     };
   };
   selected = themes.${cursorTheme};
 in
 
 {
-  home.packages = [ selected.package ];
-
-  home.pointerCursor = {
-    package = selected.package;
-    name = selected.name;
-    size = cursorSize;
-    gtk.enable = true;
-    x11.enable = true;
-    hyprcursor.enable = true;
-  };
-
   gtk.enable = true;
-
+  home.packages = [ selected.package ];
+  home.pointerCursor = {
+    gtk.enable = true;
+    hyprcursor.enable = true;
+    name = selected.name;
+    package = selected.package;
+    size = cursorSize;
+    x11.enable = true;
+  };
   home.sessionVariables = {
-    XCURSOR_THEME = selected.name;
-    XCURSOR_SIZE = toString cursorSize;
-    CURSOR_THEME = selected.name;
     CURSOR_SIZE = toString cursorSize;
+    CURSOR_THEME = selected.name;
+    XCURSOR_SIZE = toString cursorSize;
+    XCURSOR_THEME = selected.name;
   };
 }

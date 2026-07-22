@@ -6,26 +6,21 @@
 }:
 
 {
+  home.packages = with pkgs; [
+    curl.dev
+    systemd.dev
+    nerd-fonts.jetbrains-mono
+    just
+    nix-output-monitor
+  ];
   # Centralized shell aliases for all shells
   home.shellAliases = {
-    vim = "nvim";
-    vi = "nvim";
-    v = "nvim";
-
+    cat = "bat";
     # Quick directory navigation
     cdd = "cd $HOME/.config/nix/dotfiles";
-    cdn = "cd $HOME/.config/nix/dotfiles/nvim/.config/nvim";
     cdg = "cd $HOME/git";
+    cdn = "cd $HOME/.config/nix/dotfiles/nvim/";
     cdw = "cd $HOME/git/work";
-
-    ls = "eza";
-    ll = "eza -l";
-    la = "eza -la";
-    lla = "eza -la";
-    tree = "eza --tree";
-
-    cat = "bat";
-
     ga = "git add";
     gap = "git add --patch";
     gb = "git branch";
@@ -33,8 +28,8 @@
     gc = "git commit";
     gca = "git commit --amend --no-edit";
     gce = "git commit --amend";
-    gco = "git checkout";
     gcl = "git clone --recursive";
+    gco = "git checkout";
     gd = "git diff";
     gds = "git diff --staged";
     gi = "git init";
@@ -45,53 +40,36 @@
     gr = "git reset";
     gs = "git status --short";
     gu = "git pull";
-
+    la = "eza -la";
+    ll = "eza -l";
+    lla = "eza -la";
+    ls = "eza";
     pre = "uvx --with pre-commit-uv pre-commit run --all-files";
+    tree = "eza --tree";
+    v = "nvim";
+    vi = "nvim";
+    vim = "nvim";
   };
-
-  home.packages = with pkgs; [
-    curl.dev
-    systemd.dev
-    nerd-fonts.jetbrains-mono
-    just
-    nix-output-monitor
-  ];
-
-  programs.fastfetch = {
+  programs.bat = {
+    config = {
+      theme = "TwoDark";
+    };
     enable = true;
   };
-
-  programs.ripgrep = {
-    enable = true;
-  };
-
-  programs.fd = {
-    enable = true;
-  };
-
-  programs.eza = {
-    enable = true;
-    icons = "auto";
-    git = true;
-  };
-
   programs.btop = {
     enable = true;
   };
-
-  programs.starship = {
+  programs.eza = {
     enable = true;
-    enableFishIntegration = true;
-    enableZshIntegration = true;
-    settings = {
-      add_newline = true;
-      character = {
-        success_symbol = "[➜](bold green)";
-        error_symbol = "[➜](bold red)";
-      };
-    };
+    git = true;
+    icons = "auto";
   };
-
+  programs.fastfetch = {
+    enable = true;
+  };
+  programs.fd = {
+    enable = true;
+  };
   programs.fish = {
     enable = true;
     interactiveShellInit = ''
@@ -102,43 +80,62 @@
       zoxide init fish | source
     '';
   };
-
-  programs.zsh = {
-    enable = true;
-    enableCompletion = true;
-    autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
-    dotDir = "${config.xdg.configHome}/zsh";
-    initContent = ''
-      # Initialize zoxide
-      eval "$(zoxide init zsh)"
-    '';
-  };
-
-  programs.bat = {
-    enable = true;
-    config = {
-      theme = "TwoDark";
-    };
-  };
-
   programs.fzf = {
     enable = true;
     enableFishIntegration = true;
     enableZshIntegration = true;
   };
-
+  programs.lazygit = {
+    enable = true;
+  };
+  programs.opencode = {
+    enable = true;
+  };
+  programs.ripgrep = {
+    enable = true;
+  };
+  programs.starship = {
+    enable = true;
+    enableFishIntegration = true;
+    enableZshIntegration = true;
+    settings = {
+      add_newline = true;
+      character = {
+        error_symbol = "[➜](bold red)";
+        success_symbol = "[➜](bold green)";
+      };
+    };
+  };
   programs.zoxide = {
     enable = true;
     enableFishIntegration = true;
     enableZshIntegration = true;
   };
-
-  programs.lazygit = {
+  programs.zsh = {
+    autosuggestion.enable = true;
+    dotDir = "${config.xdg.configHome}/zsh";
     enable = true;
-  };
+    enableCompletion = true;
+    initContent = ''
+      # Initialize zoxide
+      eval "$(zoxide init zsh)"
 
-  programs.opencode = {
-    enable = true;
+      # opencode completion
+      _opencode() {
+        local -a completions
+        completions=(''${(f)"$(opencode --get-yargs-completions "''${words[@]}")"})
+        compadd -a completions
+      }
+      compdef _opencode opencode
+    '';
+    syntaxHighlighting.enable = true;
   };
+  xdg.configFile."fish/completions/opencode.fish".text = ''
+    function __fish_opencode_completions
+        set -l cmd (commandline -opc)
+        opencode --get-yargs-completions $cmd 2>/dev/null
+    end
+
+    complete -c opencode -f -a '(__fish_opencode_completions)'
+  '';
 }

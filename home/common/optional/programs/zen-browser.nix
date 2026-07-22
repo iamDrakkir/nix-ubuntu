@@ -6,18 +6,18 @@ let
   };
 
   commonSearch = {
-    force = true;
     engines = {
       "Nix Packages" = {
+        definedAliases = [ "n" ];
+        icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
         urls = [
           {
             template = "https://search.nixos.org/packages?channel=unstable&include_home_manager_options=1&include_modular_service_options=1&include_nixos_options=1&query={searchTerms}";
           }
         ];
-        icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-        definedAliases = [ "n" ];
       };
     };
+    force = true;
   };
 
   commonExtensions = with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
@@ -33,8 +33,6 @@ in
 {
   programs.zen-browser = {
     enable = true;
-    setAsDefaultBrowser = true;
-
     policies = {
       AutofillAddressEnabled = true;
       AutofillCreditCardEnabled = false;
@@ -44,37 +42,37 @@ in
       DisablePocket = true;
       DisableTelemetry = true;
       DontCheckDefaultBrowser = true;
-      NoDefaultBookmarks = true;
-      OfferToSaveLogins = false;
       EnableTrackingProtection = {
-        Value = true;
-        Locked = true;
         Cryptomining = true;
         Fingerprinting = true;
+        Locked = true;
+        Value = true;
       };
+      NoDefaultBookmarks = true;
+      OfferToSaveLogins = false;
     };
-
     profiles = {
       personal = {
-        id = 0;
-        isDefault = false;
-        settings = commonSettings;
-        search = commonSearch;
         extensions.packages =
           commonExtensions
           ++ (with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
             augmented-steam
             facebook-container
           ]);
+        id = 0;
+        isDefault = false;
+        search = commonSearch;
+        settings = commonSettings;
       };
 
       work = {
+        extensions.packages = commonExtensions;
         id = 1;
         isDefault = true;
-        settings = commonSettings;
         search = commonSearch;
-        extensions.packages = commonExtensions;
+        settings = commonSettings;
       };
     };
+    setAsDefaultBrowser = true;
   };
 }

@@ -6,19 +6,203 @@
 
     settings = {
       mainBar = {
+        battery = {
+          format = "{icon} {capacity}%";
+          format-alt = "{icon}  {time}";
+          format-charging = "󰂄  {capacity}%";
+          format-icons = [
+            " "
+            " "
+            " "
+            " "
+            " "
+          ];
+          format-plugged = "  {capacity}%";
+          states = {
+            critical = 15;
+            good = 95;
+            warning = 30;
+          };
+        };
+        bluetooth = {
+          format = " {status}";
+          format-disabled = "";
+          format-no-controller = "";
+          format-off = "";
+          interval = 30;
+          on-click = "blueman-manager";
+          tooltip-format = "{controller_alias}\n{num_connections} connected";
+          tooltip-format-connected = "{controller_alias}\n{num_connections} connected\n\n{device_enumerate}";
+          tooltip-format-enumerate-connected = "{device_alias}";
+          tooltip-format-enumerate-connected-battery = "{device_alias}\t{icon} {device_battery_percentage}%";
+        };
+        clock = {
+          actions = {
+            on-click-backward = "tz_down";
+            on-click-forward = "tz_up";
+            on-click-right = "mode";
+            on-scroll-down = "shift_down";
+            on-scroll-up = "shift_up";
+          };
+          calendar = {
+            format = {
+              days = "<span color='#ecc6d9'><b>{}</b></span>";
+              months = "<span color='#ffead3'><b>{}</b></span>";
+              today = "<span color='#ff6699'><b><u>{}</u></b></span>";
+              weekdays = "<span color='#ffcc66'><b>{}</b></span>";
+              weeks = "<span color='#99ffdd'><b>{:%W}</b></span>";
+            };
+            locale = "sv_SE";
+            mode = "month";
+            mode-mon-col = 3;
+            on-click-right = "mode";
+            on-scroll = 1;
+            weeks-pos = "left";
+          };
+          format = "{:%R}";
+          format-alt = "{:%R 󰃭 %d·%m·%y}";
+          timezone = "Europe/Stockholm";
+          tooltip-format = "<tt>{calendar}</tt>";
+        };
+        cpu = {
+          format = "C {usage}% ";
+          on-click = "foot htop";
+        };
+        "custom/appmenu" = {
+          format = "Apps";
+          on-click = "rofi -show drun -replace";
+          on-click-right = "~/.config/hypr/scripts/keybindings.sh";
+          tooltip = false;
+        };
+        "custom/browser" = {
+          format = "󰈹";
+          on-click = "firefox";
+          tooltip = false;
+        };
+        "custom/chatgpt" = {
+          format = "";
+          on-click = "firefox -kiosk --new-window https://chat.openai.com";
+          tooltip = false;
+        };
+        # Custom modules
+        "custom/cliphist" = {
+          format = "";
+          on-click = "cliphist list | rofi -dmenu -replace -config ~/.config/rofi/config-cliphist.rasi | cliphist decode | wl-copy";
+          tooltip = false;
+        };
+        "custom/filemanager" = {
+          format = "";
+          on-click = "nautilus";
+          tooltip = false;
+        };
+        "custom/notification" = {
+          escape = true;
+          exec = "swaync-client -swb";
+          exec-if = "which swaync-client";
+          format = "{icon}";
+          format-icons = {
+            dnd-inhibited-none = " ";
+            dnd-inhibited-notification = " ";
+            dnd-none = "󰂛";
+            dnd-notification = " ";
+            inhibited-none = "";
+            inhibited-notification = " ";
+            none = "";
+            notification = "󱅫";
+          };
+          on-click = "sleep 0.1 && swaync-client -t -sw";
+          on-click-right = "sleep 0.1 && swaync-client -d -sw";
+          return-type = "json";
+          tooltip = false;
+        };
+        "custom/system" = {
+          format = "";
+          tooltip = false;
+        };
+        "custom/updates" = {
+          escape = true;
+          exec = "~/.dotfiles/scripts/updates.sh";
+          format = "  {}";
+          on-click = "alacritty --class dotfiles-floating -e ~/.dotfiles/scripts/installupdates.sh";
+          restart-interval = 60;
+          return-type = "json";
+          tooltip = false;
+          tooltip-format = "{}";
+        };
+        "custom/wallpaper" = {
+          format = "";
+          on-click = "~/.config/hypr/scripts/wallpaper.sh select";
+          on-click-right = "~/.config/hypr/scripts/wallpaper.sh";
+          tooltip = false;
+        };
+        disk = {
+          format = "D {percentage_used}% ";
+          interval = 30;
+          on-click = "foot htop";
+          path = "/";
+        };
+        # Groups
+        "group/hardware" = {
+          drawer = {
+            children-class = "not-memory";
+            transition-duration = 300;
+            transition-left-to-right = false;
+          };
+          modules = [
+            "custom/system"
+            "disk"
+            "cpu"
+            "memory"
+          ];
+          orientation = "inherit";
+        };
+        "group/quicklinks" = {
+          modules = [
+            "custom/chatgpt"
+            "custom/wallpaper"
+            "custom/browser"
+            "custom/filemanager"
+          ];
+          orientation = "horizontal";
+        };
+        "hyprland/window" = {
+          format = "{}";
+          max-length = 1000;
+          rewrite = {
+            "(.*) — Mozilla Firefox" = "󰈹 - $1 ";
+            "(.*)Steam" = "󰓓 - Steam";
+          };
+          separate-outputs = true;
+        };
+        # Hyprland modules
+        "hyprland/workspaces" = {
+          active-only = false;
+          all-outputs = true;
+          format = "{}";
+          format-icons = {
+            active = "";
+            default = "";
+            urgent = "";
+          };
+          on-click = "activate";
+          on-scroll-down = "hyprctl dispatch workspace +1";
+          on-scroll-up = "hyprctl dispatch workspace -1";
+          persistent-workspaces = { };
+        };
         layer = "top";
-        margin-top = 0;
         margin-bottom = 0;
-
+        margin-top = 0;
+        memory = {
+          format = "M {}% ";
+          on-click = "foot htop";
+        };
+        modules-center = [ "hyprland/workspaces" ];
         modules-left = [
           "custom/notification"
           "custom/appmenu"
           "wlr/taskbar"
           "hyprland/window"
         ];
-
-        modules-center = [ "hyprland/workspaces" ];
-
         modules-right = [
           "tray"
           "custom/updates"
@@ -28,275 +212,58 @@
           "network"
           "group/hardware"
           "custom/cliphist"
-          "custom/exit"
           "clock"
         ];
-
-        # Hyprland modules
-        "hyprland/workspaces" = {
-          on-click = "activate";
-          active-only = false;
-          all-outputs = true;
-          on-scroll-up = "hyprctl dispatch workspace -1";
-          on-scroll-down = "hyprctl dispatch workspace +1";
-          format = "{}";
-          format-icons = {
-            urgent = "";
-            active = "";
-            default = "";
-          };
-          persistent-workspaces = { };
-        };
-
-        "hyprland/window" = {
-          format = "{}";
-          rewrite = {
-            "(.*) — Mozilla Firefox" = "󰈹 - $1 ";
-            "(.*)Steam" = "󰓓 - Steam";
-          };
-          separate-outputs = true;
-          max-length = 1000;
-        };
-
-        "wlr/taskbar" = {
-          align = "center";
-          format = "{icon}";
-          icon-size = 18;
-          spacing = 8;
-          tooltip-format = "{title}";
-          on-click = "activate";
-          on-click-middle = "close";
-          rewrite = {
-            "Firefox Web Browser" = "Firefox";
-          };
-        };
-
-        # Custom modules
-        "custom/cliphist" = {
-          format = "";
-          on-click = "cliphist list | rofi -dmenu -replace -config ~/.config/rofi/config-cliphist.rasi | cliphist decode | wl-copy";
-          tooltip = false;
-        };
-
-        "custom/updates" = {
-          format = "  {}";
-          tooltip-format = "{}";
-          escape = true;
-          return-type = "json";
-          exec = "~/.dotfiles/scripts/updates.sh";
-          restart-interval = 60;
-          on-click = "alacritty --class dotfiles-floating -e ~/.dotfiles/scripts/installupdates.sh";
-          tooltip = false;
-        };
-
-        "custom/wallpaper" = {
-          format = "";
-          on-click = "~/.config/hypr/scripts/wallpaper.sh select";
-          on-click-right = "~/.config/hypr/scripts/wallpaper.sh";
-          tooltip = false;
-        };
-
-        "custom/filemanager" = {
-          format = "";
-          on-click = "nautilus";
-          tooltip = false;
-        };
-
-        "custom/browser" = {
-          format = "󰈹";
-          on-click = "firefox";
-          tooltip = false;
-        };
-
-        "custom/chatgpt" = {
-          format = "";
-          on-click = "firefox -kiosk --new-window https://chat.openai.com";
-          tooltip = false;
-        };
-
-        "custom/appmenu" = {
-          format = "Apps";
-          on-click = "rofi -show drun -replace";
-          on-click-right = "~/.config/hypr/scripts/keybindings.sh";
-          tooltip = false;
-        };
-
-        "custom/exit" = {
-          format = "";
-          on-click = "~/.config/wlogout/wlogout.sh";
-          tooltip = false;
-        };
-
-        "custom/system" = {
-          format = "";
-          tooltip = false;
-        };
-
-        "custom/notification" = {
-          tooltip = false;
-          format = "{icon}";
-          format-icons = {
-            notification = "󱅫";
-            none = "";
-            dnd-notification = " ";
-            dnd-none = "󰂛";
-            inhibited-notification = " ";
-            inhibited-none = "";
-            dnd-inhibited-notification = " ";
-            dnd-inhibited-none = " ";
-          };
-          return-type = "json";
-          exec-if = "which swaync-client";
-          exec = "swaync-client -swb";
-          on-click = "sleep 0.1 && swaync-client -t -sw";
-          on-click-right = "sleep 0.1 && swaync-client -d -sw";
-          escape = true;
-        };
-
-        # Default modules
-        tray = {
-          icon-size = 18;
-          spacing = 10;
-        };
-
-        clock = {
-          format = "{:%R}";
-          format-alt = "{:%R 󰃭 %d·%m·%y}";
-          tooltip-format = "<tt>{calendar}</tt>";
-          timezone = "Europe/Stockholm";
-          calendar = {
-            mode = "month";
-            mode-mon-col = 3;
-            on-scroll = 1;
-            on-click-right = "mode";
-            weeks-pos = "left";
-            locale = "sv_SE";
-            format = {
-              months = "<span color='#ffead3'><b>{}</b></span>";
-              days = "<span color='#ecc6d9'><b>{}</b></span>";
-              weeks = "<span color='#99ffdd'><b>{:%W}</b></span>";
-              weekdays = "<span color='#ffcc66'><b>{}</b></span>";
-              today = "<span color='#ff6699'><b><u>{}</u></b></span>";
-            };
-          };
-          actions = {
-            on-click-right = "mode";
-            on-click-forward = "tz_up";
-            on-click-backward = "tz_down";
-            on-scroll-up = "shift_up";
-            on-scroll-down = "shift_down";
-          };
-        };
-
-        cpu = {
-          format = "C {usage}% ";
-          on-click = "foot htop";
-        };
-
-        memory = {
-          format = "M {}% ";
-          on-click = "foot htop";
-        };
-
-        disk = {
-          interval = 30;
-          format = "D {percentage_used}% ";
-          path = "/";
-          on-click = "foot htop";
-        };
-
         network = {
           format = "{ifname}";
           format-alt = " {bandwidthDownBytes} /  {bandwidthUpBytes}";
-          format-wifi = "  {signalStrength}%";
-          format-ethernet = "󰈀 {ifname}";
           format-disconnected = "󰌙";
-          tooltip-format-wifi = "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\nUp: {bandwidthUpBits} Down: {bandwidthDownBits}";
-          tooltip-format-ethernet = "󰈀 {ifname}\nIP: {ipaddr}\n up: {bandwidthUpBits} down: {bandwidthDownBits}";
-          tooltip-format-disconnected = "Disconnected";
+          format-ethernet = "󰈀 {ifname}";
+          format-wifi = "  {signalStrength}%";
           max-length = 50;
           on-click-right = "alacritty --class dotfiles-floating -e nmtui";
+          tooltip-format-disconnected = "Disconnected";
+          tooltip-format-ethernet = "󰈀 {ifname}\nIP: {ipaddr}\n up: {bandwidthUpBits} down: {bandwidthDownBits}";
+          tooltip-format-wifi = "  {ifname} @ {essid}\nIP: {ipaddr}\nStrength: {signalStrength}%\nFreq: {frequency}MHz\nUp: {bandwidthUpBits} Down: {bandwidthDownBits}";
         };
-
-        battery = {
-          states = {
-            good = 95;
-            warning = 30;
-            critical = 15;
-          };
-          format = "{icon} {capacity}%";
-          format-charging = "󰂄  {capacity}%";
-          format-plugged = "  {capacity}%";
-          format-alt = "{icon}  {time}";
-          format-icons = [
-            " "
-            " "
-            " "
-            " "
-            " "
-          ];
-        };
-
         pulseaudio = {
           format = "{icon} {volume}%";
           format-bluetooth = " {volume}% {icon}  {format_source}";
           format-bluetooth-muted = " 󰸈 {icon}  {format_source}";
-          format-muted = "󰸈";
-          format-source = "{volume}% ";
-          format-source-muted = "";
           format-icons = {
-            headphone = "";
-            hands-free = "";
-            headset = "";
-            phone = "";
-            portable = "";
             car = "";
             default = [
               ""
               ""
               ""
             ];
+            hands-free = "";
+            headphone = "";
+            headset = "";
+            phone = "";
+            portable = "";
           };
+          format-muted = "󰸈";
+          format-source = "{volume}% ";
+          format-source-muted = "";
           on-click = "pavucontrol";
         };
-
-        bluetooth = {
-          format = " {status}";
-          format-disabled = "";
-          format-off = "";
-          interval = 30;
-          on-click = "blueman-manager";
-          format-no-controller = "";
-          tooltip-format = "{controller_alias}\n{num_connections} connected";
-          tooltip-format-connected = "{controller_alias}\n{num_connections} connected\n\n{device_enumerate}";
-          tooltip-format-enumerate-connected = "{device_alias}";
-          tooltip-format-enumerate-connected-battery = "{device_alias}\t{icon} {device_battery_percentage}%";
+        # Default modules
+        tray = {
+          icon-size = 18;
+          spacing = 10;
         };
-
-        # Groups
-        "group/hardware" = {
-          orientation = "inherit";
-          drawer = {
-            transition-duration = 300;
-            children-class = "not-memory";
-            transition-left-to-right = false;
+        "wlr/taskbar" = {
+          align = "center";
+          format = "{icon}";
+          icon-size = 18;
+          on-click = "activate";
+          on-click-middle = "close";
+          rewrite = {
+            "Firefox Web Browser" = "Firefox";
           };
-          modules = [
-            "custom/system"
-            "disk"
-            "cpu"
-            "memory"
-          ];
-        };
-
-        "group/quicklinks" = {
-          orientation = "horizontal";
-          modules = [
-            "custom/chatgpt"
-            "custom/wallpaper"
-            "custom/browser"
-            "custom/filemanager"
-          ];
+          spacing = 8;
+          tooltip-format = "{title}";
         };
       };
     };

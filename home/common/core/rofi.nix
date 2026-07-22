@@ -11,5 +11,5 @@
   home.packages = [ pkgs.rofi ];
 
   # Symlink config from dotfiles repo
-  home.file = lib.custom.symlink.mkDotfilesLinks config [ "rofi" ];
+  xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [ "rofi" ];
 }

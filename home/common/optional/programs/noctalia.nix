@@ -1,132 +1,141 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
-  inputs,
-  homeDirectory,
   ...
 }:
 
 let
-  # Helper function for Noctalia IPC commands
+  # Helper for Noctalia v5 IPC commands: `noctalia msg <command> [args...]`.
+  # (Replaces the old quickshell `noctalia-shell ipc call <target> <method>`.)
   noctaliaIPC =
     cmd:
     [
-      "noctalia-shell"
-      "ipc"
-      "call"
+      "noctalia"
+      "msg"
     ]
     ++ (pkgs.lib.splitString " " cmd);
 
   # Keybinding definitions for different compositors
   keybinds = {
-    launcher = {
-      hyprland = "$mainMod, SPACE, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "launcher toggle")}";
+    brightnessDown = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness-down");
+        key = "XF86MonBrightnessDown";
+      };
       niri = {
-        key = "Mod+Space";
-        action = noctaliaIPC "launcher toggle";
+        action = noctaliaIPC "brightness-down";
+        key = "XF86MonBrightnessDown";
       };
     };
-
-    calendar = {
-      hyprland = "$mainMod, C, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "calendar toggle")}";
+    brightnessUp = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness-up");
+        key = "XF86MonBrightnessUp";
+      };
       niri = {
-        key = "Mod+C";
-        action = noctaliaIPC "calendar toggle";
+        action = noctaliaIPC "brightness-up";
+        key = "XF86MonBrightnessUp";
       };
     };
-
     clipboard = {
-      hyprland = "$mainMod, V, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "launcher clipboard")}";
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "panel-toggle clipboard");
+        key = "SUPER + V";
+      };
       niri = {
+        action = noctaliaIPC "panel-toggle clipboard";
         key = "Mod+V";
-        action = noctaliaIPC "launcher clipboard";
       };
     };
-
-    lockScreen = {
-      hyprland = "$mainMod, X, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "lockScreen lock")}";
+    launcher = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "panel-toggle launcher");
+        key = "SUPER + SPACE";
+      };
       niri = {
-        key = "Mod+X";
-        action = noctaliaIPC "lockScreen lock";
+        action = noctaliaIPC "panel-toggle launcher";
+        key = "Mod+Space";
       };
     };
-
     lockKey = {
-      hyprland = ",XF86Lock, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "lockScreen lock")}";
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "session lock");
+        key = "XF86Lock";
+      };
       # XF86Lock is not a valid key in niri
     };
-
-    brightnessUp = {
-      hyprland = ",XF86MonBrightnessUp, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness increase")}";
+    # Noctalia v5 ignores the logind "lock-session" signal (loginctl lock-session
+    # returns 0 but does not engage the lockscreen). v5.0.0 exposes a direct IPC
+    # session action instead: `noctalia msg session lock`.
+    lockScreen = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "session lock");
+        key = "SUPER + X";
+      };
       niri = {
-        key = "XF86MonBrightnessUp";
-        action = noctaliaIPC "brightness increase";
+        action = noctaliaIPC "session lock";
+        key = "Mod+X";
       };
     };
-
-    brightnessDown = {
-      hyprland = ",XF86MonBrightnessDown, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness decrease")}";
-      niri = {
-        key = "XF86MonBrightnessDown";
-        action = noctaliaIPC "brightness decrease";
-      };
-    };
-
-    volumeUp = {
-      hyprland = ",XF86AudioRaiseVolume, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume increase")}";
-      niri = {
-        key = "XF86AudioRaiseVolume";
-        action = noctaliaIPC "volume increase";
-      };
-    };
-
-    volumeDown = {
-      hyprland = ",XF86AudioLowerVolume, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume decrease")}";
-      niri = {
-        key = "XF86AudioLowerVolume";
-        action = noctaliaIPC "volume decrease";
-      };
-    };
-
-    volumeMute = {
-      hyprland = ",XF86AudioMute, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume muteOutput")}";
-      niri = {
-        key = "XF86AudioMute";
-        action = noctaliaIPC "volume muteOutput";
-      };
-    };
-
     micMute = {
-      hyprland = ",XF86AudioMicMute, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume muteInput")}";
-      niri = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "mic-mute");
         key = "XF86AudioMicMute";
-        action = noctaliaIPC "volume muteInput";
+      };
+      niri = {
+        action = noctaliaIPC "mic-mute";
+        key = "XF86AudioMicMute";
+      };
+    };
+    volumeDown = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-down");
+        key = "XF86AudioLowerVolume";
+      };
+      niri = {
+        action = noctaliaIPC "volume-down";
+        key = "XF86AudioLowerVolume";
+      };
+    };
+    volumeMute = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-mute");
+        key = "XF86AudioMute";
+      };
+      niri = {
+        action = noctaliaIPC "volume-mute";
+        key = "XF86AudioMute";
+      };
+    };
+    volumeUp = {
+      hyprland = {
+        cmd = pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-up");
+        key = "XF86AudioRaiseVolume";
+      };
+      niri = {
+        action = noctaliaIPC "volume-up";
+        key = "XF86AudioRaiseVolume";
       };
     };
   };
-
-  dotfilesPath = "${homeDirectory}/.config/nix/dotfiles/noctalia";
 in
 
 {
+  config = {
+    myConfig.programs.noctalia.keybindings = keybinds;
+    programs.noctalia.enable = true;
+    xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [
+      "noctalia/colors.json"
+      "noctalia/settings.json"
+      "noctalia/plugins.json"
+    ];
+  };
   imports = [ inputs.noctalia.homeModules.default ];
-
   options.myConfig.programs.noctalia.keybindings = lib.mkOption {
-    type = lib.types.attrs;
     default = { };
     description = "Keybinding definitions for Noctalia IPC commands";
-  };
-
-  config = {
-    programs.noctalia-shell.enable = true;
-
-    xdg.configFile = {
-      "noctalia/colors.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/colors.json";
-      "noctalia/settings.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/settings.json";
-      "noctalia/plugins.json".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesPath}/plugins.json";
-    };
-
-    myConfig.programs.noctalia.keybindings = keybinds;
+    type = lib.types.attrs;
   };
 }

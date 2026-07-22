@@ -3,7 +3,6 @@
 {
   # Custom library functions for easier imports and organization
   # Following EmergentMind's pattern for readable import paths
-
   custom = rec {
     # Helper to get hostname (attempts to read from /etc/hostname)
     # Usage: lib.custom.getHostname
@@ -13,13 +12,59 @@
       else
         "unknown";
 
+    # Helper for conditional imports based on hostname
+    # Usage: lib.custom.importForHost "terra" ./terra-config.nix
+    importForHost = hostname: path: if isHost hostname then path else null;
     # Helper to check if running on specific host
     # Usage: lib.custom.isHost "terra"
     isHost = hostname: getHostname == hostname;
 
-    # Helper for conditional imports based on hostname
-    # Usage: lib.custom.importForHost "terra" ./terra-config.nix
-    importForHost = hostname: path: if isHost hostname then path else null;
+    # ========== Pretty Symlink Helpers ==========
+    # Based on: https://blog.daniel-beskin.com/2025-10-18-symlinking-home-manager
+    #
+    # Out-of-store symlinks point HM-managed config files/dirs straight at the
+    # live dotfiles repo, so edits apply without a rebuild. All paths are
+    # relative to dotfiles/ (e.g. "nvim", "ghostty/shaders/cursor_warp.glsl").
+    symlink =
+      let
+        dotfilesRoot = config: "${config.home.homeDirectory}/.config/nix/dotfiles";
+      in
+      rec {
+        # Out-of-store symlink to dotfiles/<src>.
+        link = config: src: config.lib.file.mkOutOfStoreSymlink "${dotfilesRoot config}/${src}";
+
+        # General builder: map a list of `{ src; target; }` pairs into an
+        # `xdg.configFile` attrset, linking dotfiles/<src> -> <target> (relative
+        # to xdg.configHome). Use this when the dotfile path differs from the
+        # target path.
+        # Usage: xdg.configFile = mkLinks config [ { src = "foo/x"; target = "bar/x"; } ]
+        mkLinks =
+          config: entries:
+          lib.listToAttrs (
+            lib.map (
+              { src, target }:
+              {
+                name = target;
+                value.source = link config src;
+              }
+            ) entries
+          );
+
+        # Common case: link dotfiles/<src> -> $XDG_CONFIG_HOME/<src> for each src
+        # (the dotfile path doubles as the target). Covers whole dirs and files.
+        # Assign the result to `xdg.configFile`.
+        # Usage: xdg.configFile = mkXdgConfigLinks config [
+        #          "nvim" "noctalia/colors.json" "ghostty/shaders/cursor_warp.glsl"
+        #        ];
+        mkXdgConfigLinks =
+          config: srcs:
+          mkLinks config (
+            lib.map (src: {
+              inherit src;
+              target = src;
+            }) srcs
+          );
+      };
 
     # ========== Electron App Wrapper ==========
     # Wraps Electron apps to run with --no-sandbox flag
@@ -29,105 +74,5 @@
       pkgs.writeShellScriptBin name ''
         exec ${app}/bin/${name} --no-sandbox "$@"
       '';
-
-    # ========== Pretty Symlink Helpers ==========
-    # Based on: https://blog.daniel-beskin.com/2025-10-18-symlinking-home-manager
-    # These helpers provide a DRY way to create out-of-store symlinks with home-manager
-
-    symlink = {
-      # Flipped pipe for composing functions left-to-right
-      # Usage: pipe [func1 func2 func3] value
-      pipe = lib.flip lib.pipe;
-
-      # Flatten a list of attribute sets and merge them
-      # Usage: flatMerge [[{a=1;}] [{b=2;}]]
-      flatMerge = lib.flip lib.pipe [
-        lib.flatten
-        lib.mergeAttrsList
-      ];
-
-      # Create out-of-store symlink helpers
-      # config: home-manager config object (for mkOutOfStoreSymlink)
-      # sourceRoot: absolute path to source directory
-      mkHelpers =
-        config: sourceRoot:
-        let
-          inherit (config.lib.file) mkOutOfStoreSymlink;
-          pipe = lib.flip lib.pipe;
-        in
-        rec {
-          # Create a symlink source path by appending to sourceRoot
-          # Usage: toSourcePath "nvim"
-          toSourcePath = name: "${sourceRoot}/${name}";
-
-          # Create out-of-store symlink
-          # Usage: link "nvim"
-          link = pipe [
-            toSourcePath
-            mkOutOfStoreSymlink
-          ];
-
-          # Link a single file to home.file
-          # Usage: linkFile "path/to/file"
-          linkFile = name: { ${name}.source = link name; };
-
-          # Link a directory recursively to home.file
-          # Usage: linkDir "path/to/dir"
-          linkDir = name: {
-            ${name} = {
-              source = link name;
-              # Note: recursive = true should NOT be used with out-of-store symlinks
-              # We symlink the whole directory, not its contents
-            };
-          };
-
-          # Map linkFile over a list of names
-          # Usage: linkConfFiles ["file1" "file2"]
-          linkConfFiles = lib.map linkFile;
-
-          # Map linkDir over a list of names
-          # Usage: linkConfDirs ["dir1" "dir2"]
-          linkConfDirs = lib.map linkDir;
-
-          # Convenience function to link multiple files and directories
-          # Usage: linkAll { files = ["file1"]; dirs = ["dir1" "dir2"]; }
-          linkAll =
-            {
-              files ? [ ],
-              dirs ? [ ],
-            }:
-            pipe
-              [
-                lib.flatten
-                lib.mergeAttrsList
-              ]
-              [
-                (linkConfFiles files)
-                (linkConfDirs dirs)
-              ];
-        };
-
-      # High-level helper for common dotfiles pattern
-      # Links dotfiles/<name> -> ~/.config/<name>
-      # Usage: mkDotfilesLinks config ["nvim" "rofi" "lazygit"]
-      mkDotfilesLinks =
-        config: names:
-        let
-          # Get the flake root directory (where the dotfiles folder is)
-          flakeRoot = config.home.homeDirectory + "/.config/nix";
-          # Create helpers with the dotfiles root
-          helpers = symlink.mkHelpers config "${flakeRoot}/dotfiles";
-          # Prepend .config/ to each name for home.file attribute paths
-          confPaths = lib.map (name: ".config/${name}") names;
-        in
-        # linkConfDirs expects the name as it appears in dotfiles/, not with .config/ prefix
-        # So we need to pass the original names, not confPaths
-        lib.listToAttrs (
-          lib.imap0 (i: name: {
-            name = ".config/${name}";
-            value.source = helpers.link name;
-          }) names
-        );
-    };
   };
 }

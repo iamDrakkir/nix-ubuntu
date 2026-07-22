@@ -1,8 +1,6 @@
 { pkgs, ... }:
 
 {
-  programs.nix-index-database.comma.enable = true;
-
   home.packages = with pkgs; [
     # Node.js
     nodejs_24
@@ -16,5 +14,9 @@
 
     # C/C++
     gcc
+
+    # AI agent multiplexer
+    herdr
   ];
+  programs.nix-index-database.comma.enable = true;
 }

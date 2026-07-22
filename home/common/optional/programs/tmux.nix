@@ -2,22 +2,10 @@
 
 {
   programs.tmux = {
-    enable = true;
-    prefix = "C-a";
-    terminal = "tmux-256color";
-    escapeTime = 0;
-    historyLimit = 3000;
     baseIndex = 1;
-    keyMode = "vi";
-    mouse = true;
     clock24 = false;
-
-    plugins = with pkgs.tmuxPlugins; [
-      vim-tmux-navigator
-      battery
-      cpu
-    ];
-
+    enable = true;
+    escapeTime = 0;
     extraConfig = ''
       # Color definitions
       color_red="#BF616A"
@@ -179,5 +167,15 @@
       set -g window-status-current-format " #[fg=$color_grey8,bold] [󰇆] #W"
       set -g window-status-format " #[fg=$color_grey9] [#I] #W"
     '';
+    historyLimit = 3000;
+    keyMode = "vi";
+    mouse = true;
+    plugins = with pkgs.tmuxPlugins; [
+      vim-tmux-navigator
+      battery
+      cpu
+    ];
+    prefix = "C-a";
+    terminal = "tmux-256color";
   };
 }

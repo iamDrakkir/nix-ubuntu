@@ -11,16 +11,14 @@
           AddKeysToAgent = "yes";
         };
       };
-
+      "192.168.17.*" = {
+        identitiesOnly = false;
+        identityAgent = "/run/user/1735616652/gnupg/S.gpg-agent.ssh";
+        identityFile = "~/.ssh/id_ed25519";
+      };
       "github.com" = {
         identityAgent = "/run/user/1735616652/proton-pass-agent";
       };
-
-      "ssh.dev.azure.com" = {
-        identityFile = "~/.ssh/id_rsa";
-        identitiesOnly = true;
-      };
-
       "sevikcsprod01" = {
         extraOptions = {
           # Password-only jump host — skip pubkey to avoid
@@ -28,11 +26,9 @@
           PreferredAuthentications = "password,keyboard-interactive";
         };
       };
-
-      "192.168.17.*" = {
-        identityFile = "~/.ssh/id_ed25519";
-        identitiesOnly = false;
-        identityAgent = "/run/user/1735616652/gnupg/S.gpg-agent.ssh";
+      "ssh.dev.azure.com" = {
+        identitiesOnly = true;
+        identityFile = "~/.ssh/id_rsa";
       };
     };
   };

@@ -1,0 +1,28 @@
+formatter = "nixfmt"
+
+# Place inherit statements sorted among ordinary bindings (default: "front")
+inherit-placement = "sorted"
+
+[args]
+first = ["self", "lib", "config", "pkgs"]
+last = ["<defaulted>", "..."]
+
+[attrs]
+# Collapse repeated attrpaths: a.b = 1; a.c = 2; -> a = { b = 1; c = 2; }
+merge = true
+# Restore blank lines between multiline bindings after reordering
+blank-lines = 1
+blank-lines-mode = "multiline"
+
+# Sort names inside inherit statements
+[inherits]
+sort = true
+
+[lets]
+sort = true
+
+# NOTE: global list sorting is intentionally left off; list order is often
+# significant. Enable per-path via [[overrides]] where safe, e.g.:
+#   [[overrides]]
+#   path = "..."
+#   lists.sort = true

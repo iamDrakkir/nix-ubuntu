@@ -63,12 +63,6 @@ let
   '';
 in
 {
-  # Install CoreCtrl system-wide
-  environment.systemPackages = with pkgs; [
-    corectrl
-    corectrlSetupScript
-  ];
-
   # Polkit rules to allow CoreCtrl helper to run without password
   # Using polkit version >= 0.106 format
   environment.etc."polkit-1/rules.d/90-corectrl.rules".text = ''
@@ -82,16 +76,15 @@ in
         }
     });
   '';
-
+  # Install CoreCtrl system-wide
+  environment.systemPackages = with pkgs; [
+    corectrl
+    corectrlSetupScript
+  ];
   # Automatic setup: Install CoreCtrl files to /usr/share on boot
   systemd.services.corectrl-setup = {
-    description = "Install CoreCtrl D-Bus and polkit files";
-    wantedBy = [ "multi-user.target" ];
     after = [ "dbus.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
+    description = "Install CoreCtrl D-Bus and polkit files";
     script = ''
       echo "Setting up CoreCtrl D-Bus and polkit files..."
 
@@ -132,8 +125,12 @@ in
 
       echo "✓ CoreCtrl setup complete!"
     '';
+    serviceConfig = {
+      RemainAfterExit = true;
+      Type = "oneshot";
+    };
+    wantedBy = [ "multi-user.target" ];
   };
-
   # ========================================================================
   # CoreCtrl Setup (Automatic via systemd service)
   # ========================================================================

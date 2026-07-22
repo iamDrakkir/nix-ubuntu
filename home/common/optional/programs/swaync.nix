@@ -6,38 +6,78 @@
 
     settings = {
       "$schema" = "/etc/xdg/swaync/configSchema.json";
-      positionX = "left";
-      positionY = "top";
-      layer = "overlay";
-      control-center-layer = "top";
-      layer-shell = true;
-      cssPriority = "application";
-
-      control-center-width = 350;
       control-center-height = 695;
-      control-center-margin-top = 1;
+      control-center-layer = "top";
       control-center-margin-bottom = 2;
-      control-center-margin-right = 1;
       control-center-margin-left = 0;
-
+      control-center-margin-right = 1;
+      control-center-margin-top = 1;
+      control-center-width = 350;
+      cssPriority = "application";
+      fit-to-screen = false;
+      hide-on-action = true;
+      hide-on-clear = false;
+      image-visibility = "when available";
+      keyboard-shortcuts = true;
+      layer = "overlay";
+      layer-shell = true;
       notification-2fa-action = true;
-      notification-inline-replies = true;
-      notification-window-width = 300;
-      notification-icon-size = 50;
       notification-body-image-height = 140;
       notification-body-image-width = 180;
-
-      timeout = 6;
-      timeout-low = 3;
-      timeout-critical = 0;
-      fit-to-screen = false;
-      keyboard-shortcuts = true;
-      image-visibility = "when available";
-      transition-time = 200;
-      hide-on-clear = false;
-      hide-on-action = true;
+      notification-icon-size = 50;
+      notification-inline-replies = true;
+      notification-window-width = 300;
+      positionX = "left";
+      positionY = "top";
       script-fail-notify = true;
-
+      timeout = 6;
+      timeout-critical = 0;
+      timeout-low = 3;
+      transition-time = 200;
+      widget-config = {
+        backlight = {
+          label = "󰃟";
+        };
+        buttons-grid = {
+          actions = [
+            {
+              command = "nm-connection-editor";
+              label = " Wi-FI";
+            }
+            {
+              command = "pactl set-sink-mute @DEFAULT_SINK@ toggle";
+              label = "󰕾 Mute";
+            }
+            {
+              command = "blueman-manager";
+              label = "󰂯 Bluetooth";
+            }
+            {
+              command = "/home/alien/.config/hypr/scripts/themechanging";
+              label = "  Theme";
+            }
+          ];
+        };
+        dnd = {
+          text = " ";
+        };
+        label = {
+          max-lines = 2;
+          text = "Notification";
+        };
+        mpris = {
+          image-radius = 10;
+          image-size = 60;
+        };
+        title = {
+          button-text = "Clear";
+          clear-all-button = true;
+          text = "Notifications";
+        };
+        volume = {
+          label = "󰕾";
+        };
+      };
       widgets = [
         "title"
         "notifications"
@@ -46,57 +86,6 @@
         "volume"
         "backlight"
       ];
-
-      widget-config = {
-        title = {
-          text = "Notifications";
-          clear-all-button = true;
-          button-text = "Clear";
-        };
-
-        dnd = {
-          text = " ";
-        };
-
-        label = {
-          max-lines = 2;
-          text = "Notification";
-        };
-
-        mpris = {
-          image-size = 60;
-          image-radius = 10;
-        };
-
-        volume = {
-          label = "󰕾";
-        };
-
-        backlight = {
-          label = "󰃟";
-        };
-
-        buttons-grid = {
-          actions = [
-            {
-              label = " Wi-FI";
-              command = "nm-connection-editor";
-            }
-            {
-              label = "󰕾 Mute";
-              command = "pactl set-sink-mute @DEFAULT_SINK@ toggle";
-            }
-            {
-              label = "󰂯 Bluetooth";
-              command = "blueman-manager";
-            }
-            {
-              label = "  Theme";
-              command = "/home/alien/.config/hypr/scripts/themechanging";
-            }
-          ];
-        };
-      };
     };
 
     style = ''

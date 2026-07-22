@@ -13,5 +13,5 @@
   home.packages = [ pkgs.imagemagick ];
 
   # Symlink config from dotfiles repo
-  home.file = lib.custom.symlink.mkDotfilesLinks config [ "nvim" ];
+  xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [ "nvim" ];
 }

@@ -2,78 +2,70 @@
   description = "Nix configuration for Ubuntu/NixOS with system-manager and home-manager";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-
-    system-manager = {
-      url = "github:numtide/system-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nix-system-graphics = {
-      url = "github:soupglasses/nix-system-graphics";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    zen-browser = {
-      url = "github:0xc000022070/zen-browser-flake";
-      inputs = {
-        nixpkgs.follows = "nixpkgs";
-        home-manager.follows = "home-manager";
-      };
-    };
-
     firefox-addons = {
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    nix-flatpak.url = "github:gmodena/nix-flatpak";
-
+    herdr = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:ogulcancelik/herdr";
+    };
+    home-manager = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/home-manager";
+    };
     hyprland = {
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:hyprwm/Hyprland";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    noctalia = {
-      url = "github:noctalia-dev/noctalia-shell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
     niri = {
+      inputs.nixpkgs.follows = "nixpkgs";
       url = "github:sodiboo/niri-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    dms = {
-      url = "github:AvengeMedia/DankMaterialShell";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
     nix-index-database = {
-      url = "github:nix-community/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:nix-community/nix-index-database";
     };
-
+    nix-system-graphics = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:soupglasses/nix-system-graphics";
+    };
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    pedantix = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:swarsel/pedantix";
+    };
+    noctalia = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:noctalia-dev/noctalia-shell";
+    };
     # PAM shim for non-NixOS systems
     # Using 'next' branch for full libpam.so.0 API coverage
     pam-shim = {
-      url = "github:Cu3PO42/pam_shim/next";
       inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:Cu3PO42/pam_shim/next";
+    };
+    system-manager = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:numtide/system-manager";
+    };
+    zen-browser = {
+      inputs = {
+        home-manager.follows = "home-manager";
+        nixpkgs.follows = "nixpkgs";
+      };
+      url = "github:0xc000022070/zen-browser-flake";
     };
   };
 
   outputs =
     inputs@{
-      self,
-      nixpkgs,
       home-manager,
-      system-manager,
       nix-system-graphics,
+      nixpkgs,
+      self,
+      system-manager,
       ...
     }:
     let
@@ -95,15 +87,18 @@
       customPackages = final: prev: (import ./pkgs { pkgs = prev; });
 
       # Import overlays
-      overlays = [ customPackages ];
+      overlays = [
+        customPackages
+        inputs.herdr.overlays.default
+      ];
 
       # Helper to build a pkgs instance for any system
       mkPkgs =
         sys:
         import nixpkgs {
-          system = sys;
           config.allowUnfree = true;
           overlays = overlays;
+          system = sys;
         };
 
       pkgs = mkPkgs system;
@@ -112,6 +107,9 @@
       mkSystemConfig =
         hostname:
         system-manager.lib.makeSystemConfig {
+          modules = [
+            ./hosts/${hostname}
+          ];
           specialArgs = {
             inherit
               inputs
@@ -120,9 +118,6 @@
               system
               ;
           };
-          modules = [
-            ./hosts/${hostname}
-          ];
         };
 
       # Helper function to create home-manager configs for each user@host.
@@ -131,9 +126,9 @@
       mkHomeConfig =
         {
           configUser,
+          homeDirectory ? "/home/${username}",
           hostname,
           username ? configUser,
-          homeDirectory ? "/home/${username}",
         }:
         home-manager.lib.homeManagerConfiguration {
           inherit pkgs;
@@ -172,26 +167,13 @@
       # Used for hosts that actually run NixOS (e.g. Raspberry Pi).
       mkNixosConfig =
         {
+          configUser ? "drakkir",
+          homeDirectory ? "/home/${username}",
           hostname,
           sys ? systemAarch64,
-          configUser ? "drakkir",
           username ? configUser,
-          homeDirectory ? "/home/${username}",
         }:
         nixpkgs.lib.nixosSystem {
-          system = sys;
-          specialArgs = {
-            inherit
-              inputs
-              outputs
-              lib
-              sys
-              hostname
-              configUser
-              username
-              homeDirectory
-              ;
-          };
           modules = [
             ./hosts/${hostname}
 
@@ -199,8 +181,6 @@
             home-manager.nixosModules.home-manager
             {
               home-manager = {
-                useGlobalPkgs = true;
-                useUserPackages = true;
                 extraSpecialArgs = {
                   inherit
                     inputs
@@ -213,6 +193,8 @@
                     ;
                   system = sys;
                 };
+                useGlobalPkgs = true;
+                useUserPackages = true;
                 users.${username} = {
                   imports = [
                     ./home/${configUser}/${hostname}.nix
@@ -222,40 +204,50 @@
               };
             }
           ];
+          specialArgs = {
+            inherit
+              inputs
+              outputs
+              lib
+              sys
+              hostname
+              configUser
+              username
+              homeDirectory
+              ;
+          };
+          system = sys;
         };
     in
     {
-      formatter.${system} = pkgs.nixfmt-rfc-style;
-
-      systemConfigs = {
-        terra = mkSystemConfig "terra";
-        bigbox = mkSystemConfig "bigbox";
-        work = mkSystemConfig "work";
-      };
-
+      formatter.${system} = inputs.pedantix.packages.${system}.pedantix-wrapped;
       homeConfigurations = {
-        "drakkir@terra" = mkHomeConfig {
-          configUser = "drakkir";
-          hostname = "terra";
-        };
         "drakkir@bigbox" = mkHomeConfig {
           configUser = "drakkir";
           hostname = "bigbox";
         };
+        "drakkir@terra" = mkHomeConfig {
+          configUser = "drakkir";
+          hostname = "terra";
+        };
         "rhagelin@work" = mkHomeConfig {
           configUser = "rhagelin";
+          homeDirectory = "/home/rhagelin.creatorctek.local";
           hostname = "work";
           # username = "rickard.hagelin@ctek.com";
           username = "rhagelin@creatorctek.local";
-          homeDirectory = "/home/rhagelin.creatorctek.local";
         };
       };
-
       nixosConfigurations = {
         pi = mkNixosConfig {
-          hostname = "pi";
           configUser = "drakkir";
+          hostname = "pi";
         };
+      };
+      systemConfigs = {
+        bigbox = mkSystemConfig "bigbox";
+        terra = mkSystemConfig "terra";
+        work = mkSystemConfig "work";
       };
     };
 }

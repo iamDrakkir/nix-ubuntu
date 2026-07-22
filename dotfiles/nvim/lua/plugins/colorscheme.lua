@@ -48,6 +48,7 @@ return {
 	{
 		"catppuccin/nvim",
 		name = "catppuccin",
+		enabled = false,
 		cond = vim.g.vscode == nil,
 		lazy = false,
 		priority = 1000,

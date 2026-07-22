@@ -1,72 +1,103 @@
 {
   config,
+  homeDirectory,
   hostname,
   inputs,
   lib,
   pkgs,
   system,
-  homeDirectory,
   ...
 }:
 
 let
   isWorkHost = hostname == "work";
-  # Swap browser profile shortcuts based on host
-  # Create the full modifier string with proper spacing
-  browserPersonalBind = if isWorkHost then "$mainMod SHIFT, B" else "$mainMod, B";
-  browserWorkBind = if isWorkHost then "$mainMod, B" else "$mainMod SHIFT, B";
 
-  # Check which shell is enabled (use whichever has keybindings)
+  # Browser key assignments based on host
+  browserPersonalKey = if isWorkHost then "SUPER + SHIFT + B" else "SUPER + B";
+  browserWorkKey = if isWorkHost then "SUPER + B" else "SUPER + SHIFT + B";
+
+  # Check which shell is enabled
   noctaliaKb = config.myConfig.programs.noctalia.keybindings or { };
-  dmsKb = config.myConfig.programs.dms.keybindings or { };
   hasNoctalia = noctaliaKb != { };
-  hasDms = dmsKb != { };
-  shellEnabled = hasNoctalia || hasDms;
+  shellEnabled = hasNoctalia;
 
-  # Get keybindings from the enabled shell (prioritize Noctalia)
-  shellKb = if hasNoctalia then noctaliaKb else dmsKb;
+  shellKb = noctaliaKb;
 
-  # Fallback keybindings when no shell is enabled
-  fallbackBinds = {
-    launcher = "$mainMod, SPACE, exec, $menu";
-    lockScreen = "$mainMod, X, exec, hyprlock";
-    brightnessUp = ",XF86MonBrightnessUp, exec, brightnessctl -q s +10%";
-    brightnessDown = ",XF86MonBrightnessDown, exec, brightnessctl -q s 10%-";
-    volumeUp = ",XF86AudioRaiseVolume, exec, wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+";
-    volumeDown = ",XF86AudioLowerVolume, exec, wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-";
-    volumeMute = ",XF86AudioMute, exec, wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle";
-    micMute = ",XF86AudioMicMute, exec, pactl set-source-mute @DEFAULT_SOURCE@ toggle";
-    lockKey = ",XF86Lock, exec, hyprlock";
+  # Wrap a Nix string as a raw Lua expression (renders without quotes)
+  lua = lib.generators.mkLuaInline;
+
+  # Render a Nix value as a Lua literal string (e.g. "foo" → "\"foo\"")
+  toLuaStr = lib.generators.toLua { };
+
+  # Build a settings.bind entry: hl.bind(key, dispatcher)
+  mkBind = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+    ];
   };
 
-  # Select keybindings based on shell status
-  binds =
-    if shellEnabled then
-      {
-        launcher = shellKb.launcher.hyprland or shellKb.spotlight.hyprland or fallbackBinds.launcher;
-        calendar = shellKb.calendar.hyprland or "";
-        clipboard = shellKb.clipboard.hyprland or "";
-        dashboard = shellKb.dashboard.hyprland or "";
-        controlCenter = shellKb.controlCenter.hyprland or "";
-        lockScreen = shellKb.lockScreen.hyprland or fallbackBinds.lockScreen;
-        brightnessUp = shellKb.brightnessUp.hyprland or fallbackBinds.brightnessUp;
-        brightnessDown = shellKb.brightnessDown.hyprland or fallbackBinds.brightnessDown;
-        volumeUp = shellKb.volumeUp.hyprland or fallbackBinds.volumeUp;
-        volumeDown = shellKb.volumeDown.hyprland or fallbackBinds.volumeDown;
-        volumeMute = shellKb.volumeMute.hyprland or fallbackBinds.volumeMute;
-        micMute = shellKb.micMute.hyprland or fallbackBinds.micMute;
-        lockKey = shellKb.lockKey.hyprland or fallbackBinds.lockKey;
-        mediaPlay = shellKb.mediaPlay.hyprland or ",XF86AudioPlay, exec, playerctl play-pause";
-        mediaNext = shellKb.mediaNext.hyprland or ",XF86AudioNext, exec, playerctl next";
-        mediaPrev = shellKb.mediaPrev.hyprland or ",XF86AudioPrev, exec, playerctl previous";
-      }
+  # Like mkBind but with { repeating = true } — replaces hyprlang binde
+  mkBindRepeat = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+      { repeating = true; }
+    ];
+  };
+
+  # Like mkBind but with { drag = true } — replaces hyprlang bindm
+  mkBindDrag = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+      { drag = true; }
+    ];
+  };
+
+  # Build a bind from a shell keybinding struct { key; cmd; }
+  mkShellBind = kb: mkBind kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
+  mkShellBindRepeat = kb: mkBindRepeat kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
+
+  # Get a shell keybind (via .hyprland field) or fall back to an exec bind
+  getShellBind =
+    field: fallbackKey: fallbackCmd:
+    let
+      kbField = shellKb.${field}.hyprland or null;
+    in
+    if kbField != null then
+      mkShellBind kbField
     else
-      fallbackBinds
-      // {
-        mediaPlay = ",XF86AudioPlay, exec, playerctl play-pause";
-        mediaNext = ",XF86AudioNext, exec, playerctl next";
-        mediaPrev = ",XF86AudioPrev, exec, playerctl previous";
-      };
+      mkBind fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
+
+  getShellBindRepeat =
+    field: fallbackKey: fallbackCmd:
+    let
+      kbField = shellKb.${field}.hyprland or null;
+    in
+    if kbField != null then
+      mkShellBindRepeat kbField
+    else
+      mkBindRepeat fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
+
+  # Return a shell bind or null if the field is absent in the active shell
+  getOptionalShellBind =
+    field:
+    let
+      kbField = shellKb.${field}.hyprland or null;
+    in
+    if kbField != null then mkShellBind kbField else null;
+
+  # Launcher keybind
+  launcherBind =
+    let
+      launcherField = shellKb.launcher.hyprland or null;
+    in
+    if launcherField != null then
+      mkShellBind launcherField
+    else
+      mkBind "SUPER + SPACE" ''hl.dsp.exec_cmd("rofi -show drun")'';
+
 in
 
 {
@@ -92,282 +123,227 @@ in
     ];
 
   wayland.windowManager.hyprland = {
+    configType = "lua";
     enable = true;
+    # Autostart programs and submap definition
+    extraConfig = ''
+      hl.on("hyprland.start", function()
+        hl.exec_cmd("hyprpaper")
+        hl.exec_cmd("wl-paste --type text --watch cliphist store")
+        hl.exec_cmd("wl-paste --type image --watch cliphist store")
+        hl.exec_cmd("hypridle")
+        hl.exec_cmd("proton-pass")
+        hl.exec_cmd("corectrl")
+      end)
+    ''
+    + lib.optionalString hasNoctalia ''
+      hl.on("hyprland.start", function()
+        hl.exec_cmd("noctalia")
+      end)
+    ''
+    + ''
+      hl.define_submap("passthru", function()
+        hl.bind("SUPER + Escape", hl.dsp.submap("reset"))
+      end)
+    '';
     package = inputs.hyprland.packages.${system}.hyprland;
-
     settings = {
-      # Variables
-      "$terminal" = "ghostty";
-      "$menu" = "rofi -show drun";
-      "$browser" = "zen";
-      "$mainMod" = "SUPER";
-
-      # Catppuccin Mocha color scheme
-      "$rosewater" = "rgb(f5e0dc)";
-      "$flamingo" = "rgb(f2cdcd)";
-      "$pink" = "rgb(f5c2e7)";
-      "$mauve" = "rgb(cba6f7)";
-      "$red" = "rgb(f38ba8)";
-      "$maroon" = "rgb(eba0ac)";
-      "$peach" = "rgb(fab387)";
-      "$yellow" = "rgb(f9e2af)";
-      "$green" = "rgb(a6e3a1)";
-      "$teal" = "rgb(94e2d5)";
-      "$sky" = "rgb(89dceb)";
-      "$sapphire" = "rgb(74c7ec)";
-      "$blue" = "rgb(89b4fa)";
-      "$lavender" = "rgb(b4befe)";
-      "$text" = "rgb(cdd6f4)";
-      "$subtext1" = "rgb(bac2de)";
-      "$subtext0" = "rgb(a6adc8)";
-      "$overlay2" = "rgb(9399b2)";
-      "$overlay1" = "rgb(7f849c)";
-      "$overlay0" = "rgb(6c7086)";
-      "$surface2" = "rgb(585b70)";
-      "$surface1" = "rgb(45475a)";
-      "$surface0" = "rgb(313244)";
-      "$base" = "rgb(1e1e2e)";
-      "$mantle" = "rgb(181825)";
-      "$crust" = "rgb(11111b)";
-
-      # Environment variables
-      env = [
-        "QT_QPA_PLATFORM,wayland"
-        "XDG_CURRENT_DESKTOP,Hyprland"
-        "GTK_IM_MODULE,simple" # Fix dead keys on GTK 4.20+ / Wayland
-      ];
-
-      # Monitor configuration
-      monitor = [
-        "DP-1,1920x1080@120,auto,1"
-        "DP-3,2560x1440@144,auto,1"
-        ",preferred,auto,1"
-      ];
-
-      # Input configuration
-      input = {
-        kb_layout = "se";
-        kb_variant = "";
-        kb_model = "";
-        kb_options = "";
-        numlock_by_default = true;
-        follow_mouse = 1;
-        mouse_refocus = false;
-        sensitivity = 0;
-        touchpad = {
-          natural_scroll = false;
-        };
-      };
-
-      # General appearance
-      general = {
-        gaps_in = 3;
-        gaps_out = 5;
-        border_size = 2;
-        "col.active_border" = "$peach";
-        "col.inactive_border" = "$rosewater";
-        layout = "dwindle";
-      };
-
-      # Decoration
-      decoration = {
-        rounding = 10;
-        active_opacity = 1.0;
-        inactive_opacity = 1.0;
-        fullscreen_opacity = 1.0;
-        shadow = {
-          enabled = true;
-          range = 30;
-          render_power = 3;
-          color = "0x66000000";
-        };
-      };
-
-      # Animations
-      animations = {
-        enabled = false;
-        bezier = "myBezier, 0.05, 0.9, 0.1, 1.05";
-        animation = [
-          "windows, 1, 2, myBezier"
-          "windowsOut, 1, 2, default, popin 80%"
-          "border, 1, 2, default"
-          "borderangle, 1, 2, default"
-          "fade, 1, 2, default"
-          "workspaces, 1, 2, default"
-        ];
-      };
-
-      # Layout
-      dwindle = {
-        preserve_split = true;
-      };
-
-      # Misc
-      misc = {
-        disable_hyprland_logo = true;
-        disable_splash_rendering = true;
-      };
-
-      # Window rules
-      windowrule = [
-      ];
-
-      windowrulev2 = [
-      ];
-
-      layerrule = [
-      ];
-
-      # Keybindings - Applications
+      # All keybindings in a single bind list (repeating/drag via _args opts)
       bind = [
-        "$mainMod, RETURN, exec, ghostty"
-        "$mainMod SHIFT, RETURN, exec, kitty"
-        "$mainMod ALT, RETURN, exec, foot"
-        "$mainMod, S, exec, foot"
-        "$mainMod, E, exec, nautilus"
-        "$mainMod CTRL SHIFT, B, exec, $browser -p Work_Admin"
-        "$mainMod, P, exec, proton-pass"
-        "$mainMod, D, exec, discord"
-        "$mainMod, period, exec, emote"
+        # Applications
+        (mkBind "SUPER + RETURN" ''hl.dsp.exec_cmd("ghostty")'')
+        (mkBind "SUPER + SHIFT + RETURN" ''hl.dsp.exec_cmd("kitty")'')
+        (mkBind "SUPER + ALT + RETURN" ''hl.dsp.exec_cmd("foot")'')
+        (mkBind "SUPER + S" ''hl.dsp.exec_cmd("foot")'')
+        (mkBind "SUPER + E" ''hl.dsp.exec_cmd("nautilus")'')
+        (mkBind "SUPER + CTRL + SHIFT + B" ''hl.dsp.exec_cmd("zen -p Work_Admin")'')
+        (mkBind "SUPER + P" ''hl.dsp.exec_cmd("proton-pass")'')
+        (mkBind "SUPER + D" ''hl.dsp.exec_cmd("discord")'')
+        (mkBind "SUPER + period" ''hl.dsp.exec_cmd("emote")'')
 
         # Screenshot
-        "$mainMod SHIFT, S, exec, grim -g \"$(slurp)\" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png"
+        (mkBind "SUPER + SHIFT + S" (
+          "hl.dsp.exec_cmd(${toLuaStr ''grim -g "$(slurp)" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png''})"
+        ))
 
         # Launcher / menu
-        binds.launcher
+        launcherBind
       ]
-      # Shell-specific keybindings (only if enabled)
+      # Shell-specific keybindings (only if a shell is enabled)
       ++ lib.optionals shellEnabled (
-        lib.filter (s: s != "") [
-          binds.calendar
-          binds.clipboard
-          binds.dashboard
-          binds.controlCenter
+        lib.filter (b: b != null) [
+          (getOptionalShellBind "calendar")
+          (getOptionalShellBind "clipboard")
+          (getOptionalShellBind "dashboard")
+          (getOptionalShellBind "controlCenter")
         ]
       )
       ++ [
         # Window management
-        "$mainMod, Q, killactive"
-        "$mainMod, F, fullscreen, 1"
-        "$mainMod SHIFT, F, fullscreen"
-        "$mainMod, T, togglefloating"
-        "$mainMod, J, togglesplit"
-        "$mainMod, G, togglegroup"
-
-        "$mainMod, M, exec, command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"
+        (mkBind "SUPER + Q" "hl.dsp.window.close()")
+        (mkBind "SUPER + F" ''hl.dsp.window.fullscreen({ mode = "maximized" })'')
+        (mkBind "SUPER + SHIFT + F" "hl.dsp.window.fullscreen()")
+        (mkBind "SUPER + T" "hl.dsp.window.float()")
+        (mkBind "SUPER + J" ''hl.dsp.layout("togglesplit")'')
+        (mkBind "SUPER + G" "hl.dsp.group.toggle()")
+        (mkBind "SUPER + M" ''hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit")'')
 
         # Window navigation
-        "$mainMod, left, movefocus, l"
-        "$mainMod, right, movefocus, r"
-        "$mainMod, up, movefocus, u"
-        "$mainMod, down, movefocus, d"
-        "ALT, Tab, cyclenext"
-        "ALT, Tab, bringactivetotop"
+        (mkBind "SUPER + left" ''hl.dsp.focus({ direction = "l" })'')
+        (mkBind "SUPER + right" ''hl.dsp.focus({ direction = "r" })'')
+        (mkBind "SUPER + up" ''hl.dsp.focus({ direction = "u" })'')
+        (mkBind "SUPER + down" ''hl.dsp.focus({ direction = "d" })'')
+        (mkBind "ALT + Tab" ''
+          function()
+            hl.dispatch(hl.dsp.window.cycle_next())
+            hl.dispatch(hl.dsp.window.alter_zorder({ mode = "top" }))
+          end'')
 
         # Window resizing
-        "$mainMod SHIFT, right, resizeactive, 100 0"
-        "$mainMod SHIFT, left, resizeactive, -100 0"
-        "$mainMod SHIFT, up, resizeactive, 0 -100"
-        "$mainMod SHIFT, down, resizeactive, 0 100"
+        (mkBind "SUPER + SHIFT + right" "hl.dsp.window.resize({ x = 100, y = 0, relative = true })")
+        (mkBind "SUPER + SHIFT + left" "hl.dsp.window.resize({ x = -100, y = 0, relative = true })")
+        (mkBind "SUPER + SHIFT + up" "hl.dsp.window.resize({ x = 0, y = -100, relative = true })")
+        (mkBind "SUPER + SHIFT + down" "hl.dsp.window.resize({ x = 0, y = 100, relative = true })")
 
-        # Actions
-        binds.lockScreen
+        # Lock screen
+        (getShellBind "lockScreen" "SUPER + X" "hyprlock")
+      ]
+      # Workspace switching: SUPER + 0-9 (0 → workspace 10)
+      ++ map (
+        n:
+        mkBind "SUPER + ${toString n}" "hl.dsp.focus({ workspace = ${
+          toString (if n == 0 then 10 else n)
+        } })"
+      ) (lib.range 0 9)
+      # Move window to workspace: SUPER + SHIFT + 0-9
+      ++ map (
+        n:
+        mkBind "SUPER + SHIFT + ${toString n}" "hl.dsp.window.move({ workspace = ${
+          toString (if n == 0 then 10 else n)
+        } })"
+      ) (lib.range 0 9)
+      ++ [
+        # Workspace scroll via mouse wheel
+        (mkBind "SUPER + mouse_down" ''hl.dsp.focus({ workspace = "e+1" })'')
+        (mkBind "SUPER + mouse_up" ''hl.dsp.focus({ workspace = "e-1" })'')
+        (mkBind "SUPER + CTRL + down" ''hl.dsp.focus({ workspace = "empty" })'')
 
-        # Workspace switching
-        "$mainMod, 1, workspace, 1"
-        "$mainMod, 2, workspace, 2"
-        "$mainMod, 3, workspace, 3"
-        "$mainMod, 4, workspace, 4"
-        "$mainMod, 5, workspace, 5"
-        "$mainMod, 6, workspace, 6"
-        "$mainMod, 7, workspace, 7"
-        "$mainMod, 8, workspace, 8"
-        "$mainMod, 9, workspace, 9"
-        "$mainMod, 0, workspace, 10"
-        "$mainMod, mouse_down, workspace, e+1"
-        "$mainMod, mouse_up, workspace, e-1"
-        "$mainMod CTRL, down, workspace, empty"
+        # Fn / media keys
+        (getShellBind "brightnessUp" "XF86MonBrightnessUp" "brightnessctl -q s +10%")
+        (getShellBind "brightnessDown" "XF86MonBrightnessDown" "brightnessctl -q s 10%-")
+        (getShellBind "volumeMute" "XF86AudioMute" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
+        (getShellBind "mediaPlay" "XF86AudioPlay" "playerctl play-pause")
+        (mkBind "XF86AudioPause" ''hl.dsp.exec_cmd("playerctl pause")'')
+        (getShellBind "mediaNext" "XF86AudioNext" "playerctl next")
+        (getShellBind "mediaPrev" "XF86AudioPrev" "playerctl previous")
+        (getShellBind "micMute" "XF86AudioMicMute" "pactl set-source-mute @DEFAULT_SOURCE@ toggle")
+        (getShellBind "lockKey" "XF86Lock" "hyprlock")
 
-        # Move window to workspace
-        "$mainMod SHIFT, 1, movetoworkspace, 1"
-        "$mainMod SHIFT, 2, movetoworkspace, 2"
-        "$mainMod SHIFT, 3, movetoworkspace, 3"
-        "$mainMod SHIFT, 4, movetoworkspace, 4"
-        "$mainMod SHIFT, 5, movetoworkspace, 5"
-        "$mainMod SHIFT, 6, movetoworkspace, 6"
-        "$mainMod SHIFT, 7, movetoworkspace, 7"
-        "$mainMod SHIFT, 8, movetoworkspace, 8"
-        "$mainMod SHIFT, 9, movetoworkspace, 9"
-        "$mainMod SHIFT, 0, movetoworkspace, 10"
+        # Passthrough SUPER KEY to virtual machine
+        (mkBind "SUPER + Z" ''hl.dsp.submap("passthru")'')
 
-        # Fn keys
-        binds.brightnessUp
-        binds.brightnessDown
-        binds.volumeMute
-        binds.mediaPlay
-        ",XF86AudioPause, exec, playerctl pause"
-        binds.mediaNext
-        binds.mediaPrev
-        binds.micMute
-        binds.lockKey
+        # Browser shortcuts (swapped based on hostname)
+        (mkBind browserPersonalKey ''hl.dsp.exec_cmd("zen -p Personal")'')
+        (mkBind browserWorkKey ''hl.dsp.exec_cmd("zen -p Work")'')
 
-        # Passthrough SUPER KEY to Virtual Machine
-        "$mainMod, Z, submap, passthru"
+        # Audio volume — repeatable (replaces binde)
+        (getShellBindRepeat "volumeUp" "XF86AudioRaiseVolume"
+          "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
+        )
+        (getShellBindRepeat "volumeDown" "XF86AudioLowerVolume" "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-")
 
-        # Browser shortcuts that swap based on hostname
-        "${browserPersonalBind}, exec, $browser -p Personal"
-        "${browserWorkBind}, exec, $browser -p Work"
+        # Mouse drag binds (replaces bindm)
+        (mkBindDrag "SUPER + mouse:272" "hl.dsp.window.drag()")
+        (mkBindDrag "SUPER + mouse:273" "hl.dsp.window.resize()")
       ];
-
-      # Audio volume control (repeatable)
-      binde = [
-        binds.volumeUp
-        binds.volumeDown
+      # All config options — renders as hl.config({ ["section.key"] = value, ... })
+      config = {
+        "animations.enabled" = false;
+        "decoration.active_opacity" = 1.0;
+        "decoration.fullscreen_opacity" = 1.0;
+        "decoration.inactive_opacity" = 1.0;
+        "decoration.rounding" = 10;
+        "decoration.shadow.color" = "0x66000000";
+        "decoration.shadow.enabled" = true;
+        "decoration.shadow.range" = 30;
+        "decoration.shadow.render_power" = 3;
+        "dwindle.preserve_split" = true;
+        "general.border_size" = 2;
+        "general.col.active_border" = "rgb(fab387)"; # Catppuccin Mocha peach
+        "general.col.inactive_border" = "rgb(f5e0dc)"; # Catppuccin Mocha rosewater
+        "general.gaps_in" = 3;
+        "general.gaps_out" = 5;
+        "general.layout" = "dwindle";
+        "input.follow_mouse" = 1;
+        "input.kb_layout" = "se";
+        "input.kb_model" = "";
+        "input.kb_options" = "";
+        "input.kb_variant" = "";
+        "input.mouse_refocus" = false;
+        "input.numlock_by_default" = true;
+        "input.sensitivity" = 0;
+        "input.touchpad.natural_scroll" = false;
+        "misc.disable_hyprland_logo" = true;
+        "misc.disable_splash_rendering" = true;
+      };
+      # Environment variables — renders as hl.env("KEY", "VALUE")
+      env = [
+        {
+          _args = [
+            "QT_QPA_PLATFORM"
+            "wayland"
+          ];
+        }
+        {
+          _args = [
+            "XDG_CURRENT_DESKTOP"
+            "Hyprland"
+          ];
+        }
+        {
+          _args = [
+            "GTK_IM_MODULE"
+            "simple"
+          ];
+        } # Fix dead keys on GTK 4.20+ / Wayland
       ];
-
-      # Mouse bindings
-      bindm = [
-        "$mainMod, mouse:272, movewindow"
-        "$mainMod, mouse:273, resizewindow"
-      ];
-
-      # Submap for passthrough
-      submap = [
-        "passthru"
-        "SUPER,Escape,submap,reset"
-        "reset"
+      # Monitor configuration — renders as hl.monitor({ output, mode, position, scale })
+      monitor = [
+        {
+          _args = [
+            {
+              mode = "1920x1080@120";
+              output = "DP-1";
+              position = "auto";
+              scale = 1;
+            }
+          ];
+        }
+        {
+          _args = [
+            {
+              mode = "2560x1440@144";
+              output = "DP-3";
+              position = "auto";
+              scale = 1;
+            }
+          ];
+        }
+        {
+          _args = [
+            {
+              mode = "preferred";
+              output = "";
+              position = "auto";
+              scale = 1;
+            }
+          ];
+        }
       ];
     };
-
-    # Autostart programs
-    extraConfig = ''
-      exec-once = dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-
-      # Wallpaper
-      exec-once = hyprpaper
-
-      # Clipboard history
-      exec-once = wl-paste --type text --watch cliphist store
-      exec-once = wl-paste --type image --watch cliphist store
-
-      # Idle and lock
-      exec-once = hypridle
-
-      # Applications
-      exec-once = proton-pass
-      exec-once = corectrl
-    ''
-    + lib.optionalString hasNoctalia ''
-      # Noctalia shell
-      exec-once = noctalia-shell
-    ''
-    + lib.optionalString (hasDms && !hasNoctalia) ''
-      # DankMaterialShell
-      exec-once = dms run
-    '';
   };
 
   # Symlink hyprland config from dotfiles repo
   # Disabled: hyprland config files are missing from dotfiles
-  # home.file = lib.custom.symlink.mkDotfilesLinks config homeDirectory [ "hypr" ];
+  # xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [ "hypr" ];
 }

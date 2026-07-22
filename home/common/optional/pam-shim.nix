@@ -1,7 +1,7 @@
 {
   config,
-  lib,
   inputs,
+  lib,
   system,
   ...
 }:
@@ -11,10 +11,9 @@
   # Redirects PAM calls from Nix-installed binaries to the host system's PAM
   pamShim.enable = true;
 
-  # Replace PAM in the noctalia-shell package directly
-  # The nixpkgs overlay approach doesn't work because noctalia-shell brings its
-  # own quickshell (from noctalia-qs), not pkgs.quickshell from nixpkgs
-  programs.noctalia-shell.package = lib.mkIf config.programs.noctalia-shell.enable (
+  # Replace PAM in the noctalia package directly so the lockscreen can
+  # authenticate against the host's PAM stack on non-NixOS.
+  programs.noctalia.package = lib.mkIf config.programs.noctalia.enable (
     config.lib.pamShim.replacePam inputs.noctalia.packages.${system}.default
   );
 }

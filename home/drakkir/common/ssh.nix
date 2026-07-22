@@ -5,9 +5,9 @@
     enable = true;
     enableDefaultConfig = false;
 
-    matchBlocks = {
+    settings = {
       "github.com" = {
-        identityAgent = "/run/user/1000/proton-pass-agent";
+        IdentityAgent = "/run/user/1000/proton-pass-agent";
       };
     };
   };

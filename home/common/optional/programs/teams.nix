@@ -6,12 +6,16 @@
   ];
 
   xdg.desktopEntries.teams-for-linux = {
-    name = "Microsoft Teams for Linux";
+    categories = [
+      "Network"
+      "InstantMessaging"
+      "Chat"
+    ];
     comment = "Unofficial Microsoft Teams client for Linux";
     exec = "teams-for-linux --class=teams-for-linux %U";
     icon = "teams-for-linux";
-    type = "Application";
-    categories = [ "Network" "InstantMessaging" "Chat" ];
     mimeType = [ "x-scheme-handler/msteams" ];
+    name = "Microsoft Teams for Linux";
+    type = "Application";
   };
 }

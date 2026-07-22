@@ -1,7 +1,7 @@
 {
+  homeDirectory,
   inputs,
   username,
-  homeDirectory,
   ...
 }:
 
@@ -23,8 +23,8 @@
 
   # On NixOS neovim is not provided by system-manager, install it here
   programs.neovim = {
-    enable = true;
     defaultEditor = true;
+    enable = true;
   };
 
   # Override the genericLinux target — not needed on NixOS
@@ -32,5 +32,5 @@
 
   # On NixOS, systemd user env fixes from home.nix are still applied but
   # the system-manager path is irrelevant; keep the profile clean.
-  xdg.systemDirs.data = [];
+  xdg.systemDirs.data = [ ];
 }

@@ -1,11 +1,13 @@
 {
+  homeDirectory,
   inputs,
   username,
-  homeDirectory,
   ...
 }:
 
 {
+  # Symlink .face file for user avatar
+  home.file.".face".source = ../../.face;
   imports = [
     ../common/core
     ./common/git.nix
@@ -18,6 +20,7 @@
 
     # Features
     ../common/optional/development.nix
+    ../common/optional/containers.nix
     ../common/optional/gaming.nix
     ../common/optional/tools
 
@@ -29,7 +32,4 @@
     ../common/optional/programs/zen-browser.nix
     ../common/optional/programs/noctalia.nix
   ];
-
-  # Symlink .face file for user avatar
-  home.file.".face".source = ../../.face;
 }
