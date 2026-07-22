@@ -22,6 +22,7 @@ return {
 			{ "<leader>l", desc = "Lazy" },
 			{ "<leader>n", desc = "Notification History" },
 			{ "<leader>p", desc = "Clipboard History" },
+			{ "<leader>r", group = "remote" },
 			{ "<leader>s", group = "search" },
 			{ "<leader>u", group = "ui" },
 			{ "<leader>w", group = "windows" },

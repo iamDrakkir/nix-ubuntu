@@ -21,6 +21,14 @@ vim.lsp.config("basedpyright", {
 	},
 })
 
+vim.lsp.config("copilot", {
+	settings = {
+		telemetry = {
+			telemetryLevel = "off",
+		},
+	},
+})
+
 -- jsonls schema config is set in plugins/lsp.lua where schemastore is available as a dependency
 -- Auto sign-in to Copilot if not authenticated
 if vim.g.vscode == nil then
@@ -93,7 +101,9 @@ if vim.g.vscode == nil then
 			map("gI", function()
 				Snacks.picker.lsp_implementations()
 			end, "Go to implementation")
-			map("K", vim.lsp.buf.hover, "Hover documentation")
+			map("K", function()
+				vim.lsp.buf.hover({ border = "rounded" })
+			end, "Hover documentation")
 			map("<leader>cr", vim.lsp.buf.rename, "Rename symbol")
 			map("<leader>ca", vim.lsp.buf.code_action, "Code action")
 			map("<leader>ct", vim.lsp.buf.type_definition, "Type definition")
@@ -127,11 +137,6 @@ if vim.g.vscode == nil then
 			})
 		end,
 	})
-
-	-- Rounded border on hover (signatureHelp is handled by blink.cmp's own window)
-	vim.lsp.handlers["textDocument/hover"] = function(err, result, ctx, config)
-		return vim.lsp.handlers.hover(err, result, ctx, vim.tbl_deep_extend("force", config or {}, { border = "rounded" }))
-	end
 
 	-- Compat shims: LspInfo/LspRestart/LspLog were removed in nvim-lspconfig for 0.12
 	vim.api.nvim_create_user_command("LspInfo", "checkhealth vim.lsp", {
