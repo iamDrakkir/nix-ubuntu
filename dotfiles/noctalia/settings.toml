@@ -5,7 +5,10 @@ capsule = true
 center = [ "taskbar" ]
 end = [ "privacy", "tray", "notifications", "network", "bluetooth", "volume", "brightness", "battery", "session" ]
 margin_ends = 0
+radius_top_left = 0
+radius_top_right = 0
 start = [ "clock", "date", "control-center", "launcher" ]
+thickness = 30
 
 [lockscreen_widgets]
 enabled = false
@@ -100,6 +103,17 @@ widget_order = [ "lockscreen-login-box@DP-4", "lockscreen-login-box@DP-3", "lock
 
 [plugins]
 enabled = [ "lucasoe/proton-pass" ]
+
+[shell.launcher]
+categories = false
+compact = true
+fetch_exchange_rates = false
+
+    [shell.launcher.providers.session]
+    global = true
+
+[shell.panel]
+launcher_placement = "attached"
 
 [theme]
 builtin = "Noctalia"
