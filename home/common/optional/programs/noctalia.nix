@@ -16,17 +16,27 @@ let
     ]
     ++ (pkgs.lib.splitString " " cmd);
 
-  # Keybinding definitions for different compositors
+  # IPC command as a single shell string (e.g. "noctalia msg panel-toggle launcher")
+  ipcCmd = cmd: pkgs.lib.concatStringsSep " " (noctaliaIPC cmd);
+
+  # Keybinding definitions for different compositors.
+  # The hyprland consumer expects a set { key; cmd; } (see hyprland/default.nix mkShellBind).
   keybinds = {
     launcher = {
-      hyprland = "$mainMod, SPACE, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "panel-toggle launcher")}";
+      hyprland = {
+        key = "SUPER + SPACE";
+        cmd = ipcCmd "panel-toggle launcher";
+      };
       niri = {
         key = "Mod+Space";
         action = noctaliaIPC "panel-toggle launcher";
       };
     };
     clipboard = {
-      hyprland = "$mainMod, V, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "panel-toggle clipboard")}";
+      hyprland = {
+        key = "SUPER + V";
+        cmd = ipcCmd "panel-toggle clipboard";
+      };
       niri = {
         action = noctaliaIPC "panel-toggle clipboard";
         key = "Mod+V";
@@ -34,19 +44,28 @@ let
     };
 
     lockScreen = {
-      hyprland = "$mainMod, X, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "session lock")}";
+      hyprland = {
+        key = "SUPER + X";
+        cmd = ipcCmd "session lock";
+      };
       niri = {
         key = "Mod+X";
         action = noctaliaIPC "session lock";
       };
     };
     lockKey = {
-      hyprland = ",XF86Lock, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "session lock")}";
+      hyprland = {
+        key = "XF86Lock";
+        cmd = ipcCmd "session lock";
+      };
       # XF86Lock is not a valid key in niri
     };
 
     brightnessUp = {
-      hyprland = ",XF86MonBrightnessUp, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness-up")}";
+      hyprland = {
+        key = "XF86MonBrightnessUp";
+        cmd = ipcCmd "brightness-up";
+      };
       niri = {
         key = "XF86MonBrightnessUp";
         action = noctaliaIPC "brightness-up";
@@ -54,7 +73,10 @@ let
     };
 
     brightnessDown = {
-      hyprland = ",XF86MonBrightnessDown, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "brightness-down")}";
+      hyprland = {
+        key = "XF86MonBrightnessDown";
+        cmd = ipcCmd "brightness-down";
+      };
       niri = {
         key = "XF86MonBrightnessDown";
         action = noctaliaIPC "brightness-down";
@@ -62,7 +84,10 @@ let
     };
 
     volumeUp = {
-      hyprland = ",XF86AudioRaiseVolume, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-up")}";
+      hyprland = {
+        key = "XF86AudioRaiseVolume";
+        cmd = ipcCmd "volume-up";
+      };
       niri = {
         key = "XF86AudioRaiseVolume";
         action = noctaliaIPC "volume-up";
@@ -70,7 +95,10 @@ let
     };
 
     volumeDown = {
-      hyprland = ",XF86AudioLowerVolume, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-down")}";
+      hyprland = {
+        key = "XF86AudioLowerVolume";
+        cmd = ipcCmd "volume-down";
+      };
       niri = {
         key = "XF86AudioLowerVolume";
         action = noctaliaIPC "volume-down";
@@ -78,7 +106,10 @@ let
     };
 
     volumeMute = {
-      hyprland = ",XF86AudioMute, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "volume-mute")}";
+      hyprland = {
+        key = "XF86AudioMute";
+        cmd = ipcCmd "volume-mute";
+      };
       niri = {
         key = "XF86AudioMute";
         action = noctaliaIPC "volume-mute";
@@ -86,7 +117,10 @@ let
     };
 
     micMute = {
-      hyprland = ",XF86AudioMicMute, exec, ${pkgs.lib.concatStringsSep " " (noctaliaIPC "mic-mute")}";
+      hyprland = {
+        key = "XF86AudioMicMute";
+        cmd = ipcCmd "mic-mute";
+      };
       niri = {
         key = "XF86AudioMicMute";
         action = noctaliaIPC "mic-mute";
