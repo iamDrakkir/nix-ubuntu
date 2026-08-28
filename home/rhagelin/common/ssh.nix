@@ -17,6 +17,9 @@
       "ssh.dev.azure.com" = {
         IdentityFile = "~/.ssh/id_rsa";
         IdentitiesOnly = "yes";
+        # Use the on-disk key directly; don't push it into gpg-agent
+        # (which would trigger a "protect this key" passphrase prompt).
+        AddKeysToAgent = "no";
       };
 
       "sevikcsprod01" = {

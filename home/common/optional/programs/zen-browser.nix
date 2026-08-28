@@ -72,6 +72,14 @@ in
         search = commonSearch;
         settings = commonSettings;
       };
+
+      work_admin = {
+        id = 2;
+        isDefault = false;
+        settings = commonSettings;
+        search = commonSearch;
+        extensions.packages = commonExtensions;
+      };
     };
     setAsDefaultBrowser = true;
   };
