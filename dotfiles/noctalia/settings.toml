@@ -181,23 +181,35 @@ fetch_exchange_rates = false
 [shell.panel]
 launcher_placement = "attached"
 
+[shell.screen_corners]
+enabled = true
+
 [shell.screenshot]
 pipe_command = "satty -f -"
 pipe_to_command = true
 
 [theme]
-builtin = "Rosé Pine"
+builtin = "Ayu"
+community_palette = "Oxocarbon"
+mode = "dark"
 source = "builtin"
+wallpaper_scheme = "m3-content"
 
     [theme.templates]
     builtin_ids = [ "btop", "foot", "gtk3", "gtk4", "ghostty", "niri", "starship" ]
     community_ids = [ "opencode", "zen-browser", "neovim", "vscode", "bat", "herdr", "lazygit" ]
 
 [wallpaper.default]
-path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
 [wallpaper.last]
-path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+
+[wallpaper.monitors.DP-1]
+path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+
+[wallpaper.monitors.DP-2]
+path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
 [wallpaper.monitors.DP-3]
 path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
@@ -207,6 +219,16 @@ path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jp
 
 [wallpaper.monitors.eDP-1]
 path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+
+[[wallpaper.favorite]]
+builtin_palette = "Ayu"
+palette_source = "builtin"
+path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+theme_mode = "dark"
+
+[widget.sysmon]
+stat = "gpu_temp"
+visualization = "graph"
 
 [widget.taskbar]
 group_by_workspace = true

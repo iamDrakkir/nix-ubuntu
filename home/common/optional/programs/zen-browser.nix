@@ -1,12 +1,49 @@
-{ inputs, pkgs, ... }:
+{
+  inputs,
+  pkgs,
+  hostname,
+  ...
+}:
 
 let
+  # On the work machine the "work" profile is the default; on all other
+  # machines "personal" is the default.
+  isWork = hostname == "work";
+
   commonSettings = {
     "zen.tabs.vertical.right-side" = true;
+    # Required for Zen mods / userChrome.css to take effect.
+    "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
   };
+
+  # Zen mod: "Back Fwd Always Hidden" by jean06560
+  # https://zen-browser.app/mods/4a222d82-2803-4ed2-a390-90abfce4f195/
+  commonUserChrome = ''
+    :root:not([customizing]) #zen-sidebar-top-buttons-separator {
+      display: none !important;
+    }
+    :root:not([customizing]) #back-button {
+      display: none !important;
+    }
+    :root:not([customizing]) #forward-button {
+      display: none !important;
+    }
+  '';
 
   commonSearch = {
     engines = {
+      "google" = {
+        metaData.alias = "g";
+      };
+      "youtube" = {
+        definedAliases = [ "y" ];
+        icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/youtube.svg";
+        urls = [
+          {
+            template = "https://www.youtube.com/results?search_query={searchTerms}";
+          }
+        ];
+      };
       "Nix Packages" = {
         definedAliases = [ "n" ];
         icon = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
@@ -33,6 +70,12 @@ in
 {
   programs.zen-browser = {
     enable = true;
+    # The nixpkgs Firefox wrapper hardcodes MOZ_LEGACY_PROFILES=1, which forces
+    # Zen to read profiles from the legacy path ~/.zen. Home Manager, however,
+    # writes profile config (search engines, prefs, etc.) to the XDG path
+    # ~/.config/zen. Setting this to "0" makes Zen use ~/.config/zen so the
+    # Home Manager managed profiles are actually loaded.
+    env.MOZ_LEGACY_PROFILES = "0";
     policies = {
       AutofillAddressEnabled = true;
       AutofillCreditCardEnabled = false;
@@ -60,17 +103,19 @@ in
             facebook-container
           ]);
         id = 0;
-        isDefault = false;
+        isDefault = !isWork;
         search = commonSearch;
         settings = commonSettings;
+        userChrome = commonUserChrome;
       };
 
       work = {
         extensions.packages = commonExtensions;
         id = 1;
-        isDefault = true;
+        isDefault = isWork;
         search = commonSearch;
         settings = commonSettings;
+        userChrome = commonUserChrome;
       };
 
       work_admin = {
@@ -79,6 +124,7 @@ in
         settings = commonSettings;
         search = commonSearch;
         extensions.packages = commonExtensions;
+        userChrome = commonUserChrome;
       };
     };
     setAsDefaultBrowser = true;
