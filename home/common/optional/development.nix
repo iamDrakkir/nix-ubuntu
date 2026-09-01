@@ -15,9 +15,15 @@
 
     # C/C++
     gcc
-
-    # AI agent multiplexer
-    herdr
   ];
   programs.nix-index-database.comma.enable = true;
+
+  # AI agent multiplexer
+  programs.herdr = {
+    enable = true;
+    package = pkgs.herdr;
+    settings = {
+      terminal.default_shell = "fish";
+    };
+  };
 }

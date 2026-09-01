@@ -9,6 +9,9 @@
 }:
 
 let
+  # On the work machine Super+D opens Teams; elsewhere it opens Discord.
+  isWork = hostname == "work";
+
   # Conditionally use Noctalia keybindings
   kb = config.myConfig.programs.noctalia.keybindings or { };
   noctaliaEnabled = kb != { };
@@ -104,7 +107,7 @@ in
             "work_admin"
           ];
           "Mod+P".action.spawn = [ "proton-pass" ];
-          "Mod+D".action.spawn = [ "discord" ];
+          "Mod+D".action.spawn = [ (if isWork then "teams-for-linux" else "discord") ];
 
           # Window management
           "Mod+Q" = {

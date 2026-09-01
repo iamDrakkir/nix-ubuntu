@@ -6,13 +6,6 @@
 }:
 
 {
-  # Symlink .face file for user avatar
-  home.file.".face".source = ../../.face;
-  # PKCS#11 / Smartcard support
-  home.packages = with pkgs; [
-    opensc # OpenSC PKCS#11 provider (opensc-pkcs11)
-    libp11 # OpenSSL PKCS#11 engine (libengine-pkcs11-openssl)
-  ];
   imports = [
     ../common/core
     ./common/git.nix

@@ -16,6 +16,8 @@
       confirm-close-surface = false;
       # Custom shader
       custom-shader = "shaders/cursor_warp.glsl";
+      # Mouse
+      mouse-scroll-multiplier = 0.5;
       # Font configuration
       font-feature = [
         "-liga"
