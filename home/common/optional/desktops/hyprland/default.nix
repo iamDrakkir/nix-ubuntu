@@ -88,15 +88,12 @@ let
     in
     if kbField != null then mkShellBind kbField else null;
 
-  # Launcher keybind
-  launcherBind =
+  # Launcher keybind (provided by the shell; no standalone launcher installed)
+  launcherBinds =
     let
       launcherField = shellKb.launcher.hyprland or null;
     in
-    if launcherField != null then
-      mkShellBind launcherField
-    else
-      mkBind "SUPER + SPACE" ''hl.dsp.exec_cmd("rofi -show drun")'';
+    lib.optionals (launcherField != null) [ (mkShellBind launcherField) ];
 
 in
 
@@ -109,11 +106,9 @@ in
       slurp # Screen area selector
       wl-clipboard # Clipboard utilities
       wl-clipboard-x11 # X11 compatibility
-      cliphist # Clipboard history
-      hyprpaper # Wallpaper
       hypridle # Idle management
       playerctl # Media player control
-      emote # Emoji picker
+      wtype # Synthesise key events (universal copy/paste)
       satty
     ]
     ++ lib.optionals (!shellEnabled) [
@@ -128,9 +123,6 @@ in
     # Autostart programs and submap definition
     extraConfig = ''
       hl.on("hyprland.start", function()
-        hl.exec_cmd("hyprpaper")
-        hl.exec_cmd("wl-paste --type text --watch cliphist store")
-        hl.exec_cmd("wl-paste --type image --watch cliphist store")
         hl.exec_cmd("hypridle")
         hl.exec_cmd("proton-pass")
         hl.exec_cmd("corectrl")
@@ -159,23 +151,32 @@ in
         (mkBind "SUPER + CTRL + SHIFT + B" ''hl.dsp.exec_cmd("zen -p Work_Admin")'')
         (mkBind "SUPER + P" ''hl.dsp.exec_cmd("proton-pass")'')
         (mkBind "SUPER + D" ''hl.dsp.exec_cmd("discord")'')
-        (mkBind "SUPER + period" ''hl.dsp.exec_cmd("emote")'')
+
+        # Universal clipboard: send the legacy CUA chords, which both
+        # terminals and GTK/Qt apps honour, so one key works everywhere.
+        (mkBind "SUPER + C" ''hl.dsp.exec_cmd("wtype -M ctrl -k Insert -m ctrl")'')
+        (mkBind "SUPER + V" ''hl.dsp.exec_cmd("wtype -M shift -k Insert -m shift")'')
+        (mkBind "SUPER + X" ''hl.dsp.exec_cmd("wtype -M ctrl -k x -m ctrl")'')
 
         # Screenshot
         (mkBind "SUPER + SHIFT + S" (
           "hl.dsp.exec_cmd(${toLuaStr ''grim -g "$(slurp)" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png''})"
         ))
-
-        # Launcher / menu
-        launcherBind
       ]
+      ++ launcherBinds
       # Shell-specific keybindings (only if a shell is enabled)
       ++ lib.optionals shellEnabled (
         lib.filter (b: b != null) [
           (getOptionalShellBind "calendar")
           (getOptionalShellBind "clipboard")
+          (getOptionalShellBind "omniMenu")
+          (getOptionalShellBind "emoji")
           (getOptionalShellBind "dashboard")
           (getOptionalShellBind "controlCenter")
+          (getOptionalShellBind "audioPanel")
+          (getOptionalShellBind "bluetoothPanel")
+          (getOptionalShellBind "networkPanel")
+          (getOptionalShellBind "nightlight")
         ]
       )
       ++ [
@@ -206,7 +207,7 @@ in
         (mkBind "SUPER + SHIFT + down" "hl.dsp.window.resize({ x = 0, y = 100, relative = true })")
 
         # Lock screen
-        (getShellBind "lockScreen" "SUPER + X" "hyprlock")
+        (getShellBind "lockScreen" "SUPER + CTRL + Escape" "hyprlock")
       ]
       # Workspace switching: SUPER + 0-9 (0 → workspace 10)
       ++ map (

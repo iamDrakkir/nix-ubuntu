@@ -19,7 +19,101 @@ Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-conf
 - **Dual-mode system management**: system-manager on Ubuntu; native NixOS on the Pi
 - **Multiple Desktop Environments**: GNOME, Hyprland, and Niri (desktop hosts only)
 - **Declarative Dotfiles**: Managed via out-of-store symlinks to in-repo dotfiles
+- **Hierarchical Keybindings**: One modifier per layer — Super desktop, Alt multiplexer, Ctrl application
 - **Core vs Optional Philosophy**: Strict separation between always-present and optional configs
+
+## Keybinding Philosophy
+
+Every keyboard action belongs to the layer it controls, and the modifier says
+which layer that is:
+
+**Super = desktop, Alt = multiplexer, Ctrl = application.**
+
+| Layer | Modifier family | Scope |
+|-------|-----------------|-------|
+| Window manager | `Super + Ctrl/Alt/Shift + x` | Desktop and window actions |
+| tmux / Herdr | `Alt + Ctrl/Shift + x` | Multiplexer and pane actions |
+| Active TUI/application | `Ctrl + x` | The focused terminal application |
+
+Direction is always `h` left, `j` down, `k` up, `l` right — in every layer, in
+every application.
+
+- `Super + h/j/k/l`: focus a window
+- `Super + Ctrl + h/j/k/l`: move a window
+- `Super + Shift + h/j/k/l`: focus a monitor
+- `Alt + h/j/k/l`: focus a tmux or Herdr pane
+- `Alt + Shift + h/l`: previous / next tmux window or Herdr tab
+- `Alt + Shift + j/k`: next / previous tmux session or Herdr workspace
+- `Alt + Ctrl + Shift + h/j/k/l`: resize a tmux or Herdr pane
+- `Ctrl + h/j/k/l`: navigate inside the active TUI/application
+
+Each tier has the same shape: a plain direction moves within the current
+container, and `Shift + direction` moves between containers. `Super + Shift`
+cannot be reused inside tmux or Herdr, because the compositor consumes those
+chords before any terminal application can see them.
+
+### Adding a new binding
+
+Direct chords are a finite resource: every `Alt + key` claimed here is one that
+no TUI running inside the multiplexer can ever use. So the test is frequency,
+not usefulness.
+
+1. **Fundamental and frequent** — navigation, and creating, closing, moving or
+   resizing panes and windows — earns a direct chord in its layer.
+2. **Everything else** goes behind the prefix (`Ctrl+a` in tmux, `Ctrl+b` in
+   Herdr), which costs one keystroke and no keyspace.
+3. **Rare or system-wide** actions go in the `Super + Alt + Space` menu rather
+   than claiming a chord at all.
+
+Prefer widening an existing tier over inventing a new modifier combination. If
+a binding does not fit the hierarchy, that is usually a sign it belongs in the
+menu.
+
+Niri, tmux, Herdr, and Neovim are configured to preserve this separation.
+
+### Universal clipboard
+
+`Super + C/V/X` copy, paste, and cut in **any** application, so the same chord
+works in a terminal and in a GUI app. Rather than detecting the focused window,
+these synthesise the legacy CUA chords `Ctrl+Insert` and `Shift+Insert`, which
+both terminals and GTK/Qt apps honour. Keys are sent with `wtype`; niri has no
+equivalent of Hyprland's `sendshortcut` action, so both compositors use the same
+mechanism.
+
+`Super + Shift + V` opens the clipboard history panel.
+
+### Super + Ctrl utilities
+
+Letters under `Super + Ctrl` open panels and toggles (directions in this tier
+still move windows):
+
+| Key | Action |
+|-----|--------|
+| `Super + Ctrl + A` | Audio controls |
+| `Super + Ctrl + B` | Bluetooth controls |
+| `Super + Ctrl + W` | Network / WiFi controls |
+| `Super + Ctrl + N` | Toggle nightlight |
+| `Super + Ctrl + Escape` | Lock session |
+
+These are Control Center tabs in Noctalia, so they only exist when the Noctalia
+module is enabled.
+
+### System menu
+
+`Super + Alt + Space` opens a nested system menu rendered by Noctalia's own
+launcher (`noctalia dmenu`), covering Session, Nix, Toggles and Display. It is
+the overflow valve for actions that are used too rarely to deserve a dedicated
+chord — prefer adding entries here over claiming new key combinations.
+
+### Workspaces
+
+`Super + 1-9` switches workspace, `Super + Shift + 1-9` moves the focused column
+to a workspace and follows it, and `Super + Shift + Alt + 1-9` moves it there
+without following.
+
+Inside tmux and Herdr the same numbers apply one tier down: `Alt + 1-9` selects
+a tab or window, `Alt + Shift + 1-9` selects a Herdr workspace, and
+`Ctrl + Alt + 1-9` jumps to a Herdr agent.
 
 ## Structure
 

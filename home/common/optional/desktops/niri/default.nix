@@ -43,6 +43,7 @@ in
     wl-clipboard-x11 # X11 compatibility
     satty
     xwayland-satellite
+    wtype # Synthesise key events (universal copy/paste)
     xtrayhide # X11 tray to SNI bridge (hides X11 tray windows)
   ];
   imports = [ inputs.niri.homeModules.niri ];
@@ -60,9 +61,44 @@ in
         with config.lib.niri.actions;
         lib.optionalAttrs noctaliaEnabled {
           # Noctalia keybindings (only if enabled)
-          "${kb.launcher.niri.key}".action.spawn = kb.launcher.niri.action;
-          "${kb.clipboard.niri.key}".action.spawn = kb.clipboard.niri.action;
-          "${kb.lockScreen.niri.key}".action.spawn = kb.lockScreen.niri.action;
+          "${kb.launcher.niri.key}" = {
+            action.spawn = kb.launcher.niri.action;
+            hotkey-overlay.title = "Application launcher";
+          };
+          "${kb.omniMenu.niri.key}" = {
+            action.spawn = kb.omniMenu.niri.action;
+            hotkey-overlay.title = "System menu";
+          };
+          "${kb.clipboard.niri.key}" = {
+            action.spawn = kb.clipboard.niri.action;
+            hotkey-overlay.title = "Clipboard history";
+          };
+          "${kb.emoji.niri.key}" = {
+            action.spawn = kb.emoji.niri.action;
+            hotkey-overlay.title = "Emoji picker";
+          };
+          "${kb.lockScreen.niri.key}" = {
+            action.spawn = kb.lockScreen.niri.action;
+            hotkey-overlay.title = "Lock session";
+          };
+
+          # Control Center tabs and toggles (Super+Ctrl namespace)
+          "${kb.audioPanel.niri.key}" = {
+            action.spawn = kb.audioPanel.niri.action;
+            hotkey-overlay.title = "Audio controls";
+          };
+          "${kb.bluetoothPanel.niri.key}" = {
+            action.spawn = kb.bluetoothPanel.niri.action;
+            hotkey-overlay.title = "Bluetooth controls";
+          };
+          "${kb.networkPanel.niri.key}" = {
+            action.spawn = kb.networkPanel.niri.action;
+            hotkey-overlay.title = "Network controls";
+          };
+          "${kb.nightlight.niri.key}" = {
+            action.spawn = kb.nightlight.niri.action;
+            hotkey-overlay.title = "Toggle nightlight";
+          };
 
           # Brightness controls
           "${kb.brightnessUp.niri.key}".action.spawn = kb.brightnessUp.niri.action;
@@ -82,32 +118,96 @@ in
           "Mod+Shift+Slash".action.show-hotkey-overlay = [ ];
 
           # Terminal
-          "Mod+Return".action.spawn = [
-            "env"
-            "GTK_IM_MODULE=simple"
-            "ghostty"
-          ];
-          "Mod+Shift+Return".action.spawn = [ "kitty" ];
+          "Mod+Return" = {
+            action.spawn = [
+              "env"
+              "GTK_IM_MODULE=simple"
+              "ghostty"
+            ];
+            hotkey-overlay.title = "Terminal";
+          };
+          "Mod+Shift+Return" = {
+            action.spawn = [ "kitty" ];
+            hotkey-overlay.title = "Terminal (kitty)";
+          };
 
           # Applications
-          "Mod+E".action.spawn = [ "nautilus" ];
-          "Mod+B".action.spawn = [
-            "zen-beta"
-            "-p"
-            (if isWorkHost then browserWorkProfile else browserPersonalProfile)
-          ];
-          "Mod+Shift+B".action.spawn = [
-            "zen-beta"
-            "-p"
-            (if isWorkHost then browserPersonalProfile else browserWorkProfile)
-          ];
-          "Mod+Ctrl+Shift+B".action.spawn = [
-            "zen-beta"
-            "-p"
-            "work_admin"
-          ];
-          "Mod+P".action.spawn = [ "proton-pass" ];
-          "Mod+D".action.spawn = [ (if isWork then "teams-for-linux" else "discord") ];
+          "Mod+E" = {
+            action.spawn = [ "nautilus" ];
+            hotkey-overlay.title = "File manager";
+          };
+          "Mod+B" = {
+            action.spawn = [
+              "zen-beta"
+              "-p"
+              (if isWorkHost then browserWorkProfile else browserPersonalProfile)
+            ];
+            hotkey-overlay.title = "Browser";
+          };
+          "Mod+Shift+B" = {
+            action.spawn = [
+              "zen-beta"
+              "-p"
+              (if isWorkHost then browserPersonalProfile else browserWorkProfile)
+            ];
+            hotkey-overlay.title = "Browser (other profile)";
+          };
+          "Mod+Ctrl+Shift+B" = {
+            action.spawn = [
+              "zen-beta"
+              "-p"
+              "work_admin"
+            ];
+            hotkey-overlay.title = "Browser (work admin)";
+          };
+          "Mod+P" = {
+            action.spawn = [ "proton-pass" ];
+            hotkey-overlay.title = "Password manager";
+          };
+          "Mod+D" = {
+            action.spawn = [ (if isWork then "teams-for-linux" else "discord") ];
+            hotkey-overlay.title = if isWork then "Teams" else "Discord";
+          };
+
+          # Universal clipboard: send the legacy CUA chords, which both
+          # terminals and GTK/Qt apps honour, so one key works everywhere.
+          # niri has no sendshortcut action, so synthesise via wtype.
+          "Mod+C" = {
+            action.spawn = [
+              "wtype"
+              "-M"
+              "ctrl"
+              "-k"
+              "Insert"
+              "-m"
+              "ctrl"
+            ];
+            hotkey-overlay.title = "Copy (universal)";
+          };
+          "Mod+V" = {
+            action.spawn = [
+              "wtype"
+              "-M"
+              "shift"
+              "-k"
+              "Insert"
+              "-m"
+              "shift"
+            ];
+            hotkey-overlay.title = "Paste (universal)";
+          };
+          "Mod+X" = {
+            action.spawn = [
+              "wtype"
+              "-M"
+              "ctrl"
+              "-k"
+              "x"
+              "-m"
+              "ctrl"
+            ];
+            hotkey-overlay.title = "Cut (universal)";
+          };
 
           # Window management
           "Mod+Q" = {
@@ -117,7 +217,7 @@ in
           "Mod+F".action.maximize-column = [ ];
           "Mod+Shift+F".action.fullscreen-window = [ ];
           "Mod+T".action.toggle-window-floating = [ ];
-          "Mod+C".action.center-column = [ ];
+          "Mod+Shift+C".action.center-column = [ ];
           "Mod+Ctrl+C".action.center-visible-columns = [ ];
           "Mod+W".action.toggle-column-tabbed-display = [ ];
 
@@ -134,40 +234,24 @@ in
           "Mod+Shift+Equal".action.set-window-height = [ "+10%" ];
 
           # Focus movement
-          "Mod+Left".action.focus-column-left = [ ];
-          "Mod+Right".action.focus-column-right = [ ];
-          "Mod+Up".action.focus-window-up = [ ];
-          "Mod+Down".action.focus-window-down = [ ];
           "Mod+H".action.focus-column-left = [ ];
           "Mod+L".action.focus-column-right = [ ];
           "Mod+K".action.focus-window-up = [ ];
           "Mod+J".action.focus-window-down = [ ];
 
           # Window movement
-          "Mod+Ctrl+Left".action.move-column-left = [ ];
-          "Mod+Ctrl+Right".action.move-column-right = [ ];
-          "Mod+Ctrl+Up".action.move-window-up = [ ];
-          "Mod+Ctrl+Down".action.move-window-down = [ ];
           "Mod+Ctrl+H".action.move-column-left = [ ];
           "Mod+Ctrl+L".action.move-column-right = [ ];
           "Mod+Ctrl+K".action.move-window-up = [ ];
           "Mod+Ctrl+J".action.move-window-down = [ ];
 
           # Monitor focus
-          "Mod+Shift+Left".action.focus-monitor-left = [ ];
-          "Mod+Shift+Right".action.focus-monitor-right = [ ];
-          "Mod+Shift+Up".action.focus-monitor-up = [ ];
-          "Mod+Shift+Down".action.focus-monitor-down = [ ];
           "Mod+Shift+H".action.focus-monitor-left = [ ];
           "Mod+Shift+L".action.focus-monitor-right = [ ];
           "Mod+Shift+K".action.focus-monitor-up = [ ];
           "Mod+Shift+J".action.focus-monitor-down = [ ];
 
           # Move to monitor
-          "Mod+Shift+Ctrl+Left".action.move-column-to-monitor-left = [ ];
-          "Mod+Shift+Ctrl+Right".action.move-column-to-monitor-right = [ ];
-          "Mod+Shift+Ctrl+Up".action.move-column-to-monitor-up = [ ];
-          "Mod+Shift+Ctrl+Down".action.move-column-to-monitor-down = [ ];
           "Mod+Shift+Ctrl+H".action.move-column-to-monitor-left = [ ];
           "Mod+Shift+Ctrl+L".action.move-column-to-monitor-right = [ ];
           "Mod+Shift+Ctrl+K".action.move-column-to-monitor-up = [ ];
@@ -242,6 +326,44 @@ in
           "Mod+Shift+7".action.move-column-to-workspace = [ 7 ];
           "Mod+Shift+8".action.move-column-to-workspace = [ 8 ];
           "Mod+Shift+9".action.move-column-to-workspace = [ 9 ];
+
+          # Move column to workspace without following it
+          "Mod+Shift+Alt+1".action.move-column-to-workspace = [
+            { focus = false; }
+            1
+          ];
+          "Mod+Shift+Alt+2".action.move-column-to-workspace = [
+            { focus = false; }
+            2
+          ];
+          "Mod+Shift+Alt+3".action.move-column-to-workspace = [
+            { focus = false; }
+            3
+          ];
+          "Mod+Shift+Alt+4".action.move-column-to-workspace = [
+            { focus = false; }
+            4
+          ];
+          "Mod+Shift+Alt+5".action.move-column-to-workspace = [
+            { focus = false; }
+            5
+          ];
+          "Mod+Shift+Alt+6".action.move-column-to-workspace = [
+            { focus = false; }
+            6
+          ];
+          "Mod+Shift+Alt+7".action.move-column-to-workspace = [
+            { focus = false; }
+            7
+          ];
+          "Mod+Shift+Alt+8".action.move-column-to-workspace = [
+            { focus = false; }
+            8
+          ];
+          "Mod+Shift+Alt+9".action.move-column-to-workspace = [
+            { focus = false; }
+            9
+          ];
 
           # Miscellaneous
           "Mod+Escape" = {

@@ -1,4 +1,9 @@
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 {
   home.packages = with pkgs; [
@@ -13,17 +18,25 @@
     # Rust
     cargo
 
+    # Go (needed to build herdr plugins from source)
+    go
+
     # C/C++
     gcc
   ];
   programs.nix-index-database.comma.enable = true;
 
-  # AI agent multiplexer
+  # AI agent multiplexer.
+  #
+  # `settings` is deliberately left empty so the upstream module does not take
+  # ownership of config.toml. Herdr rewrites that file itself (onboarding flag)
+  # and Noctalia's templates write the theme block into it, so a read-only store
+  # symlink would both break them and fail activation. Out-of-store symlink it to
+  # the repo instead, matching how noctalia/settings.toml is handled.
   programs.herdr = {
     enable = true;
     package = pkgs.herdr;
-    settings = {
-      terminal.default_shell = "fish";
-    };
   };
+
+  xdg.configFile."herdr/config.toml".source = lib.custom.symlink.link config "herdr/config.toml";
 }

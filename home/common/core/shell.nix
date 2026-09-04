@@ -7,6 +7,8 @@
 
 {
   home.packages = with pkgs; [
+    curl
+    # .dev outputs are headers/pkg-config only; they do not provide binaries.
     curl.dev
     systemd.dev
     nerd-fonts.jetbrains-mono

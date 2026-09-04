@@ -1,5 +1,10 @@
 # Nix Configuration Justfile
 
+# Recipes pipe into `nom`, which would otherwise mask failures: without
+# pipefail the shell reports nom's exit status, so a failed rebuild looks
+# identical to a successful one. `sh` is bash here, so `|&` is available.
+set shell := ["bash", "-cu", "-o", "pipefail"]
+
 config-user := `id -un | sed 's/@.*//'`
 
 # Map real hostnames to flake config names
@@ -73,4 +78,6 @@ clean-all: clean-home clean-store
 
 [group('info')]
 show-generation:
-  home-manager generations | head -n 5
+  # `|| true` guards against SIGPIPE: with pipefail, head closing the pipe
+  # early would otherwise fail the recipe.
+  home-manager generations | head -n 5 || true

@@ -246,7 +246,7 @@ pipe_to_command = true
 
 [theme]
 builtin = "Ayu"
-community_palette = "Oxocarbon"
+community_palette = "Ayu Blue"
 mode = "dark"
 source = "builtin"
 wallpaper_scheme = "m3-content"

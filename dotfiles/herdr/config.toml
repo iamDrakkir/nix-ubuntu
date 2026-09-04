@@ -1,0 +1,67 @@
+# Herdr configuration.
+# 
+# This file is an out-of-store symlink (see home/common/optional/development.nix)
+# so that both Herdr itself and Noctalia's theming templates can write to it at
+# runtime, while the result stays version controlled. Edit it directly; run
+# `herdr server reload-config` to apply without restarting.
+#
+# Noctalia owns the [theme.custom] block below (herdr is listed in Noctalia's
+# template community_ids), so expect it to be rewritten when the theme changes.
+
+onboarding = false
+
+[terminal]
+default_shell = "fish"
+
+# Keep Herdr's direct pane controls in the Alt/tmux layer, while retaining the
+# prefix path as a fallback for focus. Resizing keeps its prefix path through
+# the built-in resize mode (prefix+r).
+#
+# Alt+Shift mirrors what Super+Shift does for the window manager: plain
+# direction moves within the current container (panes), Shift+direction moves
+# between containers. Tabs are horizontal (h/l), workspaces vertical (j/k),
+# matching how they are laid out on screen.
+[keys]
+focus_pane_left = ["prefix+h", "alt+h"]
+focus_pane_down = ["prefix+j", "alt+j"]
+focus_pane_up = ["prefix+k", "alt+k"]
+focus_pane_right = ["prefix+l", "alt+l"]
+previous_tab = ["prefix+p", "alt+shift+h"]
+next_tab = ["prefix+n", "alt+shift+l"]
+previous_workspace = "alt+shift+k"
+next_workspace = "alt+shift+j"
+# Indexed jumps mirror the window manager: Super+N picks a workspace, so Alt+N
+# picks a tab and Alt+Shift+N picks a workspace. Ctrl+Alt+N jumps straight to an
+# agent; Ctrl+Alt is the one modifier family terminals and desktops leave free.
+switch_tab = ["prefix+1..9", "alt+1..9"]
+switch_workspace = "alt+shift+1..9"
+focus_agent = ["prefix+alt+1..9", "ctrl+alt+1..9"]
+resize_pane_left = "ctrl+alt+shift+h"
+resize_pane_down = "ctrl+alt+shift+j"
+resize_pane_up = "ctrl+alt+shift+k"
+resize_pane_right = "ctrl+alt+shift+l"
+
+[theme]
+name = "rose-pine"
+auto_switch = false
+
+[theme.custom]
+accent = "#e6b450"
+panel_bg = "reset"
+sidebar_bg = "reset"
+active_row_bg = "#272c36"
+selection_bg = "#2f3542"
+surface0 = "#272c36"
+surface1 = "#2f3542"
+surface_dim = "#040507"
+overlay0 = "#595f6a"
+overlay1 = "#8e959e"
+text = "#d1d1c7"
+subtext0 = "#8e959e"
+mauve = "#dabafa"
+green = "#87d96c"
+yellow = "#facc6e"
+red = "#ed8274"
+blue = "#6dcbfa"
+teal = "#90e1c6"
+peach = "#edbe74"

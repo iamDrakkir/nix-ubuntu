@@ -1,0 +1,22 @@
+/* Zen Browser userChrome.
+ *
+ * This file is an out-of-store symlink (see
+ * home/common/optional/programs/zen-browser.nix) so Noctalia's theming template
+ * can write to it at runtime while the result stays version controlled.
+ *
+ * Noctalia rewrites this file when the theme changes and has been observed to
+ * replace its whole contents with just the @import below. If the custom rules
+ * disappear, `git diff` will show it — restore them and re-apply.
+ */
+
+@import "/home/drakkir/.cache/noctalia/zen-browser/zen-userChrome.css";
+
+:root:not([customizing]) #zen-sidebar-top-buttons-separator {
+  display: none !important;
+}
+:root:not([customizing]) #back-button {
+  display: none !important;
+}
+:root:not([customizing]) #forward-button {
+  display: none !important;
+}

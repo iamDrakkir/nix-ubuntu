@@ -1,7 +1,9 @@
 {
-  inputs,
-  pkgs,
+  config,
   hostname,
+  inputs,
+  lib,
+  pkgs,
   ...
 }:
 
@@ -15,20 +17,6 @@ let
     # Required for Zen mods / userChrome.css to take effect.
     "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
   };
-
-  # Zen mod: "Back Fwd Always Hidden" by jean06560
-  # https://zen-browser.app/mods/4a222d82-2803-4ed2-a390-90abfce4f195/
-  commonUserChrome = ''
-    :root:not([customizing]) #zen-sidebar-top-buttons-separator {
-      display: none !important;
-    }
-    :root:not([customizing]) #back-button {
-      display: none !important;
-    }
-    :root:not([customizing]) #forward-button {
-      display: none !important;
-    }
-  '';
 
   commonSearch = {
     engines = {
@@ -106,7 +94,6 @@ in
         isDefault = !isWork;
         search = commonSearch;
         settings = commonSettings;
-        userChrome = commonUserChrome;
       };
 
       work = {
@@ -115,7 +102,6 @@ in
         isDefault = isWork;
         search = commonSearch;
         settings = commonSettings;
-        userChrome = commonUserChrome;
       };
 
       work_admin = {
@@ -124,9 +110,20 @@ in
         settings = commonSettings;
         search = commonSearch;
         extensions.packages = commonExtensions;
-        userChrome = commonUserChrome;
       };
     };
     setAsDefaultBrowser = true;
   };
+
+  # userChrome.css is written by Noctalia's zen-browser theming template at
+  # runtime, so Home Manager must not own it (a read-only store symlink both
+  # breaks the template and aborts activation with a clobber error). Point each
+  # profile at the repo copy instead, so live edits apply and stay tracked.
+  xdg.configFile = lib.genAttrs
+    (map (p: "zen/${p}/chrome/userChrome.css") [
+      "personal"
+      "work"
+      "work_admin"
+    ])
+    (_: { source = lib.custom.symlink.link config "zen/userChrome.css"; });
 }

@@ -68,6 +68,14 @@
       bind-key -n M-n new-window
       bind-key -n M-[ previous-window
       bind-key -n M-] next-window
+
+      # Alt+Shift mirrors Super+Shift in the window manager: plain direction
+      # moves within the container (panes), Shift+direction moves between
+      # containers. Windows are horizontal (h/l), sessions vertical (j/k).
+      bind-key -n M-H previous-window
+      bind-key -n M-L next-window
+      bind-key -n M-J switch-client -n
+      bind-key -n M-K switch-client -p
       bind-key -n M-1 select-window -t:1
       bind-key -n M-2 select-window -t:2
       bind-key -n M-3 select-window -t:3
@@ -79,11 +87,11 @@
       bind-key -n M-9 select-window -t:9
       bind-key -n M-0 select-window -t:10
 
-      # Pane navigation with Alt-arrow
-      bind -n M-Left select-pane -L
-      bind -n M-Right select-pane -R
-      bind -n M-Up select-pane -U
-      bind -n M-Down select-pane -D
+      # Pane navigation: Alt+direction
+      bind -n M-h select-pane -L
+      bind -n M-j select-pane -D
+      bind -n M-k select-pane -U
+      bind -n M-l select-pane -R
 
       # Pane splitting
       unbind-key '"'
@@ -93,21 +101,23 @@
       bind -n M-_ split-window -fv -c "#{pane_current_path}"
       bind -n M-| split-window -fh -c "#{pane_current_path}"
 
-      # Pane resizing
-      bind -n M-h resize-pane -L 2
-      bind -n M-j resize-pane -D 1
-      bind -n M-k resize-pane -U 1
-      bind -n M-l resize-pane -R 2
+      # Pane resizing: Alt+Ctrl+Shift+direction
+      bind -n M-C-S-h resize-pane -L 2
+      bind -n M-C-S-j resize-pane -D 1
+      bind -n M-C-S-k resize-pane -U 1
+      bind -n M-C-S-l resize-pane -R 2
       bind -n M-z resize-pane -Z
 
       # Pane/window killing
       unbind-key '&'
       bind -n M-q kill-pane
       bind -n M-Q kill-window
-      bind -n M-K kill-window -a
+      # Bulk kill moved to the prefix: destructive and rarely used, and M-K is
+      # now session navigation.
+      bind K kill-window -a
 
-      # Copy mode
-      bind -n M-v copy-mode
+      # Copy mode (prefix: not a fundamental navigation/layout action)
+      bind v copy-mode
       bind -T copy-mode-vi v send-keys -X begin-selection
       bind -T copy-mode-vi V send-keys -X select-line
       bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
