@@ -32,75 +32,80 @@ let
 in
 
 {
-  # The bus configuration is the one part dbus does read from /etc, so let
-  # system-manager manage it natively — it gets tracked and cleaned up.
-  environment.etc = {
-    "dbus-1/system.d/org.corectrl.helper.conf".source =
-      "${pkgs.corectrl}/share/dbus-1/system.d/org.corectrl.helper.conf";
+  environment = {
+    # The bus configuration is the one part dbus does read from /etc, so let
+    # system-manager manage it natively — it gets tracked and cleaned up.
+    etc = {
+      "dbus-1/system.d/org.corectrl.helper.conf".source =
+        "${pkgs.corectrl}/share/dbus-1/system.d/org.corectrl.helper.conf";
 
-    "dbus-1/system.d/org.corectrl.helperkiller.conf".source =
-      "${pkgs.corectrl}/share/dbus-1/system.d/org.corectrl.helperkiller.conf";
+      "dbus-1/system.d/org.corectrl.helperkiller.conf".source =
+        "${pkgs.corectrl}/share/dbus-1/system.d/org.corectrl.helperkiller.conf";
 
-    # Polkit rules to allow CoreCtrl helper to run without password
-    # Using polkit version >= 0.106 format
-    "polkit-1/rules.d/90-corectrl.rules".text = ''
-      polkit.addRule(function(action, subject) {
-          if ((action.id == "org.corectrl.helper.init" ||
-               action.id == "org.corectrl.helperkiller.init") &&
-              subject.local == true &&
-              subject.active == true &&
-              subject.isInGroup("sudo")) {
-                  return polkit.Result.YES;
-          }
-      });
-    '';
-  };
-
-  # Install CoreCtrl system-wide
-  environment.systemPackages = [ pkgs.corectrl ];
-
-  # dbus caches bus configuration, so it has to be told when the files above
-  # change. polkit watches its directories and needs no prompting.
-  #
-  # At boot this is redundant — systemd-tmpfiles runs in sysinit.target, so the
-  # files are already in place before dbus starts. It matters when activating a
-  # new generation on a running system, which is also why the CoreCtrl store
-  # path is interpolated into the script: it makes the unit itself change
-  # whenever CoreCtrl does, which is what makes system-manager restart it.
-  systemd.services.corectrl-dbus-reload = {
-    after = [ "dbus.service" ];
-    description = "Reload D-Bus after CoreCtrl configuration changes";
-
-    script = ''
-      # CoreCtrl: ${pkgs.corectrl}
-      systemctl reload dbus
-    '';
-
-    serviceConfig = {
-      RemainAfterExit = true;
-      Type = "oneshot";
+      # Polkit rules to allow CoreCtrl helper to run without password
+      # Using polkit version >= 0.106 format
+      "polkit-1/rules.d/90-corectrl.rules".text = ''
+        polkit.addRule(function(action, subject) {
+            if ((action.id == "org.corectrl.helper.init" ||
+                 action.id == "org.corectrl.helperkiller.init") &&
+                subject.local == true &&
+                subject.active == true &&
+                subject.isInGroup("sudo")) {
+                    return polkit.Result.YES;
+            }
+        });
+      '';
     };
 
-    wantedBy = [ "multi-user.target" ];
+    # Install CoreCtrl system-wide
+    systemPackages = [ pkgs.corectrl ];
+
   };
 
-  systemd.tmpfiles.settings."10-corectrl" =
-    lib.listToAttrs (
-      map (file: {
-        name = "/usr/share/${file}";
-        value."L+".argument = "${pkgs.corectrl}/share/${file}";
-      }) usrShareFiles
-    )
-    # The bus configuration used to be copied to /usr/share too. It lives in
-    # /etc now, so drop the old copies rather than leaving dbus reading two
-    # identical files that drift apart on the next CoreCtrl update.
-    // lib.listToAttrs (
-      map (file: {
-        name = "/usr/share/dbus-1/system.d/${file}";
-        value.r = { };
-      }) legacyConfCopies
-    );
+  systemd = {
+    # dbus caches bus configuration, so it has to be told when the files above
+    # change. polkit watches its directories and needs no prompting.
+    #
+    # At boot this is redundant — systemd-tmpfiles runs in sysinit.target, so the
+    # files are already in place before dbus starts. It matters when activating a
+    # new generation on a running system, which is also why the CoreCtrl store
+    # path is interpolated into the script: it makes the unit itself change
+    # whenever CoreCtrl does, which is what makes system-manager restart it.
+    services.corectrl-dbus-reload = {
+      after = [ "dbus.service" ];
+      description = "Reload D-Bus after CoreCtrl configuration changes";
 
+      script = ''
+        # CoreCtrl: ${pkgs.corectrl}
+        systemctl reload dbus
+      '';
+
+      serviceConfig = {
+        RemainAfterExit = true;
+        Type = "oneshot";
+      };
+
+      wantedBy = [ "multi-user.target" ];
+    };
+
+    tmpfiles.settings."10-corectrl" =
+      lib.listToAttrs (
+        map (file: {
+          name = "/usr/share/${file}";
+          value."L+".argument = "${pkgs.corectrl}/share/${file}";
+        }) usrShareFiles
+      )
+      # The bus configuration used to be copied to /usr/share too. It lives in
+      # /etc now, so drop the old copies rather than leaving dbus reading two
+      # identical files that drift apart on the next CoreCtrl update.
+      // lib.listToAttrs (
+        map (file: {
+          name = "/usr/share/dbus-1/system.d/${file}";
+          value.r = { };
+        }) legacyConfCopies
+      );
+
+  };
   # ========================================================================
   # AMD GPU Kernel Parameter (Manual Setup Required)
   # ========================================================================

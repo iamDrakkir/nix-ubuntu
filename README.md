@@ -121,7 +121,7 @@ a tab or window, `Alt + Shift + 1-9` selects a Herdr workspace, and
 hosts/                   # System-level configurations
 ├── common/
 │   ├── core/            # Always present on ALL system-manager hosts
-│   ├── optional/        # Optional system configs (flatpak, corectrl, sessions)
+│   ├── optional/        # Optional system configs (flatpak, corectrl)
 │   └── users/           # User definitions for system-manager hosts
 │       └── drakkir/
 ├── terra/               # Ubuntu desktop
@@ -131,9 +131,9 @@ hosts/                   # System-level configurations
 
 home/                    # Home-manager configurations
 ├── common/
-│   ├── core/            # Always present on ALL users/hosts
+│   ├── core/            # Always present on ALL users/hosts (shell, git, dev, GUI)
 │   └── optional/        # Optional user configs
-│       ├── apps/        # Per-application configs (discord, vscode, tmux, ...)
+│       ├── apps/        # Per-application configs (discord, tmux, vlc, ...)
 │       └── desktops/    # Desktop environment configs (gnome, hyprland, niri)
 ├── drakkir/
 │   ├── terra.nix        # Desktops + dev + gaming
@@ -149,6 +149,29 @@ overlays/                # Package overrides
 pkgs/                    # Custom packages
 dotfiles/                # Application dotfiles (symlinked to ~/.config)
 ```
+
+### Core vs Optional
+
+`core` is imported wholesale by every host of its class; `optional` modules are
+listed individually by the hosts that want them. There is deliberately **no**
+`optional/default.nix` — importing a directory evaluates its `default.nix`, which
+would silently make every "optional" module mandatory.
+
+The rule is simply: **if every host imports it, it belongs in `core`.** Don't keep
+something optional for a machine that doesn't exist yet — move it back out when a
+real host actually needs to opt out. Moving a module in either direction is a
+one-line edit, so there's nothing to gain by guessing early.
+
+The one standing exception is `desktops/`: which compositor a machine runs is a
+per-host menu by nature, so those stay optional even when all current hosts happen
+to import the same ones.
+
+Two things to know when a non-Ubuntu host is added:
+
+- `pam-shim.nix` is in `core` but redirects PAM to the host's system libpam, which
+  is correct on Ubuntu and wrong on NixOS. It will need to move out — and it fails
+  at runtime (lockscreen auth), not at eval, so it won't announce itself.
+- `corectrl.nix` is AMD-only, which is why only `hosts/terra` imports it.
 
 
 ### Building for Specific Users

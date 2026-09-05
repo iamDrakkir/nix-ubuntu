@@ -38,17 +38,8 @@
     ../common/optional/desktops/gnome
     ../common/optional/desktops/niri
 
-    # Features
-    ../common/optional/containers.nix
-    ../common/optional/development.nix
-
     # Apps
-    ../common/optional/apps/proton.nix
     ../common/optional/apps/teams.nix
-    ../common/optional/apps/vscode.nix
-
-    # System
-    ../common/optional/pam-shim.nix
   ];
 
   # ---- Host hardware: displays ----

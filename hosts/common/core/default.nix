@@ -2,9 +2,12 @@
 
 {
   imports = [
-    ./nix.nix
+    ./environment.nix
     ./graphics.nix
-    ./sysctl-userns.nix
+    ./nix.nix
     ./polkit-agent-helper.nix
+    ./power.nix
+    ./sandboxing.nix
+    ./wayland-sessions.nix
   ];
 }

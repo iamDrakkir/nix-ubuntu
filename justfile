@@ -47,7 +47,10 @@ check:
 
 [group('maintenance')]
 fmt:
-  nix fmt -- **/*.nix
+  # Explicit file list: `**/*.nix` only expands one level deep without bash's
+  # globstar (it silently formatted 3 of 55 files), and bare `nix fmt` hands
+  # pedantix the directory, which makes it choke on empty input.
+  nix fmt -- $(git ls-files '*.nix')
 
 [group('maintenance')]
 update:

@@ -18,20 +18,15 @@
     ../common/optional/desktops/niri
 
     # Features
-    ../common/optional/containers.nix
-    ../common/optional/development.nix
     ../common/optional/gaming.nix
 
     # Apps
     ../common/optional/apps/discord.nix
-    ../common/optional/apps/proton.nix
     ../common/optional/apps/qbittorrent.nix
     ../common/optional/apps/tmux.nix
     ../common/optional/apps/vlc.nix
-    ../common/optional/apps/vscode.nix
 
     # System
     ../common/optional/flatpak.nix
-    ../common/optional/pam-shim.nix
   ];
 }
