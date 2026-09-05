@@ -121,7 +121,7 @@ a tab or window, `Alt + Shift + 1-9` selects a Herdr workspace, and
 hosts/                   # System-level configurations
 ├── common/
 │   ├── core/            # Always present on ALL system-manager hosts
-│   ├── optional/        # Optional system configs (flatpak, corectrl)
+│   ├── optional/        # Optional system configs (flatpak, corectrl, sessions)
 │   └── users/           # User definitions for system-manager hosts
 │       └── drakkir/
 ├── terra/               # Ubuntu desktop
@@ -133,9 +133,8 @@ home/                    # Home-manager configurations
 ├── common/
 │   ├── core/            # Always present on ALL users/hosts
 │   └── optional/        # Optional user configs
-│       ├── desktops/    # Desktop environment configs (gnome, hyprland, niri)
-│       ├── programs/    # Program-specific configs
-│       └── tools/       # Tool configs (1password, vscode, etc.)
+│       ├── apps/        # Per-application configs (discord, vscode, tmux, ...)
+│       └── desktops/    # Desktop environment configs (gnome, hyprland, niri)
 ├── drakkir/
 │   ├── terra.nix        # Desktops + dev + gaming
 │   ├── bigbox.nix       # Desktops + dev + gaming + all programs
@@ -223,11 +222,18 @@ just home          # Rebuild home-manager (auto-detects user@hostname)
 just system        # Rebuild system-manager (Ubuntu hosts only)
 just nixos         # Rebuild NixOS (pi and other NixOS hosts)
 just rebuild       # Full rebuild — dispatches to nixos or system automatically
+just check         # Evaluate every host config without activating anything
+just fmt           # Format with pedantix (nixfmt + sorted attrs)
 just update        # Update flake inputs
 just clean-all     # Full cleanup (careful!)
 ```
 
 The `just` commands automatically detect your hostname and derive the flake user from your login name, so you don't need to specify them manually. On NixOS hosts `just rebuild` runs `nixos-rebuild`; on Ubuntu hosts it runs system-manager.
+
+`just check` runs `nix flake check`, which covers the home-manager and NixOS
+configurations. The `systemConfigs` outputs are re-exported as flake `checks` in
+`flake.nix` so the Ubuntu system level is verified by the same command — `nix flake
+check` skips `systemConfigs` on its own.
 
 ### Shell Aliases
 
@@ -255,7 +261,9 @@ Sessions appear in the login screen after `just system` plus a logout or restart
 
 ### CoreCtrl Setup (AMD GPU Control)
 
-CoreCtrl is automatically installed and configured for password-less operation (for sudo group members). The required D-Bus and polkit files are automatically installed during system rebuild.
+CoreCtrl is automatically installed and configured for password-less operation (for sudo group members).
+
+The D-Bus and polkit files it needs are declared in `hosts/common/optional/corectrl.nix`. The bus configuration lives in `/etc/dbus-1/system.d/` (managed by system-manager), while the D-Bus activation files and polkit actions are symlinked into `/usr/share` with `systemd.tmpfiles` rules, because dbus and polkit only scan fixed directories under `/usr/share` for those. Everything is applied on system rebuild and at boot — there is no manual setup step.
 
 **For full GPU control** (overclocking, custom power profiles, fan curves), add the AMD GPU kernel parameter to GRUB:
 
@@ -328,6 +336,43 @@ sudo determinate-nixd upgrade
 ```
 
 ## Troubleshooting
+
+### `git push` opens a Proton Pass login
+
+SSH keys are served by the Proton Pass agent (`~/.ssh/config` points `IdentityAgent`
+at it), and `pass-cli` keeps the key that decrypts its session in the *kernel*
+keyring:
+
+```bash
+keyctl show @s   # user: keyring:cli-local-key:<fingerprint>@ProtonPassCLI
+```
+
+Kernel keyrings do not survive a reboot, so the agent starts empty once per boot.
+Rather than failing the push with a credential error, `core.sshCommand` points at a
+wrapper (`home/common/optional/apps/proton.nix`) that checks `ssh-add -l` and runs
+`pass-cli login` first — on the terminal if there is one, otherwise in a new window.
+
+To skip the login entirely, set `PROTON_PASS_KEY_PROVIDER=fs` so `pass-cli` persists
+the key to `~/.local/share/proton-pass-cli/.session/local.key`. Note that the root
+filesystem is not encrypted, so that file is then readable by anyone with the disk.
+
+### Polkit prompts do not appear
+
+Noctalia's polkit agent (`polkit_agent` in `dotfiles/noctalia/settings.toml`) is
+linked against the Nix `libpolkit-agent-1`, which has the NixOS-only helper path
+`/run/wrappers/bin/polkit-agent-helper-1` compiled in. On Ubuntu that path does not
+exist, so authentication fails with "Not authorized".
+
+`hosts/common/core/polkit-agent-helper.nix` symlinks it to the host's setuid helper
+at `/usr/lib/polkit-1/polkit-agent-helper-1`. Verify with:
+
+```bash
+ls -l /run/wrappers/bin/polkit-agent-helper-1
+SHELL=/bin/bash pkexec --disable-internal-agent true
+```
+
+(`SHELL` has to be overridden because the login shell is a Nix path and `pkexec`
+rejects shells missing from `/etc/shells`.)
 
 ### System-Manager Packages Not Available in Hyprland Autostart
 
