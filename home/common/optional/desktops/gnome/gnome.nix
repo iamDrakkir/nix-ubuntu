@@ -1,12 +1,12 @@
 {
-  config,
   lib,
+  config,
   pkgs,
   ...
 }:
 let
-  cursorTheme = config.home.sessionVariables.CURSOR_THEME;
   cursorSize = lib.toInt config.home.sessionVariables.CURSOR_SIZE;
+  cursorTheme = config.home.sessionVariables.CURSOR_THEME;
 in
 {
   # GNOME dconf configuration
@@ -14,9 +14,11 @@ in
     "org/gnome/SessionManager" = {
       logout-prompt = false;
     };
+
     "org/gnome/desktop/background" = {
       show-desktop-icons = false;
     };
+
     "org/gnome/desktop/interface" = {
       clock-show-seconds = false;
       clock-show-weekday = true;
@@ -31,38 +33,46 @@ in
       icon-theme = "Adwaita";
       show-battery-percentage = true;
     };
+
     "org/gnome/desktop/peripherals/keyboard" = {
       delay = 100;
       repeat-interval = 10;
     };
+
     "org/gnome/desktop/peripherals/mouse" = {
       accel-profile = "flat";
       speed = 0.5;
     };
+
     "org/gnome/desktop/peripherals/touchpad" = {
       click-method = "fingers";
       disable-while-typing = true;
       natural-scroll = false;
       tap-to-click = true;
     };
+
     "org/gnome/desktop/privacy" = {
       disable-camera = false;
       disable-microphone = false;
       remember-recent-files = false;
       report-technical-problems = false;
     };
+
     "org/gnome/desktop/screensaver" = {
       idle-activation-enabled = false;
       lock-delay = 1800;
       lock-enabled = false;
     };
+
     "org/gnome/desktop/session" = {
       idle-delay = lib.hm.gvariant.mkUint32 900; # 15 minutes before screen blanks
     };
+
     "org/gnome/desktop/sound" = {
       event-sounds = false;
       input-feedback-sounds = false;
     };
+
     "org/gnome/desktop/wm/keybindings" = {
       # Move window to workspace
       move-to-workspace-1 = [ "<Super><Shift>1" ];
@@ -90,29 +100,34 @@ in
       switch-to-workspace-8 = [ "<Super>8" ];
       switch-to-workspace-9 = [ "<Super>9" ];
     };
+
     "org/gnome/desktop/wm/preferences" = {
       auto-raise = false;
       focus-mode = "sloppy";
       num-workspaces = 10;
     };
+
     "org/gnome/mutter" = {
       center-new-windows = false;
       dynamic-workspaces = false;
       edge-tiling = false;
       num-workspaces = 10;
     };
+
     "org/gnome/nautilus/desktop" = {
       home-icon-visible = false;
       network-icon-visible = false;
       trash-icon-visible = false;
       volumes-visible = false;
     };
+
     "org/gnome/nautilus/preferences" = {
       default-folder-viewer = "list-view";
       show-create-link = true;
       show-hidden-files = true;
       sidebar-width = 200;
     };
+
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
         "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
@@ -121,26 +136,31 @@ in
         "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
       ];
     };
+
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
       binding = "<Super>b";
-      command = "zen";
+      command = "zen-beta";
       name = "Open Zen Browser";
     };
+
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
       binding = "<Super>Return";
       command = "env GTK_IM_MODULE=simple ghostty";
       name = "Open Ghostty Terminal";
     };
+
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
       binding = "<Super>space";
       command = "walker";
       name = "Open Walker Launcher";
     };
+
     "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
       binding = "<Super>d";
       command = "discord";
       name = "Open Discord";
     };
+
     "org/gnome/settings-daemon/plugins/power" = {
       idle-dim = true;
       lid-close-ac-action = "nothing";
@@ -149,8 +169,10 @@ in
       sleep-inactive-battery-timeout = 900;
       sleep-inactive-battery-type = "suspend";
     };
+
     "org/gnome/shell" = {
       disable-user-extensions = false;
+
       disabled-extensions = [
         "ubuntu-dock@ubuntu.com"
         "desktop-icons@csoriano"
@@ -158,6 +180,7 @@ in
         "tiling-assistant@ubuntu.com"
       ];
     };
+
     "org/gnome/shell/extensions/dash-to-dock" = {
       autohide = false;
       background-opacity = 0.0;
@@ -172,9 +195,11 @@ in
       show-trash = false;
       transparency-mode = "FIXED";
     };
+
     "org/gnome/shell/extensions/user-theme" = {
       name = "";
     };
+
     "org/gnome/shell/keybindings" = {
       switch-to-application-1 = [ ];
       switch-to-application-2 = [ ];
@@ -187,12 +212,19 @@ in
       switch-to-application-9 = [ ];
     };
   };
+
   # GNOME-related packages
   home.packages = with pkgs; [
     gnome-shell-extensions
     gnome-browser-connector
     gnome-extension-manager
+
+    # Launcher for the Super+Space bind below. GNOME runs its own shell, so
+    # Noctalia (which the other compositors spawn at startup) is not running
+    # here and cannot provide the launcher.
+    walker
   ];
+
   imports = [
     ./pop-shell.nix
   ];

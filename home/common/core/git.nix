@@ -1,8 +1,7 @@
 {
   config,
   homeDirectory,
-  lib,
-  pkgs,
+  identity,
   ...
 }:
 
@@ -16,11 +15,14 @@
         pushNonFastForward = false;
         statusHints = false;
       };
+
       blame = {
         coloring = "highlightRecent";
         date = "relative";
       };
+
       branch.sort = "-committerdate";
+
       "color.branch" = {
         current = "magenta";
         local = "default";
@@ -28,12 +30,14 @@
         remote = "yellow";
         upstream = "green";
       };
+
       "color.decorate" = {
         HEAD = "red";
         branch = "blue";
         remoteBranch = "magenta";
         tag = "yellow";
       };
+
       "color.diff" = {
         context = "white";
         frag = "magenta";
@@ -41,11 +45,13 @@
         old = "red";
         whitespace = "yellow reverse";
       };
+
       commit = {
         # gpgSign = true;  # Uncomment to enable GPG signing
         template = "${homeDirectory}/.config/git/template";
         verbose = true;
       };
+
       core = {
         autocrlf = "input";
         compression = 9; # Trade CPU for network
@@ -53,48 +59,60 @@
         preloadindex = true;
         whitespace = "error";
       };
+
       credential.helper = "store";
+
       diff = {
         context = 3;
         interHunkContext = 10;
         renames = "copies";
       };
+
       fetch.fsckObjects = true;
       init.defaultBranch = "main";
       interactive.singlekey = true;
+
       log = {
         abbrevCommit = true;
         graphColors = "blue,yellow,cyan,magenta,green,red";
       };
+
       pack = {
         packSizeLimit = "1g";
         threads = 0; # Use all available threads
         windowMemory = "1g";
       };
+
       pager = {
         branch = false;
         tag = false;
       };
+
       pull = {
         default = "current";
         rebase = true;
       };
+
       push = {
         autoSetupRemote = true;
         default = "current";
         followTags = true;
       };
+
       rebase = {
         autoStash = true;
         missingCommitsCheck = "warn";
       };
+
       receive.fsckObjects = true;
+
       status = {
         branch = true;
         short = true;
         showStash = true;
         showUntrackedFiles = "all";
       };
+
       submodule.fetchJobs = 16;
       tag.sort = "-taggerdate";
       transfer.fsckObjects = true;
@@ -102,11 +120,18 @@
       "url \"git@github.com:\"".insteadOf = "gh:";
       "url \"git@github.com:iamDrakkir\"".insteadOf = "drakkir:";
       "url \"git@ssh.dev.azure.com:v3/CTEKSwedenAB/CTEK/\"".insteadOf = "ctek:";
+
+      # Authorship comes from the `identity` specialArg (see flake.nix), so
+      # there is exactly one place per user to change name/email.
+      user = {
+        inherit (identity) email name;
+      };
     };
   };
 
   xdg.configFile."git/template" = {
     force = true;
+
     text = ''
       # feat: ✨ new feature
       # feat: 🔍 search/find feature

@@ -1,22 +1,27 @@
 {
-  config,
   lib,
+  config,
   pkgs,
   ...
 }:
 
 {
-  home.packages = with pkgs; [
-    steam
-    lutris
-    gamemode
-    wowup-cf
-  ];
-  home.sessionVariables = {
-    MANGOHUD = "1";
+  home = {
+    packages = with pkgs; [
+      steam
+      lutris
+      gamemode
+      wowup-cf
+    ];
+
+    sessionVariables = {
+      MANGOHUD = "1";
+    };
   };
+
   programs.mangohud = {
     enable = true;
+
     settings = {
       background_alpha = 0.5;
       # CPU stats

@@ -43,7 +43,9 @@
   };
   # Enable generic Linux support for proper environment setup
   # This handles shell integration, XDG paths, and session variables
-  targets.genericLinux.enable = true;
+  # Default for the non-NixOS (Ubuntu + system-manager) hosts. NixOS hosts
+  # such as pi override this to false in their own home file.
+  targets.genericLinux.enable = lib.mkDefault true;
   # Fix environment for GDM autologin + systemd user services
   #
   # Problem: GDM autologin doesn't load environment.d files, so even though

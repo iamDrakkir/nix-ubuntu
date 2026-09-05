@@ -8,10 +8,12 @@
   # On NixOS, this will work automatically when migrated.
   users.users.rhagelin = {
     description = "Rhagelin (Corporate)";
+
     extraGroups = [
       "wheel"
       "networkmanager"
     ];
+
     isNormalUser = true;
     # shell = pkgs.fish;  # Commented out: causes error in system-manager (config.programs doesn't exist)
     # SSH keys can be added in ./keys/ directory

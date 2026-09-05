@@ -12,7 +12,11 @@
     }
   '';
   # Add our custom Nix settings via nix.custom.conf (included by Determinate Nix)
+  # replaceExisting: the Determinate installer writes this file itself, so
+  # system-manager finds an unmanaged file in place and skips it otherwise.
   environment.etc."nix/nix.custom.conf" = {
+    replaceExisting = true;
+
     text = ''
       experimental-features = nix-command flakes
       auto-optimise-store = true

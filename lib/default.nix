@@ -1,24 +1,15 @@
 { lib, ... }:
 
 {
-  # Custom library functions for easier imports and organization
-  # Following EmergentMind's pattern for readable import paths
-  custom = rec {
-    # Helper to get hostname (attempts to read from /etc/hostname)
-    # Usage: lib.custom.getHostname
-    getHostname =
-      if builtins.pathExists /etc/hostname then
-        lib.strings.removeSuffix "\n" (builtins.readFile /etc/hostname)
-      else
-        "unknown";
-
-    # Helper for conditional imports based on hostname
-    # Usage: lib.custom.importForHost "terra" ./terra-config.nix
-    importForHost = hostname: path: if isHost hostname then path else null;
-    # Helper to check if running on specific host
-    # Usage: lib.custom.isHost "terra"
-    isHost = hostname: getHostname == hostname;
-
+  # Custom library functions for easier imports and organization.
+  # Exposed as `lib.custom.*` (wired up in flake.nix via nixpkgs.lib.extend).
+  # Add new shared helpers here rather than duplicating them across modules.
+  #
+  # NOTE: keep everything in here pure. Helpers that read host state at
+  # eval time (e.g. builtins.readFile /etc/hostname) silently degrade under
+  # pure evaluation and drop config with no error — pass `hostname` through
+  # specialArgs instead, which flake.nix already does.
+  custom = {
     # ========== Pretty Symlink Helpers ==========
     # Based on: https://blog.daniel-beskin.com/2025-10-18-symlinking-home-manager
     #
@@ -31,7 +22,7 @@
       in
       rec {
         # Out-of-store symlink to dotfiles/<src>.
-        link = config: src: config.lib.file.mkOutOfStoreSymlink "${dotfilesRoot config}/${src}";
+        link = config: src: config.lib.file.mkOutOfStoreSymlink (path config src);
 
         # General builder: map a list of `{ src; target; }` pairs into an
         # `xdg.configFile` attrset, linking dotfiles/<src> -> <target> (relative
@@ -64,6 +55,11 @@
               target = src;
             }) srcs
           );
+
+        # Absolute path of dotfiles/<src> in the live repo, as a plain string.
+        # Use when something needs the path itself rather than a symlink
+        # (e.g. a wrapper script that execs a dotfiles script).
+        path = config: src: "${dotfilesRoot config}/${src}";
       };
 
     # ========== Electron App Wrapper ==========

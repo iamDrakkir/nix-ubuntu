@@ -1,20 +1,14 @@
-{
-  homeDirectory,
-  inputs,
-  username,
-  ...
-}:
+{ ... }:
 
 {
   imports = [
     # Core modules that work on any Linux
-    ../common/core/home.nix
     ../common/core/git.nix
-    ../common/core/shell.nix
+    ../common/core/home.nix
     ../common/core/nvim.nix
+    ../common/core/shell.nix
 
-    # User identity
-    ./common/git.nix
+    # User identity (name/email come from the `identity` specialArg)
     ./common/ssh.nix
 
     # Dev tools
@@ -29,7 +23,6 @@
 
   # Override the genericLinux target — not needed on NixOS
   targets.genericLinux.enable = false;
-
   # On NixOS, systemd user env fixes from home.nix are still applied but
   # the system-manager path is irrelevant; keep the profile clean.
   xdg.systemDirs.data = [ ];

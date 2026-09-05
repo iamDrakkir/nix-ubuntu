@@ -9,7 +9,8 @@
     ./ghostty.nix
     ./kitty.nix
     ./foot.nix
-    #./xdg-portal.nix
     ./cursor.nix
+    ./noctalia.nix
+    ./zen-browser.nix
   ];
 }

@@ -1,64 +1,31 @@
 {
+  lib,
   config,
+  pkgs,
   homeDirectory,
   hostname,
   inputs,
-  lib,
-  pkgs,
   system,
   ...
 }:
 
 let
-  isWorkHost = hostname == "work";
-
+  # Must match the binary and the profile names declared in
+  # core/zen-browser.nix — `-p` is case-sensitive.
+  browserAdminProfile = "work_admin";
+  browserCmd = "zen-beta";
   # Browser key assignments based on host
   browserPersonalKey = if isWorkHost then "SUPER + SHIFT + B" else "SUPER + B";
+  browserPersonalProfile = "personal";
   browserWorkKey = if isWorkHost then "SUPER + B" else "SUPER + SHIFT + B";
-
-  # Check which shell is enabled
-  noctaliaKb = config.myConfig.programs.noctalia.keybindings or { };
-  hasNoctalia = noctaliaKb != { };
-  shellEnabled = hasNoctalia;
-
-  shellKb = noctaliaKb;
-
-  # Wrap a Nix string as a raw Lua expression (renders without quotes)
-  lua = lib.generators.mkLuaInline;
-
-  # Render a Nix value as a Lua literal string (e.g. "foo" → "\"foo\"")
-  toLuaStr = lib.generators.toLua { };
-
-  # Build a settings.bind entry: hl.bind(key, dispatcher)
-  mkBind = key: dispExpr: {
-    _args = [
-      key
-      (lua dispExpr)
-    ];
-  };
-
-  # Like mkBind but with { repeating = true } — replaces hyprlang binde
-  mkBindRepeat = key: dispExpr: {
-    _args = [
-      key
-      (lua dispExpr)
-      { repeating = true; }
-    ];
-  };
-
-  # Like mkBind but with { drag = true } — replaces hyprlang bindm
-  mkBindDrag = key: dispExpr: {
-    _args = [
-      key
-      (lua dispExpr)
-      { drag = true; }
-    ];
-  };
-
-  # Build a bind from a shell keybinding struct { key; cmd; }
-  mkShellBind = kb: mkBind kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
-  mkShellBindRepeat = kb: mkBindRepeat kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
-
+  browserWorkProfile = "work";
+  # Return a shell bind or null if the field is absent in the active shell
+  getOptionalShellBind =
+    field:
+    let
+      kbField = shellKb.${field}.hyprland or null;
+    in
+    if kbField != null then mkShellBind kbField else null;
   # Get a shell keybind (via .hyprland field) or fall back to an exec bind
   getShellBind =
     field: fallbackKey: fallbackCmd:
@@ -69,7 +36,6 @@ let
       mkShellBind kbField
     else
       mkBind fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
-
   getShellBindRepeat =
     field: fallbackKey: fallbackCmd:
     let
@@ -79,21 +45,48 @@ let
       mkShellBindRepeat kbField
     else
       mkBindRepeat fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
-
-  # Return a shell bind or null if the field is absent in the active shell
-  getOptionalShellBind =
-    field:
-    let
-      kbField = shellKb.${field}.hyprland or null;
-    in
-    if kbField != null then mkShellBind kbField else null;
-
+  hasNoctalia = noctaliaKb != { };
+  isWorkHost = hostname == "work";
   # Launcher keybind (provided by the shell; no standalone launcher installed)
   launcherBinds =
     let
       launcherField = shellKb.launcher.hyprland or null;
     in
     lib.optionals (launcherField != null) [ (mkShellBind launcherField) ];
+  # Wrap a Nix string as a raw Lua expression (renders without quotes)
+  lua = lib.generators.mkLuaInline;
+  # Build a settings.bind entry: hl.bind(key, dispatcher)
+  mkBind = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+    ];
+  };
+  # Like mkBind but with { drag = true } — replaces hyprlang bindm
+  mkBindDrag = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+      { drag = true; }
+    ];
+  };
+  # Like mkBind but with { repeating = true } — replaces hyprlang binde
+  mkBindRepeat = key: dispExpr: {
+    _args = [
+      key
+      (lua dispExpr)
+      { repeating = true; }
+    ];
+  };
+  # Build a bind from a shell keybinding struct { key; cmd; }
+  mkShellBind = kb: mkBind kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
+  mkShellBindRepeat = kb: mkBindRepeat kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
+  # Check which shell is enabled
+  noctaliaKb = config.myConfig.programs.noctalia.keybindings or { };
+  shellEnabled = hasNoctalia;
+  shellKb = noctaliaKb;
+  # Render a Nix value as a Lua literal string (e.g. "foo" → "\"foo\"")
+  toLuaStr = lib.generators.toLua { };
 
 in
 
@@ -120,6 +113,7 @@ in
   wayland.windowManager.hyprland = {
     configType = "lua";
     enable = true;
+
     # Autostart programs and submap definition
     extraConfig = ''
       hl.on("hyprland.start", function()
@@ -138,7 +132,9 @@ in
         hl.bind("SUPER + Escape", hl.dsp.submap("reset"))
       end)
     '';
+
     package = inputs.hyprland.packages.${system}.hyprland;
+
     settings = {
       # All keybindings in a single bind list (repeating/drag via _args opts)
       bind = [
@@ -148,7 +144,7 @@ in
         (mkBind "SUPER + ALT + RETURN" ''hl.dsp.exec_cmd("foot")'')
         (mkBind "SUPER + S" ''hl.dsp.exec_cmd("foot")'')
         (mkBind "SUPER + E" ''hl.dsp.exec_cmd("nautilus")'')
-        (mkBind "SUPER + CTRL + SHIFT + B" ''hl.dsp.exec_cmd("zen -p Work_Admin")'')
+        (mkBind "SUPER + CTRL + SHIFT + B" ''hl.dsp.exec_cmd("${browserCmd} -p ${browserAdminProfile}")'')
         (mkBind "SUPER + P" ''hl.dsp.exec_cmd("proton-pass")'')
         (mkBind "SUPER + D" ''hl.dsp.exec_cmd("discord")'')
 
@@ -244,8 +240,8 @@ in
         (mkBind "SUPER + Z" ''hl.dsp.submap("passthru")'')
 
         # Browser shortcuts (swapped based on hostname)
-        (mkBind browserPersonalKey ''hl.dsp.exec_cmd("zen -p Personal")'')
-        (mkBind browserWorkKey ''hl.dsp.exec_cmd("zen -p Work")'')
+        (mkBind browserPersonalKey ''hl.dsp.exec_cmd("${browserCmd} -p ${browserPersonalProfile}")'')
+        (mkBind browserWorkKey ''hl.dsp.exec_cmd("${browserCmd} -p ${browserWorkProfile}")'')
 
         # Audio volume — repeatable (replaces binde)
         (getShellBindRepeat "volumeUp" "XF86AudioRaiseVolume"
@@ -257,6 +253,7 @@ in
         (mkBindDrag "SUPER + mouse:272" "hl.dsp.window.drag()")
         (mkBindDrag "SUPER + mouse:273" "hl.dsp.window.resize()")
       ];
+
       # All config options — renders as hl.config({ ["section.key"] = value, ... })
       config = {
         "animations.enabled" = false;
@@ -287,6 +284,7 @@ in
         "misc.disable_hyprland_logo" = true;
         "misc.disable_splash_rendering" = true;
       };
+
       # Environment variables — renders as hl.env("KEY", "VALUE")
       env = [
         {
@@ -308,43 +306,8 @@ in
           ];
         } # Fix dead keys on GTK 4.20+ / Wayland
       ];
-      # Monitor configuration — renders as hl.monitor({ output, mode, position, scale })
-      monitor = [
-        {
-          _args = [
-            {
-              mode = "1920x1080@120";
-              output = "DP-1";
-              position = "auto";
-              scale = 1;
-            }
-          ];
-        }
-        {
-          _args = [
-            {
-              mode = "2560x1440@144";
-              output = "DP-3";
-              position = "auto";
-              scale = 1;
-            }
-          ];
-        }
-        {
-          _args = [
-            {
-              mode = "preferred";
-              output = "";
-              position = "auto";
-              scale = 1;
-            }
-          ];
-        }
-      ];
+      # Monitor configuration is host-specific hardware: see
+      # home/<user>/<host>.nix (e.g. home/drakkir/terra.nix).
     };
   };
-
-  # Symlink hyprland config from dotfiles repo
-  # Disabled: hyprland config files are missing from dotfiles
-  # xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [ "hypr" ];
 }

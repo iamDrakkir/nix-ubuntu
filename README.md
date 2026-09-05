@@ -242,16 +242,16 @@ nix-rebuild        # Both home and system
 
 ### Desktop Environment Setup
 
-Desktop session files for Hyprland and Niri are automatically created by home-manager in `~/.local/share/wayland-sessions/`. 
+Session entries for Hyprland and Niri are installed into `/usr/share/wayland-sessions/`
+by the `wayland-sessions-install` service (see `hosts/common/optional/wayland-sessions.nix`),
+which runs on every system rebuild and at boot. GDM only reads that system
+directory and won't follow symlinks into the Nix store, so the files are copied
+there as real files — no manual step is needed anymore.
 
-**Important:** GDM doesn't follow symlinks to the Nix store, so the session files need to be copied (not symlinked) to the system directory. After running `home-manager switch`, use the included helper script:
+The entries launch `$HOME/.nix-profile/bin/{start-hyprland,niri-session}`, so each
+user gets their own home-manager compositor build.
 
-```bash
-# Copy session files to system directory (makes them appear in GDM)
-install-wayland-sessions
-```
-
-Sessions will appear in the login screen after logout or restart.
+Sessions appear in the login screen after `just system` plus a logout or restart.
 
 ### CoreCtrl Setup (AMD GPU Control)
 

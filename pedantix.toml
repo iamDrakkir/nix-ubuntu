@@ -22,7 +22,17 @@ sort = true
 sort = true
 
 # NOTE: global list sorting is intentionally left off; list order is often
-# significant. Enable per-path via [[overrides]] where safe, e.g.:
+# significant. It can be enabled per-attrpath via [[overrides]], e.g.:
 #   [[overrides]]
-#   path = "..."
+#   path = "**.environment.systemPackages"
 #   lists.sort = true
+#
+# ...but do NOT enable it for `**.imports` or `**.home.packages` here.
+# pedantix treats comments as positional rather than attached to the item
+# below them, so sorting a list that uses section-header comments detaches
+# them: `# System` ends up over gaming.nix, and development.nix's
+# "# node2nix # TODO: broken" lands over github-copilot-cli. Lists whose
+# comments are *trailing* (same line) survive sorting fine.
+#
+# Import/package lists in this repo are grouped by leading comments and are
+# kept alphabetical within each group by hand.

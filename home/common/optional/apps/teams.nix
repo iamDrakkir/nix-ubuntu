@@ -11,6 +11,7 @@
       "InstantMessaging"
       "Chat"
     ];
+
     comment = "Unofficial Microsoft Teams client for Linux";
     exec = "teams-for-linux --class=teams-for-linux %U";
     icon = "teams-for-linux";

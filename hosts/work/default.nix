@@ -3,8 +3,7 @@
 {
   imports = [
     ../common/core
-    #../common/optional/auto-cpufreq.nix
-    #../common/optional/apparmor.nix
+    ../common/optional/wayland-sessions.nix
     ../common/users/rhagelin
   ];
 

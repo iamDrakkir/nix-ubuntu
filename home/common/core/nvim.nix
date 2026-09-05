@@ -1,6 +1,6 @@
 {
-  config,
   lib,
+  config,
   pkgs,
   ...
 }:
@@ -11,7 +11,6 @@
 
   # imagemagick is required by snacks.image for format conversion
   home.packages = [ pkgs.imagemagick ];
-
   # Symlink config from dotfiles repo
   xdg.configFile = lib.custom.symlink.mkXdgConfigLinks config [ "nvim" ];
 }

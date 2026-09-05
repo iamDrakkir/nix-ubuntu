@@ -9,6 +9,7 @@
         blink = "no";
         style = "block";
       };
+
       main = {
         # Font configuration
         font = "monospace:size=10";
@@ -17,9 +18,11 @@
         # Window configuration
         pad = "4x4";
       };
+
       mouse = {
         hide-when-typing = "yes";
       };
+
       scrollback = {
         lines = 10000;
       };

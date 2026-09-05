@@ -226,6 +226,9 @@ widget_order = [
 [plugins]
 enabled = [ "lucasoe/proton-pass" ]
 
+[shell]
+polkit_agent = true
+
 [shell.launcher]
 categories = false
 compact = true

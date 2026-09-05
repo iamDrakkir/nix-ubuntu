@@ -12,6 +12,7 @@
       "Network"
       "InstantMessaging"
     ];
+
     comment = "All-in-one cross-platform voice and text chat for gamers";
     exec = "discord %U";
     icon = "${pkgs.discord}/share/pixmaps/discord.png";

@@ -1,4 +1,4 @@
-{ ... }:
+{ identity, ... }:
 
 {
   programs.ssh = {
@@ -7,7 +7,7 @@
 
     settings = {
       "github.com" = {
-        IdentityAgent = "/run/user/1000/proton-pass-agent";
+        IdentityAgent = "/run/user/${toString identity.uid}/proton-pass-agent";
       };
     };
   };

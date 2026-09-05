@@ -1,6 +1,6 @@
 {
-  config,
   lib,
+  config,
   pkgs,
   ...
 }:
@@ -24,18 +24,21 @@
     # C/C++
     gcc
   ];
-  programs.nix-index-database.comma.enable = true;
 
-  # AI agent multiplexer.
-  #
-  # `settings` is deliberately left empty so the upstream module does not take
-  # ownership of config.toml. Herdr rewrites that file itself (onboarding flag)
-  # and Noctalia's templates write the theme block into it, so a read-only store
-  # symlink would both break them and fail activation. Out-of-store symlink it to
-  # the repo instead, matching how noctalia/settings.toml is handled.
-  programs.herdr = {
-    enable = true;
-    package = pkgs.herdr;
+  programs = {
+    # AI agent multiplexer.
+    #
+    # `settings` is deliberately left empty so the upstream module does not take
+    # ownership of config.toml. Herdr rewrites that file itself (onboarding flag)
+    # and Noctalia's templates write the theme block into it, so a read-only store
+    # symlink would both break them and fail activation. Out-of-store symlink it to
+    # the repo instead, matching how noctalia/settings.toml is handled.
+    herdr = {
+      enable = true;
+      package = pkgs.herdr;
+    };
+
+    nix-index-database.comma.enable = true;
   };
 
   xdg.configFile."herdr/config.toml".source = lib.custom.symlink.link config "herdr/config.toml";

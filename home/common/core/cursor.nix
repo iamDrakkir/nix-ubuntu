@@ -9,44 +9,48 @@
 #   - Default cursor index.theme files point to Bibata-Modern-Ice
 
 let
+  cursorSize = 24;
   # ===== CURSOR THEME CONFIGURATION =====
   # Change 'cursorTheme' to switch between themes:
   #   - "rose-pine"
   #   - "bibata"
   cursorTheme = "bibata";
-
-  cursorSize = 24;
+  selected = themes.${cursorTheme};
   # ======================================
-
   themes = {
     bibata = {
       name = "Bibata-Modern-Ice";
       package = pkgs.bibata-cursors;
     };
+
     rose-pine = {
       name = "BreezeX-RosePine-Linux";
       package = pkgs.rose-pine-cursor;
     };
   };
-  selected = themes.${cursorTheme};
 in
 
 {
   gtk.enable = true;
-  home.packages = [ selected.package ];
-  home.pointerCursor = {
-    enable = true;
-    gtk.enable = true;
-    hyprcursor.enable = true;
-    name = selected.name;
-    package = selected.package;
-    size = cursorSize;
-    x11.enable = true;
-  };
-  home.sessionVariables = {
-    CURSOR_SIZE = toString cursorSize;
-    CURSOR_THEME = selected.name;
-    XCURSOR_SIZE = toString cursorSize;
-    XCURSOR_THEME = selected.name;
+
+  home = {
+    packages = [ selected.package ];
+
+    pointerCursor = {
+      enable = true;
+      gtk.enable = true;
+      hyprcursor.enable = true;
+      name = selected.name;
+      package = selected.package;
+      size = cursorSize;
+      x11.enable = true;
+    };
+
+    sessionVariables = {
+      CURSOR_SIZE = toString cursorSize;
+      CURSOR_THEME = selected.name;
+      XCURSOR_SIZE = toString cursorSize;
+      XCURSOR_THEME = selected.name;
+    };
   };
 }
