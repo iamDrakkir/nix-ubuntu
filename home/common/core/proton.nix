@@ -1,5 +1,6 @@
 {
   lib,
+  config,
   pkgs,
   ...
 }:
@@ -51,14 +52,18 @@ let
           } </dev/tty >/dev/tty 2>&1
         else
           notify-send "Proton Pass" "Logging in to unlock your SSH keys" || true
-          ${lib.getExe pkgs.foot} -e pass-cli login || true
+          ${lib.getExe config.programs.ghostty.package} -e pass-cli login || true
         fi
 
         # The agent unit fails while logged out and retries every 10s; kick it
         # so the fresh session is picked up now rather than up to 10s from now.
         systemctl --user restart proton-pass-agent || true
 
-        for _ in $(seq 1 20); do
+        # Wait for keys rather than assuming the login has finished: the
+        # terminal spawned above may return immediately instead of blocking,
+        # and a web login takes as long as it takes. Exits as soon as the agent
+        # has keys, so the common case costs one iteration.
+        for _ in $(seq 1 240); do
           if ssh-add -l >/dev/null 2>&1; then break; fi
           sleep 0.5
         done
