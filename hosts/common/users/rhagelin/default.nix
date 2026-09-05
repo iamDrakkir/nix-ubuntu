@@ -1,11 +1,15 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
-  # NOTE: users.users is currently a NO-OP in system-manager
-  # This configuration documents the intended user setup but doesn't create the user.
-  # On non-NixOS systems, create this user manually before applying config:
-  #   sudo useradd -m -G wheel,networkmanager -s $(which fish) rhagelin
-  # On NixOS, this will work automatically when migrated.
+  # Managed by system-manager via userborn (services.userborn is enabled by
+  # default), so this really does create/update the user — check with
+  # `journalctl -u userborn.service`.
+  #
+  # CAVEAT on the work host: the actual login there is the SSSD/AD account
+  # rhagelin@creatorctek.local with home /home/rhagelin.creatorctek.local. The
+  # entry below is a *local* user also called rhagelin, which userborn will
+  # create in /etc/passwd with home /home/rhagelin. The two coexist, but if the
+  # local one ever shadows the domain one, drop this import from hosts/work.
   users.users.rhagelin = {
     description = "Rhagelin (Corporate)";
 
@@ -15,7 +19,9 @@
     ];
 
     isNormalUser = true;
-    # shell = pkgs.fish;  # Commented out: causes error in system-manager (config.programs doesn't exist)
+    # shell is deliberately not set — see the note in ../drakkir/default.nix:
+    # a Nix store path as login shell breaks /etc/shells validation (pkexec).
+    #
     # SSH keys can be added in ./keys/ directory
     # openssh.authorizedKeys.keyFiles = [ ./keys/id_rsa.pub ];
   };

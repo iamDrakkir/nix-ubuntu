@@ -253,6 +253,16 @@
       systemAarch64 = "aarch64-linux";
     in
     {
+      # `nix flake check` walks homeConfigurations and nixosConfigurations on its
+      # own, but reports "The following flake outputs are unchecked:
+      # systemConfigs." — re-export them here so the system level is covered by
+      # the same gate instead of only being caught at `just system` time.
+      checks.${system} = {
+        systemConfig-bigbox = self.systemConfigs.bigbox;
+        systemConfig-terra = self.systemConfigs.terra;
+        systemConfig-work = self.systemConfigs.work;
+      };
+
       formatter.${system} = inputs.pedantix.packages.${system}.pedantix-wrapped;
 
       homeConfigurations = {

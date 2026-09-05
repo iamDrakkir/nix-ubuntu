@@ -60,7 +60,12 @@
         whitespace = "error";
       };
 
-      credential.helper = "store";
+      # No credential.helper on purpose. Remotes are SSH (keys come from the
+      # Proton Pass agent), so nothing needs a stored password — and the old
+      # "store" helper wrote tokens as plaintext to ~/.git-credentials, which
+      # never expire and are trivially readable. For the occasional HTTPS
+      # remote, prefer `gh auth login` (gh manages its own token) or a
+      # short-lived `git -c credential.helper=cache push`.
 
       diff = {
         context = 3;

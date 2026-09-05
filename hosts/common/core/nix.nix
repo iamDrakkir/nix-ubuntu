@@ -47,7 +47,11 @@
     enable = false; # Let Determinate Nix manage /etc/nix/nix.conf
   };
   nixpkgs.hostPlatform = system;
-  system-manager.allowAnyDistro = true;
+  # Mask power-profiles-daemon to prevent conflicts with auto-cpufreq.
+  # It is a distro-shipped unit, so it has to be masked: `systemd.services.<n>.enable
+  # = false` only suppresses units system-manager generates itself, and silently
+  # does nothing for units it doesn't own.
+  systemd.maskedUnits = [ "power-profiles-daemon.service" ];
   # Auto-cpufreq systemd service
   systemd.services.auto-cpufreq = {
     after = [
@@ -73,6 +77,4 @@
     };
     wantedBy = [ "multi-user.target" ];
   };
-  # Mask power-profiles-daemon to prevent conflicts with auto-cpufreq
-  systemd.services.power-profiles-daemon.enable = false;
 }

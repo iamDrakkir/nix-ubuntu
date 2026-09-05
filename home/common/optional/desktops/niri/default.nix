@@ -515,6 +515,16 @@ in
     };
   };
 
+  # niri-flake unconditionally sets services.gnome-keyring.enable = true, which
+  # starts a second gnome-keyring-daemon in the session. These hosts are Ubuntu
+  # and already run the distro's own daemon: socket-activated, and — crucially —
+  # hooked into PAM, so it is the one that can auto-unlock login.keyring at
+  # login. Ours is not, and both race for the org.freedesktop.secrets bus name
+  # (the loser just logs "discover_other_daemon: 1" and no-ops).
+  #
+  # Keep exactly one secret service, and make it the PAM-aware one.
+  services.gnome-keyring.enable = lib.mkForce false;
+
   systemd = {
     user = {
       services = {

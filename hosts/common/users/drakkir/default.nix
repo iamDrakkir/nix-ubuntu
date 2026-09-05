@@ -1,11 +1,12 @@
-{ pkgs, ... }:
+{ ... }:
 
 {
-  # NOTE: users.users is currently a NO-OP in system-manager
-  # This configuration documents the intended user setup but doesn't create the user.
-  # On non-NixOS systems, create this user manually before applying config:
-  #   sudo useradd -m -G wheel,networkmanager -s $(which fish) drakkir
-  # On NixOS, this will work automatically when migrated.
+  # Managed by system-manager via userborn (services.userborn is enabled by
+  # default), so this really does create/update the user — check with
+  # `journalctl -u userborn.service`.
+  #
+  # users.mutableUsers stays true, so passwords and anything set with usermod by
+  # hand are left alone; only what is declared here is enforced.
   users.users.drakkir = {
     description = "Drakkir";
 
@@ -15,7 +16,12 @@
     ];
 
     isNormalUser = true;
-    # shell = pkgs.fish;  # Commented out: causes error in system-manager (config.programs doesn't exist)
+    # shell is deliberately not set. Pointing it at a Nix store path breaks
+    # anything that validates the login shell against /etc/shells — pkexec
+    # refuses to run at all ("The value for the SHELL variable was not found in
+    # the /etc/shells file"). The shell is set to the system-manager bash
+    # (/run/system-manager/sw/bin/bash) at the distro level instead.
+    #
     # SSH keys can be added in ./keys/ directory
     # openssh.authorizedKeys.keyFiles = [ ./keys/id_rsa.pub ];
   };
