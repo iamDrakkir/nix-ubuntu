@@ -238,7 +238,7 @@ enabled = [ "lucasoe/proton-pass", "noctalia/screen_recorder", "drakkir/nix", "d
 
     [[plugins.source]]
     kind = "path"
-    location = "/home/drakkir/.config/nix/dotfiles/noctalia/plugins"
+    location = "~/.config/nix/dotfiles/noctalia/plugins"
     name = "local"
 
 [shell]

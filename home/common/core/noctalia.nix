@@ -98,6 +98,7 @@ let
         key = "Mod+Space";
       };
     };
+
     launcherProviders = {
       hyprland = {
         cmd = ipcCmd "panel-toggle launcher /";
