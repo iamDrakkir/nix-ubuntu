@@ -23,6 +23,7 @@
       # Quick directory navigation
       cdd = "cd $HOME/.config/nix/dotfiles";
       cdg = "cd $HOME/git";
+      cdi = "cd $HOME/.config/nix";
       cdn = "cd $HOME/.config/nix/dotfiles/nvim/";
       cdw = "cd $HOME/git/work";
       ga = "git add";

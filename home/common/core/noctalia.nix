@@ -98,6 +98,17 @@ let
         key = "Mod+Space";
       };
     };
+    launcherProviders = {
+      hyprland = {
+        cmd = ipcCmd "panel-toggle launcher /";
+        key = "SUPER + ALT + SPACE";
+      };
+
+      niri = {
+        action = noctaliaIPC "panel-toggle launcher /";
+        key = "Mod+Alt+Space";
+      };
+    };
 
     lockKey = {
       hyprland = {
@@ -155,19 +166,6 @@ let
       };
     };
 
-    # System action menu (the overflow valve for infrequent actions)
-    omniMenu = {
-      hyprland = {
-        cmd = "omni-menu";
-        key = "SUPER + ALT + SPACE";
-      };
-
-      niri = {
-        action = [ "omni-menu" ];
-        key = "Mod+Alt+Space";
-      };
-    };
-
     volumeDown = {
       hyprland = {
         cmd = ipcCmd "volume-down";
@@ -212,20 +210,21 @@ let
       "msg"
     ]
     ++ (lib.splitString " " cmd);
-  # System action menu, rendered by noctalia's own launcher via `noctalia
-  # dmenu` (reads items on stdin, prints the selection on stdout). This is the
-  # overflow valve for actions that do not deserve a dedicated chord.
-  #
-  # The script itself lives in dotfiles/noctalia/omni-menu.sh so it can be
-  # edited live without a rebuild; this only pins its runtime dependencies.
-  omniMenu = pkgs.writeShellApplication {
-    name = "omni-menu";
-    runtimeInputs = with pkgs; [ jq ];
-
-    text = ''
-      exec bash ${lib.custom.symlink.path config "noctalia/omni-menu.sh"} "$@"
-    '';
-  };
+  # Umbriel keybinds are derived from the niri ones rather than written out a
+  # third time: both compositors use the same chord syntax ("Mod+Ctrl+A",
+  # "XF86AudioRaiseVolume"), and umbriel runs commands via a "spawn:" action
+  # instead of a command list. Entries with no niri variant (lockKey, which niri
+  # cannot express) are simply absent here too.
+  withUmbriel = lib.mapAttrs (
+    _: variants:
+    variants
+    // lib.optionalAttrs (variants ? niri) {
+      umbriel = {
+        action = "spawn:" + lib.concatStringsSep " " variants.niri.action;
+        inherit (variants.niri) key;
+      };
+    }
+  );
 in
 
 {
@@ -237,11 +236,9 @@ in
       # live repo so GUI edits persist there and rebuilds aren't needed.
       file.".local/state/noctalia/settings.toml".source =
         lib.custom.symlink.link config "noctalia/settings.toml";
-
-      packages = [ omniMenu ];
     };
 
-    myConfig.programs.noctalia.keybindings = keybinds;
+    myConfig.programs.noctalia.keybindings = withUmbriel keybinds;
     programs.noctalia.enable = true;
   };
 

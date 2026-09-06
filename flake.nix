@@ -63,6 +63,11 @@
       url = "github:numtide/system-manager";
     };
 
+    umbriel = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:noctalia-dev/umbriel";
+    };
+
     zen-browser = {
       inputs = {
         home-manager.follows = "home-manager";

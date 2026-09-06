@@ -1,0 +1,16 @@
+id = "drakkir/toggles"
+name = "Toggles"
+version = "0.1.0"
+plugin_api = 3
+author = "drakkir"
+license = "MIT"
+icon = "toggle-right"
+description = "Theme, nightlight, caffeine, DND and radio toggles"
+tags = ["launcher"]
+
+[[launcher_provider]]
+id = "toggles"
+entry = "launcher.luau"
+prefix = "toggles"
+glyph = "toggle-right"
+include_in_global_search = false

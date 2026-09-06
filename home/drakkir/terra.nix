@@ -12,6 +12,7 @@
     ../common/optional/desktops/gnome
     ../common/optional/desktops/hyprland
     ../common/optional/desktops/niri
+    ../common/optional/desktops/umbriel
 
     # Features
     ../common/optional/gaming.nix
@@ -26,32 +27,57 @@
     ../common/optional/flatpak.nix
   ];
 
-  # ---- Host hardware: displays ----
-  # terra drives two external displays side by side.
-  programs.niri.settings.outputs = {
-    "DP-1" = {
-      mode = {
-        height = 1080;
-        refresh = 119.982;
-        width = 1920;
+  programs = {
+    niri.settings.outputs = {
+      "DP-1" = {
+        mode = {
+          height = 1080;
+          refresh = 119.982;
+          width = 1920;
+        };
+
+        position = {
+          x = 0;
+          y = 0;
+        };
       };
 
-      position = {
-        x = 0;
-        y = 0;
+      "DP-2" = {
+        mode = {
+          height = 1440;
+          refresh = 143.998;
+          width = 2560;
+        };
+
+        position = {
+          x = 1920;
+          y = 0;
+        };
       };
     };
 
-    "DP-2" = {
-      mode = {
-        height = 1440;
-        refresh = 143.998;
-        width = 2560;
+    # ---- Host hardware: displays ----
+    # terra drives two external displays side by side.
+    # Umbriel has no output block by default, so wlroots picks each display's
+    # *preferred* mode — which on both of these is 60 Hz, not the 120/144 Hz they
+    # are capable of. Mirrors the niri outputs below; keep the two in sync.
+    umbriel.settings.output = {
+      "DP-1" = {
+        mode = "1920x1080@119.982";
+
+        position = [
+          0
+          0
+        ];
       };
 
-      position = {
-        x = 1920;
-        y = 0;
+      "DP-2" = {
+        mode = "2560x1440@143.998";
+
+        position = [
+          1920
+          0
+        ];
       };
     };
   };

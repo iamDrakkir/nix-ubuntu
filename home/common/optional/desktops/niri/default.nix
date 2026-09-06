@@ -93,6 +93,11 @@ in
             hotkey-overlay.title = "Application launcher";
           };
 
+          "${kb.launcherProviders.niri.key}" = {
+            action.spawn = kb.launcherProviders.niri.action;
+            hotkey-overlay.title = "System menu";
+          };
+
           "${kb.lockScreen.niri.key}" = {
             action.spawn = kb.lockScreen.niri.action;
             hotkey-overlay.title = "Lock session";
@@ -109,11 +114,6 @@ in
           "${kb.nightlight.niri.key}" = {
             action.spawn = kb.nightlight.niri.action;
             hotkey-overlay.title = "Toggle nightlight";
-          };
-
-          "${kb.omniMenu.niri.key}" = {
-            action.spawn = kb.omniMenu.niri.action;
-            hotkey-overlay.title = "System menu";
           };
 
           "${kb.volumeDown.niri.key}".action.spawn = kb.volumeDown.niri.action;

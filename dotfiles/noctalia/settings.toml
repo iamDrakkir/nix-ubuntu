@@ -224,28 +224,43 @@ widget_order = [
         show_weather = true
 
 [plugins]
-enabled = [ "lucasoe/proton-pass" ]
+enabled = [ "lucasoe/proton-pass", "noctalia/screen_recorder", "drakkir/nix", "drakkir/toggles" ]
+
+    [[plugins.source]]
+    kind = "git"
+    location = "https://github.com/noctalia-dev/official-plugins"
+    name = "official"
+
+    [[plugins.source]]
+    kind = "git"
+    location = "https://github.com/noctalia-dev/community-plugins"
+    name = "community"
+
+    [[plugins.source]]
+    kind = "path"
+    location = "/home/drakkir/.config/nix/dotfiles/noctalia/plugins"
+    name = "local"
 
 [shell]
 polkit_agent = true
 
-[shell.launcher]
-categories = false
-compact = true
-fetch_exchange_rates = false
+    [shell.launcher]
+    categories = false
+    compact = true
+    fetch_exchange_rates = false
 
-    [shell.launcher.providers.session]
-    global = true
+        [shell.launcher.providers.session]
+        global = true
 
-[shell.panel]
-launcher_placement = "attached"
+    [shell.panel]
+    launcher_placement = "attached"
 
-[shell.screen_corners]
-enabled = true
+    [shell.screen_corners]
+    enabled = true
 
-[shell.screenshot]
-pipe_command = "satty -f -"
-pipe_to_command = true
+    [shell.screenshot]
+    pipe_command = "satty -f -"
+    pipe_to_command = true
 
 [theme]
 builtin = "Ayu"
@@ -258,32 +273,35 @@ wallpaper_scheme = "m3-content"
     builtin_ids = [ "btop", "foot", "gtk3", "gtk4", "ghostty", "niri", "starship" ]
     community_ids = [ "opencode", "zen-browser", "neovim", "vscode", "bat", "herdr", "lazygit" ]
 
-[wallpaper.default]
-path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+[wallpaper]
+directory = "/home/drakkir/Pictures/Wallpapers"
 
-[wallpaper.last]
-path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.default]
+    path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[wallpaper.monitors.DP-1]
-path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.last]
+    path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[wallpaper.monitors.DP-2]
-path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.monitors.DP-1]
+    path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[wallpaper.monitors.DP-3]
-path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.monitors.DP-2]
+    path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[wallpaper.monitors.DP-4]
-path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.monitors.DP-3]
+    path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[wallpaper.monitors.eDP-1]
-path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    [wallpaper.monitors.DP-4]
+    path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
 
-[[wallpaper.favorite]]
-builtin_palette = "Ayu"
-palette_source = "builtin"
-path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
-theme_mode = "dark"
+    [wallpaper.monitors.eDP-1]
+    path = "/home/rhagelin.creatorctek.local/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+
+    [[wallpaper.favorite]]
+    builtin_palette = "Ayu"
+    palette_source = "builtin"
+    path = "/home/drakkir/Pictures/Wallpapers/wallhaven_mdqmw8.jpg"
+    theme_mode = "dark"
 
 [widget.sysmon]
 stat = "gpu_temp"

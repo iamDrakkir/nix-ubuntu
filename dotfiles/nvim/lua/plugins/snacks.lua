@@ -77,6 +77,28 @@ return {
 			desc = "Key Maps",
 		},
 		{
+			-- Ctrl+? is the application tier of the Super/Alt/Ctrl hierarchy in
+			-- README.md. Spelled <C-S-+> because ghostty and Neovim negotiate the
+			-- kitty keyboard protocol, so the chord arrives as the base key plus
+			-- modifiers, and `?` is Shift+plus on the Swedish layout. <C-?> would
+			-- never fire, and resolves to 0x7f, which is Backspace.
+			"<C-S-+>",
+			function()
+				Snacks.picker.keymaps()
+			end,
+			desc = "Key Maps",
+			mode = { "n", "v" },
+		},
+		{
+			-- Same chord on a layout where `?` is Shift+slash.
+			"<C-S-/>",
+			function()
+				Snacks.picker.keymaps()
+			end,
+			desc = "Key Maps",
+			mode = { "n", "v" },
+		},
+		{
 			"<leader>sM",
 			function()
 				Snacks.picker.man()

@@ -13,6 +13,13 @@ onboarding = false
 [terminal]
 default_shell = "fish"
 
+[ui]
+# Tab names come from the auto-title plugin, so prefix+c should open a tab
+# straight away rather than stopping to ask for one. Rename with prefix+shift+t
+# when a name is worth having.
+#   herdr plugin install kryptamine/herdr-auto-title
+prompt_new_tab_name = false
+
 # Keep Herdr's direct pane controls in the Alt/tmux layer, while retaining the
 # prefix path as a fallback for focus. Resizing keeps its prefix path through
 # the built-in resize mode (prefix+r).
@@ -22,6 +29,9 @@ default_shell = "fish"
 # between containers. Tabs are horizontal (h/l), workspaces vertical (j/k),
 # matching how they are laid out on screen.
 [keys]
+# Alt+? mirrors Super+? in the window manager: ask the current layer to show
+# its own bindings. Keeps the prefix route as well.
+help = ["prefix+?", "alt+?"]
 focus_pane_left = ["prefix+h", "alt+h"]
 focus_pane_down = ["prefix+j", "alt+j"]
 focus_pane_up = ["prefix+k", "alt+k"]

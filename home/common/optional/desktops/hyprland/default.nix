@@ -165,7 +165,7 @@ in
         lib.filter (b: b != null) [
           (getOptionalShellBind "calendar")
           (getOptionalShellBind "clipboard")
-          (getOptionalShellBind "omniMenu")
+          (getOptionalShellBind "launcherProviders")
           (getOptionalShellBind "emoji")
           (getOptionalShellBind "dashboard")
           (getOptionalShellBind "controlCenter")
