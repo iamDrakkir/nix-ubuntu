@@ -31,9 +31,9 @@ which layer that is:
 
 | Layer | Modifier family | Scope |
 |-------|-----------------|-------|
-| Window manager | `Super + Ctrl/Alt/Shift + x` | Desktop and window actions |
-| tmux / Herdr | `Alt + Ctrl/Shift + x` | Multiplexer and pane actions |
-| Active TUI/application | `Ctrl + x` | The focused terminal application |
+| Window manager | `Super + (Ctrl/Alt/Shift) + x` | Desktop and window actions |
+| tmux / Herdr | `Alt + (Ctrl/Shift) + x` | Multiplexer and pane actions |
+| Active TUI/application | `Ctrl + (shift) + x` | The focused terminal application |
 
 Direction is always `h` left, `j` down, `k` up, `l` right — in every layer, in
 every application.

@@ -16,8 +16,11 @@ enabled = false
 [location]
 address = "Norrköping"
 
+[lockscreen]
+blurred_desktop = true
+
 [lockscreen_widgets]
-enabled = false
+enabled = true
 schema_version = 2
 widget_order = [
     "lockscreen-login-box@DP-6",
@@ -26,7 +29,8 @@ widget_order = [
     "lockscreen-login-box@DP-2",
     "lockscreen-login-box@DP-4",
     "lockscreen-login-box@DP-3",
-    "lockscreen-login-box@eDP-1"
+    "lockscreen-login-box@eDP-1",
+    "lockscreen-widget-0000000000000001"
 ]
 
     [lockscreen_widgets.grid]
@@ -222,6 +226,21 @@ widget_order = [
         show_session_buttons = true
         show_unlock_hint = true
         show_weather = true
+
+    [lockscreen_widgets.widget.lockscreen-widget-0000000000000001]
+    box_height = 208.0
+    box_width = 336.0
+    cx = 1280.0
+    cy = 992.0
+    output = "DP-2"
+    placement_height = 1440.0
+    placement_width = 2560.0
+    rotation = -0.0
+    type = "clock"
+
+        [lockscreen_widgets.widget.lockscreen-widget-0000000000000001.settings]
+        background = false
+        shadow = true
 
 [plugins]
 enabled = [ "lucasoe/proton-pass", "noctalia/screen_recorder", "drakkir/nix", "drakkir/toggles" ]
