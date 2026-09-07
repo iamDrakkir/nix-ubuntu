@@ -25,10 +25,16 @@ home *ARGS:
 home-trace *ARGS:
   home-manager switch --flake ~/.config/nix#{{config-user}}@{{config-host}} --show-trace {{ARGS}} |& nom
 
+# The `system` recipe is split in two on purpose. `switch --sudo` prompts for a
+# password, but nom owns the terminal and repaints over the prompt, so it looks
+# like the run has hung on a spinner. Building first (no sudo, and where nom
+# actually earns its keep) means the switch has nothing left to fetch and can
+# run unpiped, with sudo free to draw its prompt normally.
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  system-manager switch --sudo --flake ~/.config/nix#{{config-host}} |& nom
+  system-manager build --flake ~/.config/nix#{{config-host}} |& nom
+  system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
 
 # Rebuild NixOS configuration (for NixOS hosts like pi)
 [group('build')]
