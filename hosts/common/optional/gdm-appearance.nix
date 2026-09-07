@@ -1,12 +1,17 @@
-{ pkgs, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 
 # Appearance for Ubuntu's GDM login screen.
 #
 # GDM's greeter runs as the `gdm` user, which cannot read anything under
 # /home/drakkir — hosts/common/core tmpfiles pins that directory to 0700. So
-# every asset referenced here has to live somewhere world-readable. The Nix
-# store is, which is why the wallpaper is committed alongside this module and
-# the cursor theme comes from nixpkgs rather than the copy in ~/.icons.
+# every asset referenced here has to live somewhere world-readable: the Nix
+# store for the wallpaper source and cursor theme, /var/lib for the generated
+# background.
 #
 # Settings reach the greeter through Debian's dconf keyfile directory:
 # /usr/share/gdm/dconf/ holds 00-upstream-settings and 90-debian-settings (a
@@ -21,136 +26,136 @@
 # advice is to recompile gnome-shell-theme.gresource — not needed here, and
 # that approach would be clobbered by every gnome-shell update.
 #
-# ── Why the wallpaper is composited ──────────────────────────────────────────
+# ── Why the background is composited at runtime ──────────────────────────────
 # gnome-shell sets the background style on `_lockDialogGroup`, a child of
 # `screenShieldGroup`, which spans the *entire* virtual desktop rather than one
 # actor per monitor. With mixed-resolution outputs that makes `background-size`
-# useless on its own: this desktop is 4480x1440 (3.11:1), so `cover` scales a
-# 16:9 source by 2.33x and crops away most of it, and `contain` letterboxes it
-# across the seam between the two screens.
+# useless on its own: on a 1920x1080 + 2560x1440 desktop the stage is 4480x1440
+# (3.11:1), so `cover` scales a 16:9 source by 2.33x and crops away most of it,
+# while `contain` letterboxes it across the seam between the screens.
 #
-# Instead, build a single stage-sized image with each monitor's region framed
-# individually, then hand it to the greeter at native size (`auto` +
-# `no-repeat`) so it lands 1:1 on the desktop.
+# So we build a stage-sized image with each monitor's region framed
+# individually and hand it over at native size (`auto` + `no-repeat`).
 #
-# NOTE: `outputs` below must match the greeter's actual monitor arrangement,
-# which is NOT the same as niri's. niri places DP-1 (1920x1080) at x=0 and
-# DP-2 (2560x1440) at x=1920; GDM orders them the other way round, so the
-# regions here are deliberately mirrored relative to dotfiles/niri/config.kdl.
-# Verified empirically — the first attempt used niri's order and came out with
-# the two screens' backgrounds swapped.
+# That has to happen at runtime rather than build time, because the monitor set
+# is not a property of the configuration — a laptop docks and undocks. The
+# compositing script reads /sys/class/drm just before gdm starts and sizes the
+# canvas to whatever is actually connected. A single-monitor machine therefore
+# needs no configuration at all.
 #
-# If you move a monitor or change a resolution, update this list — a mismatch
-# shows up as the background being swapped, offset, or letterboxed.
+# The one thing sysfs cannot tell us is left-to-right order, and mutter's
+# arrangement does not necessarily match the compositor's: on terra, niri puts
+# DP-1 first while GDM puts DP-2 first. `myConfig.gdm.outputOrder` exists purely
+# to pin that, and is only needed when outputs differ in resolution — with a
+# single output, or several identical ones, order cannot change the result.
 let
-  # Composite a stage-sized background: each region is scaled to cover its own
-  # monitor (^ resize) and centre-cropped to that monitor's exact size, then
-  # placed at the monitor's position on a black canvas.
-  #
-  # `-gravity NorthWest` before each -geometry is load-bearing. ImageMagick's
-  # gravity is global rather than scoped to the \( \) group, so the `center`
-  # used for the crop otherwise leaks out and makes -geometry offsets relative
-  # to the canvas centre — which silently misplaces every region.
-  background =
-    pkgs.runCommand "gdm-background.png"
-      {
-        nativeBuildInputs = [ pkgs.imagemagick ];
-      }
-      ''
-        magick -size ${toString stageWidth}x${toString stageHeight} xc:black \
-          ${
-            pkgs.lib.concatMapStringsSep " \\\n  " (o: ''
-              \( ${source} -resize ${toString o.width}x${toString o.height}^ \
-                 -gravity center -extent ${toString o.width}x${toString o.height} \) \
-              -gravity NorthWest -geometry +${toString o.x}+${toString o.y} -composite'') outputs
-          } \
-          -depth 8 "$out"
-      '';
-
-  cursorSize = 24;
-  cursorTheme = "Bibata-Modern-Ice";
-
-  # Keys use dconf paths (slashes), not GSettings ids (dots).
-  greeterDconf = pkgs.writeText "95-appearance" ''
-    [com/ubuntu/login-screen]
-    background-picture-uri='file://${background}'
-    background-repeat='no-repeat'
-    background-size='auto'
-
-    [org/gnome/desktop/interface]
-    color-scheme='prefer-dark'
-    cursor-size=${toString cursorSize}
-    cursor-theme='${cursorTheme}'
-
-    [org/gnome/login-screen]
-    logo=""
-  '';
-
-  outputs = [
-    # DP-2 (2560x1440) is the left-hand screen as far as GDM is concerned.
-    {
-      height = 1440;
-      width = 2560;
-      x = 0;
-      y = 0;
-    }
-    # DP-1 (1920x1080), top-aligned, to its right.
-    {
-      height = 1080;
-      width = 1920;
-      x = 2560;
-      y = 0;
-    }
-  ];
-
-  source = ./gdm/background.png;
-  stageHeight = 1440;
-  stageWidth = 4480;
+  cfg = config.myConfig.gdm;
 in
 
 {
-  systemd = {
-    # gdm regenerates the database itself on start, but restarting gdm would
-    # kill the running session. Compiling here means the new settings are in
-    # place for the next time the greeter is shown.
-    services.gdm-appearance = {
-      after = [ "sysinit-reactivation.target" ];
-      description = "Compile the GDM greeter dconf database with local appearance settings";
+  config = {
+    # Keys use dconf paths (slashes), not GSettings ids (dots).
+    #
+    # The background is a fixed /var/lib path rather than a store path, because
+    # the image is regenerated at runtime; baking a store path here would mean
+    # the keyfile had to change every time the monitor layout did.
+    environment.etc."gdm-appearance-95".text = ''
+      [com/ubuntu/login-screen]
+      background-picture-uri='file:///var/lib/gdm-appearance/background.png'
+      background-repeat='no-repeat'
+      background-size='auto'
 
-      script = ''
-        if [ ! -e /usr/share/gdm/dconf/95-appearance ]; then
-          echo "Error: /usr/share/gdm/dconf/95-appearance missing; tmpfiles did not run."
-          exit 1
-        fi
+      [org/gnome/desktop/interface]
+      color-scheme='prefer-dark'
+      cursor-size=${toString cfg.cursorSize}
+      cursor-theme='${cfg.cursorTheme}'
 
-        # generate-config is Debian's own script and expects host tooling:
-        # setsid and setpriv (util-linux), plus dconf and pkill. system-manager
-        # gives units a Nix-only PATH (coreutils, findutils, gnugrep, gnused,
-        # systemd-minimal), so without this the script exits 127 on setsid.
-        #
-        # Host PATH rather than pkgs.util-linux on purpose: dconf must be the
-        # host binary, since it writes the host's own database format into
-        # /var/lib/gdm3.
-        export PATH=/usr/sbin:/usr/bin:/sbin:/bin
+      [org/gnome/login-screen]
+      logo=""
+    '';
 
-        /usr/share/gdm/generate-config
-        echo "✓ recompiled /var/lib/gdm3/greeter-dconf-defaults"
-      '';
+    systemd = {
+      services.gdm-appearance = {
+        after = [ "sysinit-reactivation.target" ];
+        before = [ "gdm.service" ];
+        description = "Compose the GDM login background for the connected monitors";
 
-      serviceConfig = {
-        RemainAfterExit = true;
-        Type = "oneshot";
+        script = ''
+          export MAGICK=${pkgs.imagemagick}/bin/magick
+          export OUTPUT_ORDER=${lib.escapeShellArg (lib.concatStringsSep " " cfg.outputOrder)}
+          export WALLPAPER=${cfg.wallpaper}
+
+          exec ${pkgs.bash}/bin/bash ${./gdm/compose-background.sh}
+        '';
+
+        serviceConfig = {
+          RemainAfterExit = true;
+          Type = "oneshot";
+        };
+
+        # graphical.target so it runs before gdm at boot; system-manager.target
+        # so `just system` applies changes without waiting for a reboot.
+        wantedBy = [
+          "graphical.target"
+          "system-manager.target"
+        ];
       };
 
-      wantedBy = [ "system-manager.target" ];
+      # 95- sorts after Debian's 90-debian-settings, so these win. polkit and
+      # dconf only read from /usr/share, never a store path, so both of these
+      # have to be linked into place — same reasoning as umbriel-portal.nix.
+      tmpfiles.settings."15-gdm-appearance" = {
+        "/usr/share/gdm/dconf/95-appearance"."L+".argument = "/etc/gdm-appearance-95";
+
+        "/usr/share/icons/${cfg.cursorTheme}"."L+".argument =
+          "${pkgs.bibata-cursors}/share/icons/${cfg.cursorTheme}";
+      };
+    };
+  };
+
+  options.myConfig.gdm = {
+    cursorSize = lib.mkOption {
+      default = 24;
+      description = "Cursor size on the login screen.";
+      type = lib.types.int;
     };
 
-    # 95- sorts after Debian's 90-debian-settings, so these win.
-    tmpfiles.settings."15-gdm-appearance" = {
-      "/usr/share/gdm/dconf/95-appearance"."L+".argument = "${greeterDconf}";
+    cursorTheme = lib.mkOption {
+      default = "Bibata-Modern-Ice";
 
-      "/usr/share/icons/${cursorTheme}"."L+".argument =
-        "${pkgs.bibata-cursors}/share/icons/${cursorTheme}";
+      description = ''
+        Cursor theme for the login screen. Must exist in pkgs.bibata-cursors;
+        the copy in ~/.icons is unreadable to the gdm user.
+      '';
+
+      type = lib.types.str;
+    };
+
+    outputOrder = lib.mkOption {
+      default = [ ];
+
+      description = ''
+        Connector names in left-to-right order as GDM arranges them, for
+        example [ "DP-2" "DP-1" ]. Connected outputs not listed here are
+        appended alphabetically.
+
+        Only matters when the connected outputs differ in resolution: with one
+        output, or several identical ones, the ordering cannot change the
+        composited result. Note this is GDM's arrangement, which is not
+        necessarily the same as the one in your compositor's config.
+      '';
+
+      example = [
+        "DP-2"
+        "DP-1"
+      ];
+
+      type = lib.types.listOf lib.types.str;
+    };
+
+    wallpaper = lib.mkOption {
+      description = "Source image, framed per monitor onto a desktop-sized canvas.";
+      type = lib.types.path;
     };
   };
 }
