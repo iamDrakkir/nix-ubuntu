@@ -1,4 +1,4 @@
-config_version = 13
+config_version = 14
 
 [bar.default]
 capsule = true
@@ -9,6 +9,9 @@ radius_top_left = 0
 radius_top_right = 0
 start = [ "clock", "date", "control-center", "launcher" ]
 thickness = 30
+
+[control_center.calendar]
+show_week_numbers = true
 
 [desktop_widgets]
 enabled = false
@@ -262,6 +265,7 @@ enabled = [ "lucasoe/proton-pass", "noctalia/screen_recorder", "drakkir/nix", "d
 
 [shell]
 polkit_agent = true
+screen_time_enabled = true
 
     [shell.launcher]
     categories = false
@@ -273,6 +277,8 @@ polkit_agent = true
 
     [shell.panel]
     launcher_placement = "attached"
+    open_near_click_control_center = true
+    open_near_click_session = true
 
     [shell.screen_corners]
     enabled = true

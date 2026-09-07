@@ -28,7 +28,7 @@ home-trace *ARGS:
 # Rebuild system-manager configuration
 [group('build')]
 system:
-  system-manager switch --sudo --flake ~/.config/nix#{{config-host}}
+  system-manager switch --sudo --flake ~/.config/nix#{{config-host}} |& nom
 
 # Rebuild NixOS configuration (for NixOS hosts like pi)
 [group('build')]
