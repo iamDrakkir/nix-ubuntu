@@ -18,50 +18,40 @@
 # them in sync when the package updates; `umbriel msg cheatsheet-open` lists
 # what is actually active.
 let
-  # Universal clipboard: send the legacy CUA chords, which both terminals and
-  # GTK/Qt apps honour, so one key works everywhere. Synthesised with wtype.
   appBinds = {
-    "Mod+B" = "spawn:${browserCmd} -p ${if isWork then browserWorkProfile else browserPersonalProfile}";
+    "Mod+B" = "spawn:${browser.cmd} -p ${if isWork then browser.work else browser.personal}";
+    # Universal clipboard: synthesise the legacy CUA chords with wtype, which
+    # both terminals and GTK/Qt apps honour, so one key works everywhere.
     "Mod+C" = "spawn:wtype -M ctrl -k Insert -m ctrl";
-    "Mod+Ctrl+Shift+B" = "spawn:${browserCmd} -p ${browserAdminProfile}";
+    "Mod+Ctrl+Shift+B" = "spawn:${browser.cmd} -p ${browser.admin}";
     "Mod+D" = "spawn:${if isWork then "teams-for-linux" else "discord"}";
     "Mod+E" = "spawn:nautilus";
     "Mod+P" = "spawn:proton-pass";
     "Mod+Return" = "spawn:env GTK_IM_MODULE=simple ghostty";
-
-    # The other browser profile, matching the niri module.
-    "Mod+Shift+B" = "spawn:${browserCmd} -p ${
-      if isWork then browserPersonalProfile else browserWorkProfile
-    }";
-
-    # niri has a built-in screenshot action; umbriel has none, so use the
-    # shell's, which is what draws the picker under both compositors anyway.
+    "Mod+Shift+B" = "spawn:${browser.cmd} -p ${if isWork then browser.personal else browser.work}";
+    # Umbriel has no screenshot action of its own, so use the shell's — which
+    # is what draws the picker anyway.
     "Mod+Shift+S" = "spawn:noctalia msg screenshot-region";
     "Mod+V" = "spawn:wtype -M shift -k Insert -m shift";
   };
   # Must match the binary and the profile names declared in
   # core/zen-browser.nix — `-p` is case-sensitive.
-  browserAdminProfile = "work_admin";
-  browserCmd = "zen-beta";
-  browserPersonalProfile = "personal";
-  browserWorkProfile = "work";
-  # On the work machine Super+D opens Teams; elsewhere it opens Discord.
+  browser = {
+    admin = "work_admin";
+    cmd = "zen-beta";
+    personal = "personal";
+    work = "work";
+  };
+  # On the work machine Mod+D opens Teams and Mod+B the work profile;
+  # elsewhere Discord and the personal profile.
   isWork = hostname == "work";
-  kb = config.myConfig.programs.noctalia.keybindings or { };
-  # On AD domain machines (username contains "@"), Nix glibc can't resolve the
-  # fully-qualified username via SSSD because it lacks libnss_sss.so.2. Same
-  # fixup as the niri module.
-  needsNssFixup = lib.hasInfix "@" username;
-  # The niri chords, mapped by behaviour rather than by name (niri
-  # focus-workspace-up is umbriel workspace-previous; show-hotkey-overlay is
-  # cheatsheet-toggle).
+  # Window and workspace management, spelled with umbriel's action names.
   #
-  # Absent because umbriel has no equivalent: Mod+W (tabbed columns),
-  # Mod+Ctrl+F (expand-column-to-available-width), Mod+Ctrl+R
-  # (reset-window-height) and Mod+Shift+Alt+N (move-to-workspace without
-  # following). Mod+Escape is left unbound rather than restored to umbriel's
-  # default session-quit, since niri uses that chord for something harmless.
-  niriParityBinds = {
+  # Absent because umbriel has no equivalent: tabbed columns, expanding a column
+  # to the available width, resetting a window's height, and moving a window to
+  # a workspace without following it. Mod+Escape is deliberately left unbound
+  # rather than restored to umbriel's default session-quit.
+  navigationBinds = {
     "Mod+BracketLeft" = "window-consume-or-expel-left";
     "Mod+BracketRight" = "window-consume-or-expel-right";
     "Mod+Comma" = "window-consume-left";
@@ -97,31 +87,33 @@ let
     "Mod+Shift+U" = "workspace-move-down";
     "Mod+Shift+WheelDown" = "window-focus-right";
     "Mod+Shift+WheelUp" = "window-focus-left";
-    # Not Mod+Shift+Slash as in niri: on the Swedish layout `?` is Shift on the
-    # `+` key, while `slash` is Shift+7. umbriel matches both the shifted keysym
-    # and the raw one, so a Slash bind would also fire on Mod+Shift+7 and race
-    # the workspace bind.
+    # Not Mod+Shift+Slash: on the Swedish layout `?` is Shift on `+` while
+    # `slash` is Shift+7, and umbriel matches both the shifted keysym and the
+    # raw one — so a Slash bind would also fire on Mod+Shift+7 and race the
+    # workspace bind.
     "Mod+Shift+question" = "cheatsheet-toggle";
     "Mod+U" = "workspace-next";
     "Mod+WheelDown" = "workspace-next";
     "Mod+WheelUp" = "workspace-previous";
   }
   # Mod+N switches to workspace N, Mod+Shift+N takes the column along.
-  // lib.listToAttrs (
-    lib.concatMap (n: [
-      (lib.nameValuePair "Mod+${toString n}" "workspace-switch:${toString n}")
-      (lib.nameValuePair "Mod+Shift+${toString n}" "column-move-to-workspace:${toString n}")
-    ]) (lib.range 1 9)
+  // lib.mergeAttrsList (
+    map (n: {
+      "Mod+${n}" = "workspace-switch:${n}";
+      "Mod+Shift+${n}" = "column-move-to-workspace:${n}";
+    }) (map toString (lib.range 1 9))
   );
-  # Every Noctalia bind that has an umbriel variant, keyed by chord. The
-  # variants are derived from the niri ones in core/noctalia.nix, so the two
-  # compositors cannot drift apart.
-  noctaliaBinds = lib.listToAttrs (
-    lib.concatMap (v: lib.optional (v ? umbriel) (lib.nameValuePair v.umbriel.key v.umbriel.action)) (
-      lib.attrValues kb
-    )
+  # Every Noctalia bind that declares an umbriel variant, re-keyed by chord.
+  noctaliaBinds = lib.mapAttrs' (_: v: lib.nameValuePair v.umbriel.key v.umbriel.action) (
+    lib.filterAttrs (_: v: v ? umbriel) (config.myConfig.programs.noctalia.keybindings or { })
   );
-  noctaliaCmd = if needsNssFixup then "env LD_LIBRARY_PATH=${pkgs.sssd}/lib noctalia" else "noctalia";
+  # On AD domain machines (username contains "@") Nix's glibc lacks
+  # libnss_sss.so.2, so it cannot resolve the fully-qualified username via SSSD.
+  noctaliaCmd =
+    if lib.hasInfix "@" username then
+      "env LD_LIBRARY_PATH=${pkgs.sssd}/lib noctalia"
+    else
+      "noctalia";
   # share/umbriel/config.toml's own binds, plus the vim directions it leaves to
   # the compiled-in defaults. Both need declaring: see the note at the top.
   packagedBinds = {
@@ -130,9 +122,8 @@ let
     "Mod+Ctrl+K" = "window-move-up";
     "Mod+Ctrl+L" = "column-move-right";
     "Mod+Down" = "window-focus-down";
-    # Matches the niri module: Mod+F fills the width but keeps the bar's struts
-    # (maximize-column there), Mod+Shift+F genuinely covers everything
-    # (fullscreen-window). Mod+M below is the third variant, which ignores gaps
+    # Mod+F fills the width but keeps the bar's struts, Mod+Shift+F genuinely
+    # covers everything. Mod+M below is the third variant, which ignores gaps
     # and struts entirely.
     "Mod+F" = "window-toggle-maximize";
     "Mod+H" = "window-focus-left";
@@ -147,7 +138,6 @@ let
       repeat = false;
     };
 
-    "Mod+P" = "window-toggle-pinned";
     "Mod+Q" = "window-close";
     "Mod+Right" = "window-focus-right";
     "Mod+Shift+F" = "window-toggle-fullscreen";
@@ -174,12 +164,12 @@ in
 
     settings = {
       # Blur and shadows stay at umbriel's defaults (both on). Only the corner
-      # radius is overridden: umbriel defaults to 10, while the niri module sets
-      # 12 on every window via geometry-corner-radius, so match it.
+      # radius is overridden: umbriel defaults to 10, and this config uses 12
+      # on every window.
       appearance.corner_radius = 12;
 
       general = {
-        # corectrl matches the niri module's spawn-at-startup.
+        # Noctalia is the shell; corectrl manages GPU fan curves.
         autostart = [
           noctaliaCmd
           "corectrl"
@@ -190,27 +180,25 @@ in
       };
 
       input = {
-        # Matches the niri module, which pairs focus-follows-mouse with
-        # max-scroll-amount = "10%". umbriel's equivalent limit is expressed in
-        # viewport widths rather than a percentage, so 0.1 is the same cap: do
-        # not steal focus on hover if revealing the window would scroll more
-        # than a tenth of a viewport.
+        # Focus follows the mouse, but capped: do not steal focus on hover if
+        # revealing the window would scroll more than a tenth of a viewport.
+        # umbriel expresses the limit in viewport widths, so 0.1 is 10%.
         focus = {
           follows_mouse = true;
           follows_mouse_max_scroll = 0.1;
         };
 
-        # Swedish layout, matching the niri and hyprland modules. Umbriel
-        # defaults to an empty layout, which falls back to the system default —
-        # and on this host `localectl` reports no VC keymap, so that lands on us.
+        # Umbriel defaults to an empty layout, which falls back to the system
+        # default — and this host has no VC keymap set, so it lands on us.
         keyboard.layout = "se";
       };
 
       # Precedence: the packaged defaults lose to our application chords, which
       # lose to the Noctalia chords documented in README.md. The one casualty is
-      # Mod+P, which umbriel packages as window-toggle-pinned but which is the
-      # password manager everywhere else in this config.
-      keybinds = packagedBinds // niriParityBinds // appBinds // noctaliaBinds;
+      # Mod+P — umbriel packages it as window-toggle-pinned, but it is the
+      # password manager everywhere else in this config, so it is dropped from
+      # packagedBinds above rather than left to be silently overridden.
+      keybinds = packagedBinds // navigationBinds // appBinds // noctaliaBinds;
 
       # share/umbriel/config.toml's rules, which defining any window_rule here
       # would otherwise drop. The first is load-bearing rather than cosmetic:
@@ -269,10 +257,9 @@ in
 
           match.title = "^notificationtoasts_.+_desktop";
         }
-        # Mirrors the niri module's window rule. Umbriel has no equivalent of
-        # niri's default-column-width/default-window-height, but the output is
-        # already 2560x1440 and the rule only ever existed to make WoW open
-        # fullscreen at native resolution.
+        # Umbriel has no default-size equivalent for tiled windows, but the
+        # output is already 2560x1440 and the rule only ever existed to make WoW
+        # open fullscreen at native resolution.
         {
           default_fullscreen = true;
           match.title = "^World of Warcraft$";
@@ -287,9 +274,8 @@ in
   # and the session dies at the login screen, while launching the binary by hand
   # from a TTY still works because that path never touches systemd.
   #
-  # Re-declared here so home-manager links them into ~/.config/systemd/user,
-  # the same treatment the niri module gives niri.service. Keep in sync with
-  # share/systemd/user/ in the package.
+  # Re-declared here so home-manager links them into ~/.config/systemd/user.
+  # Keep in sync with share/systemd/user/ in the package.
   systemd.user = {
     services = {
       umbriel = {
@@ -371,10 +357,9 @@ in
 
   # GTK/libadwaita apps (Bottles, and every flatpak) learn the dark-mode
   # preference from the portal Settings API, not from the compositor. The gtk
-  # backend implements it but declares `UseIn=gnome`, and niri only works
-  # because its package ships a niri-portals.conf overriding that. Umbriel ships
-  # none, so without this nothing answers Settings and apps silently fall back
-  # to light despite gsettings reporting prefer-dark.
+  # backend implements it but declares `UseIn=gnome`, and umbriel ships no
+  # portals.conf overriding that — so without this nothing answers Settings and
+  # apps silently fall back to light despite gsettings reporting prefer-dark.
   xdg.configFile."xdg-desktop-portal/umbriel-portals.conf".text = ''
     [preferred]
     default=gnome;gtk;

@@ -7,202 +7,134 @@
 }:
 
 let
-  # IPC command as a single shell string (e.g. "noctalia msg panel-toggle launcher")
-  ipcCmd = cmd: lib.concatStringsSep " " (noctaliaIPC cmd);
-  # Keybinding definitions for different compositors.
-  # The hyprland consumer expects a set { key; cmd; } (see hyprland/default.nix mkShellBind).
-  keybinds = {
+  # Every Noctalia bind in neutral form; the per-compositor variants are
+  # expanded from this below. `cmd` is the IPC command, `key` the chord in the
+  # syntax niri and umbriel share, `hyprKey` hyprland's spelling of it.
+  binds = {
     # Control Center tabs. Audio, Bluetooth and network have no standalone
     # panels; they are contexts of the control-center panel.
     audioPanel = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle control-center audio";
-        key = "SUPER + CTRL + A";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle control-center audio";
-        key = "Mod+Ctrl+A";
-      };
+      cmd = "panel-toggle control-center audio";
+      hyprKey = "SUPER + CTRL + A";
+      key = "Mod+Ctrl+A";
     };
 
     bluetoothPanel = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle control-center bluetooth";
-        key = "SUPER + CTRL + B";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle control-center bluetooth";
-        key = "Mod+Ctrl+B";
-      };
+      cmd = "panel-toggle control-center bluetooth";
+      hyprKey = "SUPER + CTRL + B";
+      key = "Mod+Ctrl+B";
     };
 
     brightnessDown = {
-      hyprland = {
-        cmd = ipcCmd "brightness-down";
-        key = "XF86MonBrightnessDown";
-      };
-
-      niri = {
-        action = noctaliaIPC "brightness-down";
-        key = "XF86MonBrightnessDown";
-      };
+      cmd = "brightness-down";
+      hyprKey = "XF86MonBrightnessDown";
+      key = "XF86MonBrightnessDown";
     };
 
     brightnessUp = {
-      hyprland = {
-        cmd = ipcCmd "brightness-up";
-        key = "XF86MonBrightnessUp";
-      };
-
-      niri = {
-        action = noctaliaIPC "brightness-up";
-        key = "XF86MonBrightnessUp";
-      };
+      cmd = "brightness-up";
+      hyprKey = "XF86MonBrightnessUp";
+      key = "XF86MonBrightnessUp";
     };
 
     clipboard = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle clipboard";
-        key = "SUPER + SHIFT + V";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle clipboard";
-        key = "Mod+Shift+V";
-      };
+      cmd = "panel-toggle clipboard";
+      hyprKey = "SUPER + SHIFT + V";
+      key = "Mod+Shift+V";
     };
 
     # Emoji picker: the launcher's built-in emoji provider replaces emote.
     emoji = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle launcher /emo";
-        key = "SUPER + CTRL + E";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle launcher /emo";
-        key = "Mod+Ctrl+E";
-      };
+      cmd = "panel-toggle launcher /emo";
+      hyprKey = "SUPER + CTRL + E";
+      key = "Mod+Ctrl+E";
     };
 
     launcher = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle launcher";
-        key = "SUPER + SPACE";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle launcher";
-        key = "Mod+Space";
-      };
+      cmd = "panel-toggle launcher";
+      hyprKey = "SUPER + SPACE";
+      key = "Mod+Space";
     };
 
     launcherProviders = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle launcher /";
-        key = "SUPER + ALT + SPACE";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle launcher /";
-        key = "Mod+Alt+Space";
-      };
+      cmd = "panel-toggle launcher /";
+      hyprKey = "SUPER + ALT + SPACE";
+      key = "Mod+Alt+Space";
     };
 
+    # No `key`: XF86Lock is not a valid key in niri or umbriel.
     lockKey = {
-      hyprland = {
-        cmd = ipcCmd "session lock";
-        key = "XF86Lock";
-      };
-      # XF86Lock is not a valid key in niri
+      cmd = "session lock";
+      hyprKey = "XF86Lock";
     };
 
     lockScreen = {
-      hyprland = {
-        cmd = ipcCmd "session lock";
-        key = "SUPER + CTRL + Escape";
-      };
-
-      niri = {
-        action = noctaliaIPC "session lock";
-        key = "Mod+Ctrl+Escape";
-      };
+      cmd = "session lock";
+      hyprKey = "SUPER + CTRL + Escape";
+      key = "Mod+Ctrl+Escape";
     };
 
     micMute = {
-      hyprland = {
-        cmd = ipcCmd "mic-mute";
-        key = "XF86AudioMicMute";
-      };
-
-      niri = {
-        action = noctaliaIPC "mic-mute";
-        key = "XF86AudioMicMute";
-      };
+      cmd = "mic-mute";
+      hyprKey = "XF86AudioMicMute";
+      key = "XF86AudioMicMute";
     };
 
     networkPanel = {
-      hyprland = {
-        cmd = ipcCmd "panel-toggle control-center network";
-        key = "SUPER + CTRL + W";
-      };
-
-      niri = {
-        action = noctaliaIPC "panel-toggle control-center network";
-        key = "Mod+Ctrl+W";
-      };
+      cmd = "panel-toggle control-center network";
+      hyprKey = "SUPER + CTRL + W";
+      key = "Mod+Ctrl+W";
     };
 
     nightlight = {
-      hyprland = {
-        cmd = ipcCmd "nightlight-toggle";
-        key = "SUPER + CTRL + N";
-      };
-
-      niri = {
-        action = noctaliaIPC "nightlight-toggle";
-        key = "Mod+Ctrl+N";
-      };
+      cmd = "nightlight-toggle";
+      hyprKey = "SUPER + CTRL + N";
+      key = "Mod+Ctrl+N";
     };
 
     volumeDown = {
-      hyprland = {
-        cmd = ipcCmd "volume-down";
-        key = "XF86AudioLowerVolume";
-      };
-
-      niri = {
-        action = noctaliaIPC "volume-down";
-        key = "XF86AudioLowerVolume";
-      };
+      cmd = "volume-down";
+      hyprKey = "XF86AudioLowerVolume";
+      key = "XF86AudioLowerVolume";
     };
 
     volumeMute = {
-      hyprland = {
-        cmd = ipcCmd "volume-mute";
-        key = "XF86AudioMute";
-      };
-
-      niri = {
-        action = noctaliaIPC "volume-mute";
-        key = "XF86AudioMute";
-      };
+      cmd = "volume-mute";
+      hyprKey = "XF86AudioMute";
+      key = "XF86AudioMute";
     };
 
     volumeUp = {
-      hyprland = {
-        cmd = ipcCmd "volume-up";
-        key = "XF86AudioRaiseVolume";
-      };
-
-      niri = {
-        action = noctaliaIPC "volume-up";
-        key = "XF86AudioRaiseVolume";
-      };
+      cmd = "volume-up";
+      hyprKey = "XF86AudioRaiseVolume";
+      key = "XF86AudioRaiseVolume";
     };
   };
+  # IPC command as a single shell string (e.g. "noctalia msg panel-toggle launcher")
+  ipcCmd = cmd: lib.concatStringsSep " " (noctaliaIPC cmd);
+  # The same bind in each compositor's own shape: hyprland wants a { key; cmd; }
+  # pair (see hyprland/default.nix mkShellBind), niri an argv list, umbriel a
+  # "spawn:" action. Binds without a `key` are hyprland-only.
+  keybinds = lib.mapAttrs (
+    _: b:
+    {
+      hyprland = {
+        cmd = ipcCmd b.cmd;
+        key = b.hyprKey;
+      };
+    }
+    // lib.optionalAttrs (b ? key) {
+      niri = {
+        action = noctaliaIPC b.cmd;
+        inherit (b) key;
+      };
+
+      umbriel = {
+        action = "spawn:${ipcCmd b.cmd}";
+        inherit (b) key;
+      };
+    }
+  ) binds;
   # Helper function for Noctalia IPC commands (v5+ uses `noctalia msg <command>`)
   noctaliaIPC =
     cmd:
@@ -211,21 +143,6 @@ let
       "msg"
     ]
     ++ (lib.splitString " " cmd);
-  # Umbriel keybinds are derived from the niri ones rather than written out a
-  # third time: both compositors use the same chord syntax ("Mod+Ctrl+A",
-  # "XF86AudioRaiseVolume"), and umbriel runs commands via a "spawn:" action
-  # instead of a command list. Entries with no niri variant (lockKey, which niri
-  # cannot express) are simply absent here too.
-  withUmbriel = lib.mapAttrs (
-    _: variants:
-    variants
-    // lib.optionalAttrs (variants ? niri) {
-      umbriel = {
-        action = "spawn:" + lib.concatStringsSep " " variants.niri.action;
-        inherit (variants.niri) key;
-      };
-    }
-  );
 in
 
 {
@@ -239,7 +156,7 @@ in
         lib.custom.symlink.link config "noctalia/settings.toml";
     };
 
-    myConfig.programs.noctalia.keybindings = withUmbriel keybinds;
+    myConfig.programs.noctalia.keybindings = keybinds;
     programs.noctalia.enable = true;
   };
 
