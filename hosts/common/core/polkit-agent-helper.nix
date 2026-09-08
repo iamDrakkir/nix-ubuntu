@@ -13,10 +13,18 @@
 # The host's own setuid helper lives at /usr/lib/polkit-1/polkit-agent-helper-1
 # and matches the host polkitd, so point the expected path at it. Same spirit as
 # home/common/optional/pam-shim.nix: bridge Nix binaries to host system paths.
+#
+# The link must be re-made on every activation. suid-sgid-wrappers.service
+# populates a fresh wrappers.XXXXXXXX directory and re-points /run/wrappers/bin
+# at it, so anything we linked into the previous one is gone. Hence no
+# RemainAfterExit: it would leave this unit "active (exited)" forever and make
+# the next activation's `start` a silent no-op, stranding the link in the old
+# directory until the next reboot. partOf covers wrappers restarting on its own.
 {
   systemd.services.polkit-agent-helper-link = {
     after = [ "suid-sgid-wrappers.service" ];
     description = "Link the NixOS polkit agent helper path to the host helper";
+    partOf = [ "suid-sgid-wrappers.service" ];
     requires = [ "suid-sgid-wrappers.service" ];
 
     script = ''
@@ -32,7 +40,6 @@
     '';
 
     serviceConfig = {
-      RemainAfterExit = true;
       Type = "oneshot";
     };
 
