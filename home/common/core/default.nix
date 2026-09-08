@@ -12,6 +12,7 @@
     ./kitty.nix
     ./foot.nix
     ./cursor.nix
+    ./input-method.nix
     ./noctalia.nix
     ./zen-browser.nix
     ./proton.nix

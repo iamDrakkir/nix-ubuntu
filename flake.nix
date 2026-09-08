@@ -46,6 +46,11 @@
       url = "github:noctalia-dev/noctalia-shell";
     };
 
+    noctalia-greeter = {
+      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:noctalia-dev/noctalia-greeter";
+    };
+
     # PAM shim for non-NixOS systems
     # Using 'next' branch for full libpam.so.0 API coverage
     pam-shim = {

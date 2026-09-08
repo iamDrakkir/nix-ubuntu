@@ -9,6 +9,7 @@
     ./polkit-agent-helper.nix
     ./power.nix
     ./sandboxing.nix
+    ./shells.nix
     ./wayland-sessions.nix
   ];
 }

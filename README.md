@@ -8,16 +8,16 @@ Inspired by [EmergentMind's nix-config](https://github.com/EmergentMind/nix-conf
 
 | Host | OS | Architecture | Role |
 |------|----|--------------|------|
-| `terra` | Ubuntu | x86_64 | Desktop — GNOME + Niri |
+| `terra` | Ubuntu | x86_64 | Desktop — GNOME + Hyprland + Niri + Umbriel |
 | `bigbox` | Ubuntu | x86_64 | Desktop — GNOME + Hyprland + Niri |
-| `work` | Ubuntu | x86_64 | Work laptop — GNOME |
+| `work` | Ubuntu | x86_64 | Work laptop — GNOME + Niri |
 | `pi` | NixOS | aarch64 | Raspberry Pi 4/5 — headless server |
 
 ## Features
 
 - **Multi-host Support**: Separate configurations per host with auto-detection via `just`
 - **Dual-mode system management**: system-manager on Ubuntu; native NixOS on the Pi
-- **Multiple Desktop Environments**: GNOME, Hyprland, and Niri (desktop hosts only)
+- **Multiple Desktop Environments**: GNOME, Hyprland, Niri, and Umbriel (desktop hosts only)
 - **Declarative Dotfiles**: Managed via out-of-store symlinks to in-repo dotfiles
 - **Hierarchical Keybindings**: One modifier per layer — Super desktop, Alt multiplexer, Ctrl application
 - **Core vs Optional Philosophy**: Strict separation between always-present and optional configs
@@ -134,7 +134,7 @@ home/                    # Home-manager configurations
 │   ├── core/            # Always present on ALL users/hosts (shell, git, dev, GUI)
 │   └── optional/        # Optional user configs
 │       ├── apps/        # Per-application configs (discord, tmux, vlc, ...)
-│       └── desktops/    # Desktop environment configs (gnome, hyprland, niri)
+│       └── desktops/    # Desktop environment configs (gnome, hyprland, niri, umbriel)
 ├── drakkir/
 │   ├── terra.nix        # Desktops + dev + gaming
 │   ├── bigbox.nix       # Desktops + dev + gaming + all programs
@@ -196,6 +196,10 @@ nix-shell -p git
 # Clone repository
 git clone https://github.com/iamDrakkir/nix-config.git ~/.config/nix
 
+# Install greetd before the first system activation (desktop hosts using the
+# Noctalia greeter — see "Login Screen"). noctalia-greeter-setup fails without it.
+sudo apt install greetd
+
 # Initial system setup (installs system packages and services)
 nix run 'github:numtide/system-manager' -- switch --sudo --flake ~/.config/nix#terra
 
@@ -204,6 +208,15 @@ nix shell github:nix-community/home-manager
 home-manager switch --flake ~/.config/nix#drakkir@terra
 
 # After this, 'just' commands and shell aliases will be available!
+
+# Set the login shell. This is not declarative: pointing users.users.<name>.shell
+# at a Nix store path breaks anything validating against /etc/shells. The
+# register-login-shell service adds this path to /etc/shells for you.
+chsh -s /run/system-manager/sw/bin/bash
+
+# Switch the display manager from GDM to greetd (desktop hosts only)
+sudo systemctl disable --now gdm
+sudo systemctl enable --now greetd
 
 # Setup flatpak remote
 sudo env "PATH=$PATH" flatpak remote-add --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
@@ -271,16 +284,54 @@ nix-rebuild        # Both home and system
 
 ### Desktop Environment Setup
 
-Session entries for Hyprland and Niri are installed into `/usr/share/wayland-sessions/`
-by the `wayland-sessions-install` service (see `hosts/common/optional/wayland-sessions.nix`),
-which runs on every system rebuild and at boot. GDM only reads that system
-directory and won't follow symlinks into the Nix store, so the files are copied
-there as real files — no manual step is needed anymore.
+Session entries for Hyprland, Niri and Umbriel are installed into
+`/usr/share/wayland-sessions/` by the `wayland-sessions-install` service (see
+`hosts/common/core/wayland-sessions.nix`), which runs on every system rebuild and
+at boot. Display managers only read that system directory and won't follow
+symlinks into the Nix store, so the files are copied there as real files — no
+manual step is needed.
 
-The entries launch `$HOME/.nix-profile/bin/{start-hyprland,niri-session}`, so each
-user gets their own home-manager compositor build.
+The entries launch `$HOME/.nix-profile/bin/{start-hyprland,niri-session,...}`, so
+each user gets their own home-manager compositor build.
 
 Sessions appear in the login screen after `just system` plus a logout or restart.
+
+### Login Screen (greetd + Noctalia Greeter)
+
+Desktop hosts use [Noctalia Greeter](https://github.com/noctalia-dev/noctalia-greeter)
+driven by greetd, themed from the same Noctalia settings as the shell. It is
+opt-in per host by importing `hosts/common/optional/noctalia-greeter.nix` —
+currently enabled on `terra`; other desktop hosts still use GDM.
+
+greetd itself comes from apt and only the greeter UI comes from Nix. That split
+is deliberate — a Nix-built greetd links Nix's PAM, which ships no
+`pam_systemd.so`, so sessions would never get a seat or `XDG_RUNTIME_DIR`. The
+reasoning is documented at the top of the module.
+
+Because greetd is a distro package, enabling this on a new host takes three
+manual steps (see [Installation](#ubuntu--non-nixos-hosts-terra-bigbox-work)):
+install `greetd`, switch the active display manager unit, and set your login
+shell. The `noctalia-greeter-setup` service fails with a clear error if the
+`greetd` package is missing.
+
+`gdm-appearance.nix` stays imported alongside the greeter. It only configures
+GDM's appearance and is inert while greetd owns the login screen, so falling
+back is `sudo systemctl disable --now greetd && sudo systemctl enable --now gdm`
+rather than a rebuild.
+
+Autologin is configured per host:
+
+```nix
+myConfig.greetd.autologin = {
+  enable = true;
+  session = "umbriel"; # must be one of myConfig.waylandSessions
+  user = "drakkir";
+};
+```
+
+greetd runs this once per boot only, so logging out returns to the greeter
+instead of straight back into the desktop. A `session` that isn't enabled in
+`myConfig.waylandSessions` is caught at evaluation time.
 
 ### CoreCtrl Setup (AMD GPU Control)
 
@@ -391,11 +442,15 @@ at `/usr/lib/polkit-1/polkit-agent-helper-1`. Verify with:
 
 ```bash
 ls -l /run/wrappers/bin/polkit-agent-helper-1
-SHELL=/bin/bash pkexec --disable-internal-agent true
+pkexec --disable-internal-agent true
 ```
 
-(`SHELL` has to be overridden because the login shell is a Nix path and `pkexec`
-rejects shells missing from `/etc/shells`.)
+`pkexec` also refuses to run at all — "The value for the SHELL variable was not
+found in the `/etc/shells` file" — if your login shell isn't registered there.
+`hosts/common/core/shells.nix` appends `/run/system-manager/sw/bin/bash` to
+`/etc/shells` on every rebuild and at boot, so this should not happen; if it
+does, check that `register-login-shell.service` succeeded and that your shell is
+actually that path (`getent passwd "$USER"`).
 
 ### System-Manager Packages Not Available in Hyprland Autostart
 

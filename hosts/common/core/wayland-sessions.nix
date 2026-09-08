@@ -58,6 +58,13 @@ in
 
 {
   config = {
+    # Exposed so greetd's autologin can reuse the exact launcher the login
+    # screen would run, rather than duplicating the $HOME/.nix-profile
+    # indirection. See hosts/common/optional/noctalia-greeter.nix.
+    myConfig.waylandSessionLaunchers = lib.mapAttrs (
+      name: session: launcher name session.binary
+    ) selected;
+
     systemd.services.wayland-sessions-install = {
       description = "Install Wayland session entries into /usr/share/wayland-sessions";
 
@@ -89,23 +96,39 @@ in
     };
   };
 
-  options.myConfig.waylandSessions = lib.mkOption {
-    default = [ ];
+  options = {
+    myConfig = {
+      waylandSessionLaunchers = lib.mkOption {
+        description = ''
+          Generated session launcher scripts, keyed by session name. Populated from
+          `waylandSessions`; consumed by greetd autologin so both paths run exactly
+          the same launcher.
+        '';
 
-    description = ''
-      Compositors to offer at the login screen. Entries are only useful when the
-      matching compositor is installed by home-manager for the user logging in,
-      so this is chosen per host rather than installed unconditionally.
-    '';
+        internal = true;
+        readOnly = true;
+        type = lib.types.attrsOf lib.types.path;
+      };
 
-    example = [ "niri" ];
+      waylandSessions = lib.mkOption {
+        default = [ ];
 
-    type = lib.types.listOf (
-      lib.types.enum [
-        "hyprland"
-        "niri"
-        "umbriel"
-      ]
-    );
+        description = ''
+          Compositors to offer at the login screen. Entries are only useful when the
+          matching compositor is installed by home-manager for the user logging in,
+          so this is chosen per host rather than installed unconditionally.
+        '';
+
+        example = [ "niri" ];
+
+        type = lib.types.listOf (
+          lib.types.enum [
+            "hyprland"
+            "niri"
+            "umbriel"
+          ]
+        );
+      };
+    };
   };
 }
