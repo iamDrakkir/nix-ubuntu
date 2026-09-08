@@ -17,8 +17,17 @@
     pname = "xtrayhide";
 
     # Patch go.mod to work with Go 1.25.5
+    #
+    # Also fix upstream bug: internAtom passes onlyIfExists=true, so on a fresh
+    # Xwayland where _NET_SYSTEM_TRAY_S0 has never been created, InternAtom
+    # returns atom 0 (None) without an error. The following GetSelectionOwner(0)
+    # then fails with BadAtom and the process exits 1, crash-looping forever.
+    # xtrayhide *is* the tray manager, so it must create the atom, not require it.
     postPatch = ''
       substituteInPlace go.mod --replace-fail "go 1.25.6" "go 1.25.5"
+
+      substituteInPlace internal/tray/atoms.go \
+        --replace-fail "xproto.InternAtom(conn, true," "xproto.InternAtom(conn, false,"
     '';
 
     proxyVendor = true;
