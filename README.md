@@ -115,6 +115,22 @@ Inside tmux and Herdr the same numbers apply one tier down: `Alt + 1-9` selects
 a tab or window, `Alt + Shift + 1-9` selects a Herdr workspace, and
 `Ctrl + Alt + 1-9` jumps to a Herdr agent.
 
+### Scratchpad (Umbriel only)
+
+Umbriel keeps a per-output stash of windows outside the workspace strip. The
+compositor implements it but binds nothing, so the chords are ours:
+
+| Key | Action |
+|-----|--------|
+| `Super + S` | Show or hide this output's scratchpad windows |
+| `Super + Ctrl + S` | Move the focused window into the scratchpad, or back out |
+| `Super + Alt + S` | Cycle focus through the visible scratchpad windows |
+
+The tiers read as elsewhere: bare `Super` acts on what is on screen,
+`Super + Ctrl` moves the focused window (as `Super + Ctrl + h/j/k/l` does), and
+`Super + Alt` cycles within what bare `Super` revealed. Niri and Hyprland have
+no equivalent here, so the chords are free on those sessions.
+
 ## Structure
 
 ```

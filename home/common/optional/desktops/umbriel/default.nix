@@ -148,6 +148,20 @@ let
   # Taken from umbriel's own flake inputs rather than added as an input of ours,
   # so the portal version always matches the compositor it talks to.
   portalPackage = inputs.umbriel.inputs.xdg-desktop-portal-umbriel.packages.${system}.default;
+  # Scratchpad: a per-output stash of windows that live outside the workspace
+  # strip. Umbriel implements it natively (`umbriel msg --help`, "Scratchpad"),
+  # but binds none of it, so the chords are ours.
+  #
+  # Keyed to follow the Super tier's own logic: bare Super acts on what is on
+  # screen (show/hide the stash), Super+Ctrl moves the focused window — the same
+  # sense as Super+Ctrl+h/j/k/l — and Super+Alt cycles within what bare Super
+  # revealed. Every action is left output-bare, so each monitor keeps its own
+  # scratchpad and the chords act on whichever one has focus.
+  scratchpadBinds = {
+    "Mod+Alt+S" = "scratchpad-focus-next";
+    "Mod+Ctrl+S" = "window-toggle-scratchpad";
+    "Mod+S" = "scratchpad-toggle";
+  };
 in
 
 {
@@ -198,7 +212,7 @@ in
       # Mod+P — umbriel packages it as window-toggle-pinned, but it is the
       # password manager everywhere else in this config, so it is dropped from
       # packagedBinds above rather than left to be silently overridden.
-      keybinds = packagedBinds // navigationBinds // appBinds // noctaliaBinds;
+      keybinds = packagedBinds // navigationBinds // scratchpadBinds // appBinds // noctaliaBinds;
 
       # share/umbriel/config.toml's rules, which defining any window_rule here
       # would otherwise drop. The first is load-bearing rather than cosmetic:
