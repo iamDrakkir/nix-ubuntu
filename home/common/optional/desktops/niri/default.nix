@@ -43,10 +43,13 @@ in
     satty
     xwayland-satellite
     wtype # Synthesise key events (universal copy/paste)
-    xtrayhide # X11 tray to SNI bridge (hides X11 tray windows)
   ];
 
-  imports = [ inputs.niri.homeModules.niri ];
+  imports = [
+    inputs.niri.homeModules.niri
+    ../portals.nix
+    ../xtrayhide.nix
+  ];
 
   # Configure Niri window manager
   programs.niri = {
@@ -556,28 +559,6 @@ in
           };
         };
 
-        # X11 System Tray to StatusNotifierItem bridge
-        # xtrayhide captures X11 tray icons, hides them, and exposes them as SNI
-        # This prevents the black container window issue with Wine/Battle.net
-        xtrayhide = {
-          Install = {
-            WantedBy = [ "graphical-session.target" ];
-          };
-
-          Service = {
-            ExecStart = "${pkgs.xtrayhide}/bin/xtrayhide";
-            Restart = "on-failure";
-            RestartSec = 3;
-            Type = "simple";
-          };
-
-          Unit = {
-            After = [ "graphical-session.target" ];
-            ConditionEnvironment = "WAYLAND_DISPLAY";
-            Description = "X11 System Tray to StatusNotifierItem bridge (with hidden windows)";
-            PartOf = [ "graphical-session.target" ];
-          };
-        };
       };
 
       targets.niri-shutdown = {

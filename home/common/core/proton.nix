@@ -92,11 +92,23 @@ in
     enable = true;
   };
 
-  # The agent fails on boot if not logged in yet; keep retrying until it succeeds
+  # The agent fails on boot if not logged in yet; keep retrying until it
+  # succeeds. The git wrapper above restarts the unit itself after a login, but
+  # that only covers logins it drove — a login through the Proton Pass GUI is
+  # picked up by this retry alone, so it has to keep going indefinitely.
+  #
+  # It backs off because "indefinitely" is the common case, not the exception:
+  # the local key is gone every boot and nothing restores it until the first
+  # push, so a flat 10s meant 662 restarts in one ~110min session, each dragging
+  # set-SSH_AUTH_SOCK.service (WantedBy=proton-pass-agent.service) along with it
+  # and each logging a failure. Decaying 10s -> 5min costs at most 5 extra
+  # minutes before a GUI login is noticed and cuts that by ~25x.
   systemd.user.services.proton-pass-agent = {
     Service = {
       Restart = "on-failure";
+      RestartMaxDelaySec = "5min";
       RestartSec = "10s";
+      RestartSteps = 5;
     };
   };
 }

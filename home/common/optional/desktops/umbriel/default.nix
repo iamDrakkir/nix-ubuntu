@@ -110,10 +110,7 @@ let
   # On AD domain machines (username contains "@") Nix's glibc lacks
   # libnss_sss.so.2, so it cannot resolve the fully-qualified username via SSSD.
   noctaliaCmd =
-    if lib.hasInfix "@" username then
-      "env LD_LIBRARY_PATH=${pkgs.sssd}/lib noctalia"
-    else
-      "noctalia";
+    if lib.hasInfix "@" username then "env LD_LIBRARY_PATH=${pkgs.sssd}/lib noctalia" else "noctalia";
   # share/umbriel/config.toml's own binds, plus the vim directions it leaves to
   # the compiled-in defaults. Both need declaring: see the note at the top.
   packagedBinds = {
@@ -170,7 +167,12 @@ in
   # routing capture at the gnome backend (as the rest of the config does) sends
   # it to Mutter, which knows nothing about this session.
   home.packages = [ portalPackage ];
-  imports = [ inputs.umbriel.homeModules.default ];
+
+  imports = [
+    inputs.umbriel.homeModules.default
+    ../portals.nix
+    ../xtrayhide.nix
+  ];
 
   programs.umbriel = {
     enable = true;

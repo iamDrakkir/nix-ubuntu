@@ -110,6 +110,8 @@ in
       brightnessctl # Brightness control (shells handle this)
     ];
 
+  imports = [ ../portals.nix ];
+
   wayland.windowManager.hyprland = {
     configType = "lua";
     enable = true;
