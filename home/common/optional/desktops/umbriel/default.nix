@@ -10,13 +10,6 @@
 }:
 
 # Umbriel — noctalia's own wlroots compositor.
-#
-# Umbriel loads the highest-priority config file *instead of* merging with the
-# packaged one, and a [keybinds] table also suppresses the compiled-in defaults.
-# Nothing survives that is not declared here, so this module reproduces
-# share/umbriel/config.toml's window rules and binds alongside our own. Keep
-# them in sync when the package updates; `umbriel msg cheatsheet-open` lists
-# what is actually active.
 let
   appBinds = {
     "Mod+B" = "spawn:${browser.cmd} -p ${if isWork then browser.work else browser.personal}";
@@ -34,8 +27,6 @@ let
     "Mod+Shift+S" = "spawn:noctalia msg screenshot-region";
     "Mod+V" = "spawn:wtype -M shift -k Insert -m shift";
   };
-  # Must match the binary and the profile names declared in
-  # core/zen-browser.nix — `-p` is case-sensitive.
   browser = {
     admin = "work_admin";
     cmd = "zen-beta";
@@ -45,12 +36,6 @@ let
   # On the work machine Mod+D opens Teams and Mod+B the work profile;
   # elsewhere Discord and the personal profile.
   isWork = hostname == "work";
-  # Window and workspace management, spelled with umbriel's action names.
-  #
-  # Absent because umbriel has no equivalent: tabbed columns, expanding a column
-  # to the available width, resetting a window's height, and moving a window to
-  # a workspace without following it. Mod+Escape is deliberately left unbound
-  # rather than restored to umbriel's default session-quit.
   navigationBinds = {
     "Mod+BracketLeft" = "window-consume-or-expel-left";
     "Mod+BracketRight" = "window-consume-or-expel-right";
@@ -87,10 +72,6 @@ let
     "Mod+Shift+U" = "workspace-move-down";
     "Mod+Shift+WheelDown" = "window-focus-right";
     "Mod+Shift+WheelUp" = "window-focus-left";
-    # Not Mod+Shift+Slash: on the Swedish layout `?` is Shift on `+` while
-    # `slash` is Shift+7, and umbriel matches both the shifted keysym and the
-    # raw one — so a Slash bind would also fire on Mod+Shift+7 and race the
-    # workspace bind.
     "Mod+Shift+question" = "cheatsheet-toggle";
     "Mod+U" = "workspace-next";
     "Mod+WheelDown" = "workspace-next";
@@ -119,9 +100,6 @@ let
     "Mod+Ctrl+K" = "window-move-up";
     "Mod+Ctrl+L" = "column-move-right";
     "Mod+Down" = "window-focus-down";
-    # Mod+F fills the width but keeps the bar's struts, Mod+Shift+F genuinely
-    # covers everything. Mod+M below is the third variant, which ignores gaps
-    # and struts entirely.
     "Mod+F" = "window-toggle-maximize";
     "Mod+H" = "window-focus-left";
     "Mod+J" = "window-focus-down";
@@ -142,18 +120,7 @@ let
     "Mod+T" = "window-toggle-floating";
     "Mod+Up" = "window-focus-up";
   };
-  # Taken from umbriel's own flake inputs rather than added as an input of ours,
-  # so the portal version always matches the compositor it talks to.
   portalPackage = inputs.umbriel.inputs.xdg-desktop-portal-umbriel.packages.${system}.default;
-  # Scratchpad: a per-output stash of windows that live outside the workspace
-  # strip. Umbriel implements it natively (`umbriel msg --help`, "Scratchpad"),
-  # but binds none of it, so the chords are ours.
-  #
-  # Keyed to follow the Super tier's own logic: bare Super acts on what is on
-  # screen (show/hide the stash), Super+Ctrl moves the focused window — the same
-  # sense as Super+Ctrl+h/j/k/l — and Super+Alt cycles within what bare Super
-  # revealed. Every action is left output-bare, so each monitor keeps its own
-  # scratchpad and the chords act on whichever one has focus.
   scratchpadBinds = {
     "Mod+Alt+S" = "scratchpad-focus-next";
     "Mod+Ctrl+S" = "window-toggle-scratchpad";
@@ -162,10 +129,6 @@ let
 in
 
 {
-  # Screen capture and screen sharing. The backend declares `UseIn=umbriel` and
-  # implements ScreenCast + Screenshot, but nothing else can serve them here:
-  # routing capture at the gnome backend (as the rest of the config does) sends
-  # it to Mutter, which knows nothing about this session.
   home.packages = [ portalPackage ];
 
   imports = [
@@ -179,19 +142,19 @@ in
     package = inputs.umbriel.packages.${system}.default;
 
     settings = {
-      # Blur and shadows stay at umbriel's defaults (both on). Only the corner
-      # radius is overridden: umbriel defaults to 10, and this config uses 12
-      # on every window.
+      animation.scratchpad = {
+        enabled = true;
+        scale = 0.8;
+      };
+
       appearance.corner_radius = 12;
 
       general = {
-        # Noctalia is the shell; corectrl manages GPU fan curves.
         autostart = [
           noctaliaCmd
           "corectrl"
         ];
 
-        # Noctalia draws the bar and panels; umbriel's own overlay would double up.
         show_cheatsheet = false;
       };
 
@@ -204,50 +167,48 @@ in
           follows_mouse_max_scroll = 0.1;
         };
 
-        # Umbriel defaults to an empty layout, which falls back to the system
-        # default — and this host has no VC keymap set, so it lands on us.
         keyboard.layout = "se";
       };
 
-      # Precedence: the packaged defaults lose to our application chords, which
-      # lose to the Noctalia chords documented in README.md. The one casualty is
-      # Mod+P — umbriel packages it as window-toggle-pinned, but it is the
-      # password manager everywhere else in this config, so it is dropped from
-      # packagedBinds above rather than left to be silently overridden.
       keybinds = packagedBinds // navigationBinds // scratchpadBinds // appBinds // noctaliaBinds;
 
-      # share/umbriel/config.toml's rules, which defining any window_rule here
-      # would otherwise drop. The first is load-bearing rather than cosmetic:
-      # the global blur engine only builds the buffers, and a window or layer
-      # rule must opt each surface in, so without it blur is enabled and inert.
+      layout = {
+        gap = 8;
+        scrolling = {
+          default_width_fraction = 0.5;
+        };
+        width_presets = [
+          0.33333
+          0.5
+          0.66667
+        ];
+      };
+
       window_rule = [
         {
           blur = true;
           blur_optimized = false;
         }
         {
+          match.app_id = "^dev.noctalia.Noctalia$";
           default_floating = true;
-
           default_size = [
             1020
             900
           ];
-
-          match.app_id = "^dev.noctalia.Noctalia$";
         }
         # The screencast source picker.
         {
+          match.app_id = "^dev.noctalia.UmbrielSharePicker$";
           default_floating = true;
-
           default_size = [
             800
             600
           ];
-
-          match.app_id = "^dev.noctalia.UmbrielSharePicker$";
         }
         # Browsers expose no semantic PiP role or global position control.
         {
+          match.title = "^(Picture-in-Picture|Picture in picture)$";
           default_floating = true;
           default_maximize = false;
 
@@ -256,12 +217,11 @@ in
             x = 20;
             y = 20;
           };
-
-          match.title = "^(Picture-in-Picture|Picture in picture)$";
         }
         # Keep Steam notification toasts in the bottom-right corner without
         # stealing focus, and pin them so workspace switches do not hide them.
         {
+          match.title = "^notificationtoasts_.+_desktop";
           default_focused = false;
           default_pinned = true;
 
@@ -271,14 +231,31 @@ in
             y = 0;
           };
 
-          match.title = "^notificationtoasts_.+_desktop";
         }
-        # Umbriel has no default-size equivalent for tiled windows, but the
-        # output is already 2560x1440 and the rule only ever existed to make WoW
-        # open fullscreen at native resolution.
+        # Battle.net's tray context menu, dragged back under the bar's tray.
+        {
+          match.title = "^Battle\\.net$";
+          default_position = {
+            anchor = "top_right";
+            x = 220;
+            y = 0;
+          };
+        }
         {
           default_fullscreen = true;
           match.title = "^World of Warcraft$";
+        }
+        {
+          default_width = 1.0;
+          match.app_id = "^zen-beta$";
+        }
+        {
+          default_width = 1.0;
+          match.is_alone = true;
+        }
+        {
+          default_width = 0.5;
+          match.is_alone = false;
         }
       ];
     };
