@@ -12,11 +12,14 @@
 @import "/home/drakkir/.cache/noctalia/zen-browser/zen-userChrome.css";
 
 :root:not([customizing]) #zen-sidebar-top-buttons-separator {
-  display: none !important;
+    display: none !important;
 }
 :root:not([customizing]) #back-button {
-  display: none !important;
+    display: none !important;
 }
 :root:not([customizing]) #forward-button {
-  display: none !important;
+    display: none !important;
+}
+:root:not([customizing]) .titlebar-buttonbox-container {
+    display: none !important;
 }

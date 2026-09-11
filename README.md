@@ -317,7 +317,7 @@ Sessions appear in the login screen after `just system` plus a logout or restart
 Desktop hosts use [Noctalia Greeter](https://github.com/noctalia-dev/noctalia-greeter)
 driven by greetd, themed from the same Noctalia settings as the shell. It is
 opt-in per host by importing `hosts/common/optional/noctalia-greeter.nix` —
-currently enabled on `terra`; other desktop hosts still use GDM.
+currently enabled on `terra` and `work`; other desktop hosts still use GDM.
 
 greetd itself comes from apt and only the greeter UI comes from Nix. That split
 is deliberate — a Nix-built greetd links Nix's PAM, which ships no
@@ -330,12 +330,33 @@ install `greetd`, switch the active display manager unit, and set your login
 shell. The `noctalia-greeter-setup` service fails with a clear error if the
 `greetd` package is missing.
 
-`gdm-appearance.nix` stays imported alongside the greeter. It only configures
-GDM's appearance and is inert while greetd owns the login screen, so falling
-back is `sudo systemctl disable --now greetd && sudo systemctl enable --now gdm`
-rather than a rebuild.
+To activate it on an already-installed host, after adding the import:
 
-Autologin is configured per host:
+```bash
+# 1. greetd itself comes from apt; without it the setup service fails.
+sudo apt install greetd
+
+# 2. Apply the config (installs the greeter, /etc/greetd/config.toml and the
+#    /usr/local/bin + polkit symlinks).
+just system
+
+# 3. Hand the login screen over from GDM to greetd. Do this from a TTY or over
+#    SSH — it kills the running session.
+sudo systemctl disable --now gdm
+sudo systemctl enable --now greetd
+```
+
+Verify with `systemctl status greetd noctalia-greeter-setup` before logging out.
+If the greeter fails to start, `sudo systemctl enable --now gdm` restores the
+previous login screen without a rebuild (on hosts that import
+`gdm-appearance.nix`).
+
+On `terra`, `gdm-appearance.nix` stays imported alongside the greeter. It only
+configures GDM's appearance and is inert while greetd owns the login screen, so
+falling back is `sudo systemctl disable --now greetd && sudo systemctl enable
+--now gdm` rather than a rebuild. `work` skips it and has no GDM fallback path.
+
+Autologin is configured per host, and is off on `work`:
 
 ```nix
 myConfig.greetd.autologin = {
@@ -348,6 +369,15 @@ myConfig.greetd.autologin = {
 greetd runs this once per boot only, so logging out returns to the greeter
 instead of straight back into the desktop. A `session` that isn't enabled in
 `myConfig.waylandSessions` is caught at evaluation time.
+
+#### Domain-joined hosts (work)
+
+The greeter builds its user picker from AccountsService `ListCachedUsers` plus
+an NSS `getpwent` walk. Neither surfaces an SSSD/AD account — AccountsService
+filters to uid 1000–60000 and `work`'s account is uid 1735616652, while sssd
+defaults to `enumerate = False`. The picker therefore either comes up empty or,
+worse, offers a same-named *local* account that has no password, which fails
+with `AUTH_ERROR`.
 
 ### CoreCtrl Setup (AMD GPU Control)
 

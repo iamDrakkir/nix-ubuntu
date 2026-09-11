@@ -39,6 +39,27 @@ let
     ];
 
     text = ''
+      # Nix's openssh is on PATH here for ssh-add, but its `ssh` must not be
+      # used: it resolves users through Nix's glibc, which cannot load the
+      # host NSS modules, so getpwuid() fails for an AD/sssd account and it
+      # dies with "No user exists for uid". Use the host's ssh instead.
+      ssh=/usr/bin/ssh
+      [ -x "$ssh" ] || ssh="$(command -v ssh)"
+
+      # Only hosts that actually authenticate through the Proton Pass agent are
+      # worth logging in for. Ask ssh which agent it would use for this
+      # destination (IdentityAgent from ssh_config, else the ambient
+      # SSH_AUTH_SOCK) and get out of the way for everything else — e.g. Azure
+      # DevOps, which uses an on-disk key and would otherwise be blocked behind
+      # a pointless Proton web login.
+      agent="$("$ssh" -G "$@" 2>/dev/null | sed -n 's/^identityagent //p' | tail -n1 || true)"
+      agent="''${agent:-''${SSH_AUTH_SOCK:-}}"
+      case "$agent" in
+        *proton-pass-agent*) ;;
+        *) exec "$ssh" "$@" ;;
+      esac
+      export SSH_AUTH_SOCK="$agent"
+
       # 0 = agent has keys. 1 = agent reachable but empty, 2 = no agent:
       # both mean "not logged in".
       if ! ssh-add -l >/dev/null 2>&1; then
@@ -69,7 +90,7 @@ let
         done
       fi
 
-      exec ssh "$@"
+      exec "$ssh" "$@"
     '';
   };
 in

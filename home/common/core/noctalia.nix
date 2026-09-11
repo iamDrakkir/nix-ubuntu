@@ -3,6 +3,8 @@
   config,
   pkgs,
   inputs,
+  system,
+  username,
   ...
 }:
 
@@ -143,6 +145,39 @@ let
       "msg"
     ]
     ++ (lib.splitString " " cmd);
+  # On AD domain hosts the account only exists in SSSD. Nix's glibc resolves it
+  # by dlopen()ing libnss_sss.so.2, which its own store lib/ does not contain,
+  # so without help Noctalia cannot see the user at all.
+  #
+  # Give the *binary* a DT_RPATH pointing at Nix's sssd instead. glibc's NSS
+  # dlopen searches the main executable's DT_RPATH; DT_RUNPATH is not searched
+  # for dlopen, hence --force-rpath.
+  #
+  # This used to be done with LD_LIBRARY_PATH on the compositor's spawn, which
+  # broke the lockscreen. The variable is inherited, and pam_shim_server -- the
+  # *host* binary that performs the actual PAM conversation -- would then load
+  # Nix's libnss_sss.so.2 against the host glibc and lose every NSS lookup.
+  # pam_authenticate still passed (pam_sss talks to sssd over a socket and only
+  # needs the username string), but the account stack did not: pam_unix
+  # returned PAM_USER_UNKNOWN(10), common-account's
+  # `[success=1 ... default=ignore]` fell through to `requisite pam_deny.so`,
+  # and Noctalia saw PAM_AUTH_ERR(7) -- correct password, refused unlock.
+  #
+  # An RPATH belongs to this one ELF and is not inherited, so the helper keeps
+  # the host's own NSS and nothing else in the session is affected.
+  withSssdNss =
+    drv:
+    pkgs.runCommand "${drv.name}-sssd-nss" { nativeBuildInputs = [ pkgs.patchelf ]; } ''
+      cp -r ${drv} $out
+      chmod -R u+w $out
+
+      # bin/noctalia is a makeWrapper script holding an absolute path to the
+      # real ELF, so repoint it at our copy before patching that copy.
+      substituteInPlace $out/bin/noctalia \
+        --replace-fail "${drv}/bin/.noctalia-wrapped" "$out/bin/.noctalia-wrapped"
+
+      patchelf --force-rpath --add-rpath "${pkgs.sssd}/lib" $out/bin/.noctalia-wrapped
+    '';
 in
 
 {
@@ -157,7 +192,20 @@ in
     };
 
     myConfig.programs.noctalia.keybindings = keybinds;
-    programs.noctalia.enable = true;
+    programs.noctalia = {
+      enable = true;
+
+      # Two host-integration patches on the upstream package: PAM redirected to
+      # the host stack (core/pam-shim.nix) so the lockscreen can authenticate,
+      # and the SSSD NSS module made reachable so the account stack knows the
+      # user. The latter is only needed where the username is fully qualified,
+      # i.e. an AD domain host.
+      package =
+        let
+          withPam = config.lib.pamShim.replacePam inputs.noctalia.packages.${system}.default;
+        in
+        if lib.hasInfix "@" username then withSssdNss withPam else withPam;
+    };
   };
 
   imports = [ inputs.noctalia.homeModules.default ];

@@ -4,7 +4,6 @@
   pkgs,
   hostname,
   inputs,
-  username,
   ...
 }:
 
@@ -19,17 +18,7 @@ let
   isWork = hostname == "work";
   # Conditionally use Noctalia keybindings
   kb = config.myConfig.programs.noctalia.keybindings or { };
-  # On AD domain machines (username contains "@"), Nix glibc can't resolve
-  # the fully-qualified username via SSSD because it lacks libnss_sss.so.2.
-  # We expose Nix's own sssd NSS module via LD_LIBRARY_PATH so getpwnam_r
-  # can resolve domain usernames, which then pass through to pam_sss for auth.
-  needsNssFixup = lib.hasInfix "@" username;
   noctaliaEnabled = kb != { };
-  noctaliaSpawn =
-    if needsNssFixup then
-      { sh = "LD_LIBRARY_PATH=${pkgs.sssd}/lib exec noctalia"; }
-    else
-      { command = [ "noctalia" ]; };
 in
 
 {
@@ -486,7 +475,7 @@ in
         { command = [ "corectrl" ]; }
         # { command = [ "proton-pass" ]; } # can not start minimized.
       ]
-      ++ lib.optionals noctaliaEnabled [ noctaliaSpawn ];
+      ++ lib.optionals noctaliaEnabled [ { command = [ "noctalia" ]; } ];
 
       # Window rules
       window-rules = [

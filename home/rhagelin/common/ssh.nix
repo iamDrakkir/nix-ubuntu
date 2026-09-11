@@ -7,7 +7,10 @@
 
     settings = {
       "*" = {
-        AddKeysToAgent = "yes";
+        # Don't import on-disk keys into gpg-agent: the local keys are
+        # unencrypted, so gpg-agent pops a pinentry asking for a passphrase
+        # to protect them in its keystore on every first use.
+        AddKeysToAgent = "no";
       };
 
       "192.168.17.*" = {
@@ -27,9 +30,7 @@
       };
 
       "ssh.dev.azure.com" = {
-        # Use the on-disk key directly; don't push it into gpg-agent
-        # (which would trigger a "protect this key" passphrase prompt).
-        AddKeysToAgent = "no";
+        # Use the on-disk key directly.
         IdentitiesOnly = "yes";
         IdentityFile = "~/.ssh/id_rsa";
       };

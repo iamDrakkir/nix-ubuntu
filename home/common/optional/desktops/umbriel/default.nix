@@ -5,7 +5,6 @@
   hostname,
   inputs,
   system,
-  username,
   ...
 }:
 
@@ -88,10 +87,6 @@ let
   noctaliaBinds = lib.mapAttrs' (_: v: lib.nameValuePair v.umbriel.key v.umbriel.action) (
     lib.filterAttrs (_: v: v ? umbriel) (config.myConfig.programs.noctalia.keybindings or { })
   );
-  # On AD domain machines (username contains "@") Nix's glibc lacks
-  # libnss_sss.so.2, so it cannot resolve the fully-qualified username via SSSD.
-  noctaliaCmd =
-    if lib.hasInfix "@" username then "env LD_LIBRARY_PATH=${pkgs.sssd}/lib noctalia" else "noctalia";
   # share/umbriel/config.toml's own binds, plus the vim directions it leaves to
   # the compiled-in defaults. Both need declaring: see the note at the top.
   packagedBinds = {
@@ -151,7 +146,7 @@ in
 
       general = {
         autostart = [
-          noctaliaCmd
+          "noctalia"
           "corectrl"
         ];
 

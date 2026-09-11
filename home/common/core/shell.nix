@@ -87,6 +87,21 @@
     fish = {
       enable = true;
 
+      functions = {
+        # Wrapper: mint a fresh Entra token for the Azure DevOps MCP server
+        # (audience https://mcp.dev.azure.com) before launching opencode.
+        # The token expires ~hourly, so relaunch opencode if a session runs long.
+        opencode = ''
+          set -l token (az account get-access-token --resource https://mcp.dev.azure.com --query accessToken -o tsv 2>/dev/null)
+          if test -n "$token"
+              set -gx AZURE_DEVOPS_MCP_TOKEN $token
+          else
+              echo "opencode: warning: could not mint Azure DevOps MCP token (is 'az login' current?)" >&2
+          end
+          command opencode $argv
+        '';
+      };
+
       interactiveShellInit = ''
         # Enable vi mode
         fish_vi_key_bindings
@@ -144,6 +159,20 @@
       initContent = ''
         # Initialize zoxide
         eval "$(zoxide init zsh)"
+
+        # Wrapper: mint a fresh Entra token for the Azure DevOps MCP server
+        # (audience https://mcp.dev.azure.com) before launching opencode.
+        # The token expires ~hourly, so relaunch opencode if a session runs long.
+        opencode() {
+          local token
+          token=$(az account get-access-token --resource https://mcp.dev.azure.com --query accessToken -o tsv 2>/dev/null)
+          if [[ -n "$token" ]]; then
+            export AZURE_DEVOPS_MCP_TOKEN="$token"
+          else
+            echo "opencode: warning: could not mint Azure DevOps MCP token (is 'az login' current?)" >&2
+          fi
+          command opencode "$@"
+        }
 
         # opencode completion
         _opencode() {

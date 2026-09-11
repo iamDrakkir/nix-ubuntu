@@ -31,13 +31,21 @@
 # below.
 let
   cfg = config.myConfig.greetd;
+  # The greeter builds its user picker from AccountsService ListCachedUsers plus
+  # an NSS getpwent walk. Neither surfaces an SSSD/AD account: AccountsService
+  # filters to uid 1000-60000, and sssd defaults to enumerate = False. On a
+  # domain-joined host the picker is therefore empty or — worse — offers only a
+  # same-named local account, which has no password and fails with AUTH_ERROR.
+  #
+  # --user skips the picker and opens the password step directly. The greeter
+  # accepts a name it never enumerated ("default_user not in user list; opening
+  # password step anyway"), so the full domain name works.
+  defaultUserArg = lib.optionalString (cfg.defaultUser != null) " -- --user ${cfg.defaultUser}";
   greeter = inputs.noctalia-greeter.packages.${system}.default;
-
   # The Debian/Ubuntu package names its service account _greetd (user and
   # group), not upstream's `greeter`. The state directory is chowned to this, so
   # a mismatch leaves the greeter unable to read its own config.
   greeterUser = "_greetd";
-
   # greetd runs [initial_session] once per boot and falls back to the greeter
   # afterwards, so logging out lands on the greeter rather than straight back
   # in — the same shape as GDM's AutomaticLogin.
@@ -79,7 +87,7 @@ in
         vt = 7
 
         [default_session]
-        command = "${greeter}/bin/noctalia-greeter-session"
+        command = "${greeter}/bin/noctalia-greeter-session${defaultUserArg}"
         user = "${greeterUser}"
         ${initialSession}'';
     };
@@ -140,27 +148,47 @@ in
     };
   };
 
-  options.myConfig.greetd.autologin = {
-    enable = lib.mkEnableOption ''
-      logging straight into a session at boot, skipping the greeter. greetd
-      runs this once per boot only, so logging out still returns to the greeter
-    '';
-
-    session = lib.mkOption {
-      description = ''
-        Which session to start, by `myConfig.waylandSessions` name. Must be one
-        of the sessions enabled on this host, since it reuses the same launcher
-        the login screen would run.
+  options.myConfig.greetd = {
+    autologin = {
+      enable = lib.mkEnableOption ''
+        logging straight into a session at boot, skipping the greeter. greetd
+        runs this once per boot only, so logging out still returns to the greeter
       '';
 
-      example = "umbriel";
-      type = lib.types.str;
+      session = lib.mkOption {
+        description = ''
+          Which session to start, by `myConfig.waylandSessions` name. Must be one
+          of the sessions enabled on this host, since it reuses the same launcher
+          the login screen would run.
+        '';
+
+        example = "umbriel";
+        type = lib.types.str;
+      };
+
+      user = lib.mkOption {
+        description = "Account to log in automatically.";
+        example = "drakkir";
+        type = lib.types.str;
+      };
     };
 
-    user = lib.mkOption {
-      description = "Account to log in automatically.";
-      example = "drakkir";
-      type = lib.types.str;
+    defaultUser = lib.mkOption {
+      default = null;
+
+      description = ''
+        Skip the greeter's user picker and open the password prompt for this
+        account. Required on domain-joined hosts: the picker is built from
+        AccountsService (uid 1000-60000 only) and NSS enumeration (off by
+        default in sssd), so an AD account never appears in it.
+
+        Use the fully qualified name where the domain sets
+        `use_fully_qualified_names` — the short form resolves to a different,
+        passwordless local account and fails with AUTH_ERROR.
+      '';
+
+      example = "rhagelin@creatorctek.local";
+      type = lib.types.nullOr lib.types.str;
     };
   };
 }
