@@ -1,7 +1,6 @@
 {
   lib,
   config,
-  pkgs,
   hostname,
   inputs,
   system,
@@ -169,9 +168,11 @@ in
 
       layout = {
         gap = 8;
+
         scrolling = {
           default_width_fraction = 0.5;
         };
+
         width_presets = [
           0.33333
           0.5
@@ -185,25 +186,28 @@ in
           blur_optimized = false;
         }
         {
-          match.app_id = "^dev.noctalia.Noctalia$";
           default_floating = true;
+
           default_size = [
             1020
             900
           ];
+
+          match.app_id = "^dev.noctalia.Noctalia$";
         }
         # The screencast source picker.
         {
-          match.app_id = "^dev.noctalia.UmbrielSharePicker$";
           default_floating = true;
+
           default_size = [
             800
             600
           ];
+
+          match.app_id = "^dev.noctalia.UmbrielSharePicker$";
         }
         # Browsers expose no semantic PiP role or global position control.
         {
-          match.title = "^(Picture-in-Picture|Picture in picture)$";
           default_floating = true;
           default_maximize = false;
 
@@ -212,11 +216,12 @@ in
             x = 20;
             y = 20;
           };
+
+          match.title = "^(Picture-in-Picture|Picture in picture)$";
         }
         # Keep Steam notification toasts in the bottom-right corner without
         # stealing focus, and pin them so workspace switches do not hide them.
         {
-          match.title = "^notificationtoasts_.+_desktop";
           default_focused = false;
           default_pinned = true;
 
@@ -226,19 +231,26 @@ in
             y = 0;
           };
 
+          match.title = "^notificationtoasts_.+_desktop";
+
         }
         # Battle.net's tray context menu, dragged back under the bar's tray.
         {
-          match.title = "^Battle\\.net$";
           default_position = {
             anchor = "top_right";
             x = 220;
             y = 0;
           };
+
+          match.title = "^Battle\\.net$";
         }
         {
           default_fullscreen = true;
           match.title = "^World of Warcraft$";
+        }
+        {
+          default_fullscreen = true;
+          match.title = "^starcraft II$";
         }
         {
           default_width = 1.0;

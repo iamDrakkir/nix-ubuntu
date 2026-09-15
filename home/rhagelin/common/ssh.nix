@@ -30,7 +30,8 @@
       };
 
       "ssh.dev.azure.com" = {
-        # Use the on-disk key directly.
+        # Pin the on-disk key: the ambient agent (Proton Pass) holds the
+        # personal/work git keys, and offering those first burns attempts.
         IdentitiesOnly = "yes";
         IdentityFile = "~/.ssh/id_rsa";
       };

@@ -43,8 +43,13 @@ let
       # used: it resolves users through Nix's glibc, which cannot load the
       # host NSS modules, so getpwuid() fails for an AD/sssd account and it
       # dies with "No user exists for uid". Use the host's ssh instead.
+      # Deliberately no PATH fallback: `command -v ssh` would find Nix's ssh,
+      # which is the exact binary this avoids.
       ssh=/usr/bin/ssh
-      [ -x "$ssh" ] || ssh="$(command -v ssh)"
+      if [ ! -x "$ssh" ]; then
+        echo "git-ssh-proton: $ssh missing; install the distro openssh-client" >&2
+        exit 1
+      fi
 
       # Only hosts that actually authenticate through the Proton Pass agent are
       # worth logging in for. Ask ssh which agent it would use for this

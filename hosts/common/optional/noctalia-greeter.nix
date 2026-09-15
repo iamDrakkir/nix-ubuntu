@@ -40,7 +40,11 @@ let
   # --user skips the picker and opens the password step directly. The greeter
   # accepts a name it never enumerated ("default_user not in user list; opening
   # password step anyway"), so the full domain name works.
-  defaultUserArg = lib.optionalString (cfg.defaultUser != null) " -- --user ${cfg.defaultUser}";
+  #
+  # greetd splits `command` with shell-like lexing, so the value is quoted.
+  defaultUserArg = lib.optionalString (
+    cfg.defaultUser != null
+  ) " -- --user ${lib.escapeShellArg cfg.defaultUser}";
   greeter = inputs.noctalia-greeter.packages.${system}.default;
   # The Debian/Ubuntu package names its service account _greetd (user and
   # group), not upstream's `greeter`. The state directory is chowned to this, so

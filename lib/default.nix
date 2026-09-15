@@ -10,6 +10,23 @@
   # pure evaluation and drop config with no error — pass `hostname` through
   # specialArgs instead, which flake.nix already does.
   custom = {
+    # ========== Domain (AD/SSSD) logins ==========
+    # Single source of truth for the fully qualified login names of
+    # domain-joined hosts. The home level takes this as the `username`
+    # specialArg (flake.nix), and the system level needs the same string for
+    # the greeter's `--user` (hosts/<host>/default.nix) — the two must not
+    # drift, since a short name there resolves to a different, passwordless
+    # local account.
+    domainLogins = {
+      work = "rhagelin@creatorctek.local";
+    };
+
+    # True for a fully qualified domain login. Several Nix-built programs need
+    # extra help to resolve such an account (glibc cannot load the host's
+    # libnss_sss.so.2); gate those workarounds on this rather than open-coding
+    # the "@" test.
+    isDomainUser = username: lib.hasInfix "@" username;
+
     # ========== Pretty Symlink Helpers ==========
     # Based on: https://blog.daniel-beskin.com/2025-10-18-symlinking-home-manager
     #

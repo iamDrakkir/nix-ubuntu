@@ -293,7 +293,7 @@
           homeDirectory = "/home/rhagelin.creatorctek.local";
           hostname = "work";
           identity = identities.rhagelin;
-          username = "rhagelin@creatorctek.local";
+          username = lib.custom.domainLogins.work;
         };
       };
 

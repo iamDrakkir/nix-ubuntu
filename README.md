@@ -379,6 +379,28 @@ defaults to `enumerate = False`. The picker therefore either comes up empty or,
 worse, offers a same-named *local* account that has no password, which fails
 with `AUTH_ERROR`.
 
+The fix is to skip the picker entirely and go straight to the password prompt
+for a known account:
+
+```nix
+myConfig.greetd.defaultUser = "rhagelin@creatorctek.local";
+```
+
+This passes `--user` to the greeter session. The greeter accepts a name it never
+enumerated (it logs `default_user not in user list; opening password step
+anyway`), so the account does not need to be visible to AccountsService or NSS.
+
+Use the **fully qualified** name wherever the domain sets
+`use_fully_qualified_names` — the short form resolves to the passwordless local
+account instead and fails with `AUTH_ERROR`. `work` sets this; `terra` leaves it
+`null` and keeps the normal picker.
+
+The same domain problem hits the Noctalia *lockscreen* from the other side: Nix's
+glibc cannot `dlopen` the host's `libnss_sss.so.2`, so the session's own user is
+unresolvable and PAM's account stack rejects an otherwise correct password.
+`home/common/core/noctalia.nix` handles that by patching an RPATH onto the
+noctalia binary — see the comment there before touching it.
+
 ### CoreCtrl Setup (AMD GPU Control)
 
 CoreCtrl is automatically installed and configured for password-less operation (for sudo group members).

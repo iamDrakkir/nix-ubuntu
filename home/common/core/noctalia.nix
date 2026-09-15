@@ -192,6 +192,7 @@ in
     };
 
     myConfig.programs.noctalia.keybindings = keybinds;
+
     programs.noctalia = {
       enable = true;
 
@@ -204,7 +205,7 @@ in
         let
           withPam = config.lib.pamShim.replacePam inputs.noctalia.packages.${system}.default;
         in
-        if lib.hasInfix "@" username then withSssdNss withPam else withPam;
+        if lib.custom.isDomainUser username then withSssdNss withPam else withPam;
     };
   };
 

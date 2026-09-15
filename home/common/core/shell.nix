@@ -2,8 +2,20 @@
   lib,
   config,
   pkgs,
+  hostname,
   ...
 }:
+
+let
+  # Wrapper: mint a fresh Entra token for the Azure DevOps MCP server before
+  # launching opencode. The token expires ~hourly, so relaunch opencode if a
+  # session runs long. Only `work` talks to Azure DevOps, and `az` isn't even
+  # installed elsewhere — gating keeps the other hosts from paying an `az`
+  # round-trip (and a spurious warning) on every launch.
+  azMcpAudience = "https://mcp.dev.azure.com";
+  azMcpStaleLogin = "opencode: warning: could not mint Azure DevOps MCP token (is 'az login' current?)";
+  needsAzMcpToken = hostname == "work";
+in
 
 {
   home = {
@@ -87,16 +99,14 @@
     fish = {
       enable = true;
 
-      functions = {
-        # Wrapper: mint a fresh Entra token for the Azure DevOps MCP server
-        # (audience https://mcp.dev.azure.com) before launching opencode.
-        # The token expires ~hourly, so relaunch opencode if a session runs long.
+      functions = lib.optionalAttrs needsAzMcpToken {
+        # See azMcpAudience at the top of this file.
         opencode = ''
-          set -l token (az account get-access-token --resource https://mcp.dev.azure.com --query accessToken -o tsv 2>/dev/null)
+          set -l token (az account get-access-token --resource ${azMcpAudience} --query accessToken -o tsv 2>/dev/null)
           if test -n "$token"
               set -gx AZURE_DEVOPS_MCP_TOKEN $token
           else
-              echo "opencode: warning: could not mint Azure DevOps MCP token (is 'az login' current?)" >&2
+              echo "${azMcpStaleLogin}" >&2
           end
           command opencode $argv
         '';
@@ -160,20 +170,19 @@
         # Initialize zoxide
         eval "$(zoxide init zsh)"
 
-        # Wrapper: mint a fresh Entra token for the Azure DevOps MCP server
-        # (audience https://mcp.dev.azure.com) before launching opencode.
-        # The token expires ~hourly, so relaunch opencode if a session runs long.
-        opencode() {
-          local token
-          token=$(az account get-access-token --resource https://mcp.dev.azure.com --query accessToken -o tsv 2>/dev/null)
-          if [[ -n "$token" ]]; then
-            export AZURE_DEVOPS_MCP_TOKEN="$token"
-          else
-            echo "opencode: warning: could not mint Azure DevOps MCP token (is 'az login' current?)" >&2
-          fi
-          command opencode "$@"
-        }
-
+        ${lib.optionalString needsAzMcpToken ''
+          # See azMcpAudience at the top of this file.
+          opencode() {
+            local token
+            token=$(az account get-access-token --resource ${azMcpAudience} --query accessToken -o tsv 2>/dev/null)
+            if [[ -n "$token" ]]; then
+              export AZURE_DEVOPS_MCP_TOKEN="$token"
+            else
+              echo "${azMcpStaleLogin}" >&2
+            fi
+            command opencode "$@"
+          }
+        ''}
         # opencode completion
         _opencode() {
           local -a completions
