@@ -21,6 +21,7 @@
       "net.davidotek.pupgui2"
       "com.usebottles.bottles"
       "com.bambulab.BambuStudio"
+      "io.github.Faugus.faugus-launcher"
     ];
   };
 
