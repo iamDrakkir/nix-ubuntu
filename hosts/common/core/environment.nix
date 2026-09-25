@@ -28,7 +28,6 @@
       neovim
       pipewire
       wireplumber
-      auto-cpufreq
     ];
   };
 }

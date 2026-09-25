@@ -6,7 +6,7 @@
     ../common/users/drakkir
 
     # Optional system configs — opt in per host
-    ../common/optional/corectrl.nix
+    ../common/optional/lact.nix
     ../common/optional/flatpak.nix
     # gdm-appearance stays imported alongside the greeter: it only configures
     # GDM's look and is inert while greetd owns the login screen, so falling

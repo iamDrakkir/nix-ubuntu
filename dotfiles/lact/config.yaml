@@ -1,0 +1,28 @@
+version: 7
+daemon:
+  log_level: info
+  admin_group: wheel
+  disable_clocks_cleanup: false
+apply_settings_timer: 5
+gpus:
+  1002:73BF-148C:2406-0000:03:00.0:
+    fan_control_enabled: true
+    fan_control_settings:
+      mode: curve
+      static_speed: 0.5
+      temperature_key: edge
+      interval_ms: 500
+      curve:
+        50: 0.0
+        60: 0.25
+        70: 0.33
+        80: 0.45
+        90: 0.7
+        100: 1.0
+      spindown_delay_ms: 5000
+      change_threshold: 2
+    power_cap: 264.0
+    performance_level: auto
+    voltage_offset: -80
+current_profile: null
+auto_switch_profiles: false

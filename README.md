@@ -137,7 +137,7 @@ no equivalent here, so the chords are free on those sessions.
 hosts/                   # System-level configurations
 ├── common/
 │   ├── core/            # Always present on ALL system-manager hosts
-│   ├── optional/        # Optional system configs (flatpak, corectrl)
+│   ├── optional/        # Optional system configs (flatpak, lact)
 │   └── users/           # User definitions for system-manager hosts
 │       └── drakkir/
 ├── terra/               # Ubuntu desktop
@@ -187,7 +187,6 @@ Two things to know when a non-Ubuntu host is added:
 - `pam-shim.nix` is in `core` but redirects PAM to the host's system libpam, which
   is correct on Ubuntu and wrong on NixOS. It will need to move out — and it fails
   at runtime (lockscreen auth), not at eval, so it won't announce itself.
-- `corectrl.nix` is AMD-only, which is why only `hosts/terra` imports it.
 
 
 ### Building for Specific Users
@@ -401,13 +400,11 @@ unresolvable and PAM's account stack rejects an otherwise correct password.
 `home/common/core/noctalia.nix` handles that by patching an RPATH onto the
 noctalia binary — see the comment there before touching it.
 
-### CoreCtrl Setup (AMD GPU Control)
+### LACT Setup (GPU Control)
 
-CoreCtrl is automatically installed and configured for password-less operation (for sudo group members).
+It is declared in `hosts/common/optional/lact.nix` The `lactd` daemon is a plain systemd service that applies saved settings at boot, whether or not the GUI is running. 
 
-The D-Bus and polkit files it needs are declared in `hosts/common/optional/corectrl.nix`. The bus configuration lives in `/etc/dbus-1/system.d/` (managed by system-manager), while the D-Bus activation files and polkit actions are symlinked into `/usr/share` with `systemd.tmpfiles` rules, because dbus and polkit only scan fixed directories under `/usr/share` for those. Everything is applied on system rebuild and at boot — there is no manual setup step.
-
-**For full GPU control** (overclocking, custom power profiles, fan curves), add the AMD GPU kernel parameter to GRUB:
+**For full GPU control** (overclocking, undervolting, custom fan curves), add the AMD GPU kernel parameter to GRUB
 
 1. Edit `/etc/default/grub`
 2. Find `GRUB_CMDLINE_LINUX_DEFAULT` and append `amdgpu.ppfeaturemask=0xffffffff`
@@ -417,7 +414,25 @@ The D-Bus and polkit files it needs are declared in `hosts/common/optional/corec
 3. Update GRUB: `sudo update-grub`
 4. Reboot
 
-CoreCtrl will autostart with Hyprland and be available in the application launcher.
+Verify with `cat /sys/module/amdgpu/parameters/ppfeaturemask` (should read `0xffffffff`). Without it LACT shows monitoring only.
+
+#### Backing up the LACT config
+
+LACT's config lives at `/etc/lact/config.yaml` and **the daemon writes to it at runtime** — every Apply in the GUI rewrites the file. That rules out managing it declaratively with `environment.etc` without making the GUI read-only, so it is deliberately left mutable and snapshotted into the repo by hand instead:
+
+```bash
+# Snapshot the live LACT config into the repo (run after changing settings)
+sudo cat /etc/lact/config.yaml > dotfiles/lact/config.yaml
+```
+
+This is a backup and a reference, **not** the source of truth — `/etc/lact/config.yaml` is. To restore onto a fresh machine:
+
+```bash
+sudo install -Dm644 dotfiles/lact/config.yaml /etc/lact/config.yaml
+sudo systemctl restart lactd
+```
+
+If the settings ever stop changing, this can be promoted to a proper `environment.etc` entry in `lact.nix`, at the cost of the GUI no longer being able to save.
 
 ## Configuration
 
