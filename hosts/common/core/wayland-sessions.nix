@@ -36,6 +36,16 @@ let
   launcher =
     name: binary:
     pkgs.writeShellScript "${name}-session-launch" ''
+      # GDM/greetd exec this script directly, not through a login shell, and the
+      # Ubuntu-provided ~/.profile is unmanaged so it never sources home-manager's
+      # session variables. Without them XDG_DATA_DIRS lacks the flatpak and
+      # system-manager export dirs, so the compositor -- and everything it spawns,
+      # including the noctalia launcher -- sees none of those .desktop files.
+      # Sourcing here fixes the whole session in one place.
+      if [ -r "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh" ]; then
+        . "$HOME/.nix-profile/etc/profile.d/hm-session-vars.sh"
+      fi
+
       exec "$HOME/.nix-profile/bin/${binary}"
     '';
   mkSession =
