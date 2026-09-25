@@ -37,7 +37,6 @@ in
   imports = [
     inputs.niri.homeModules.niri
     ../portals.nix
-    ../xtrayhide.nix
   ];
 
   # Configure Niri window manager
@@ -472,8 +471,6 @@ in
 
       # Spawn applications at startup
       spawn-at-startup = [
-        { command = [ "corectrl" ]; }
-        # { command = [ "proton-pass" ]; } # can not start minimized.
       ]
       ++ lib.optionals noctaliaEnabled [ { command = [ "noctalia" ]; } ];
 

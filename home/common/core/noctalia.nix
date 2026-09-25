@@ -183,6 +183,29 @@ in
 {
   config = {
     home = {
+      # Noctalia derives the clipboard-history and calendar-cache encryption
+      # keys from a storage master key. Its default source is the Secret
+      # Service, but greetd autologin never feeds PAM a password, so
+      # login.keyring stays locked and gnome-keyring prompts for it on every
+      # boot. settings.toml therefore sets `[storage] key_source = "file"`
+      # pointing here, which takes the keyring out of the loop entirely.
+      #
+      # The key is per-machine local state, never committed: 32 random bytes as
+      # 64 lowercase hex chars, which is the only format noctalia accepts.
+      # Created once and then left alone — rotating it strands the existing
+      # encrypted clipboard history and calendar cache.
+      activation.noctaliaStorageKey = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+        keyFile="${config.home.homeDirectory}/.local/state/noctalia/storage.key"
+        if [ ! -e "$keyFile" ]; then
+          run mkdir -p "$(dirname "$keyFile")"
+          ( umask 077
+            run ${pkgs.coreutils}/bin/head -c 32 /dev/urandom \
+              | run ${pkgs.coreutils}/bin/od -An -tx1 -v \
+              | run tr -d ' \n' > "$keyFile" )
+          run chmod 600 "$keyFile"
+        fi
+      '';
+
       # Noctalia v13+ stores all transferable config (bar layout, enabled
       # plugins, theme/colors, and every GUI setting) in a single TOML file at
       # $XDG_STATE_HOME/noctalia/settings.toml. Out-of-store symlink it to the

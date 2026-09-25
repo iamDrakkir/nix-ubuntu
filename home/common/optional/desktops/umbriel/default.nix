@@ -49,24 +49,24 @@ let
     "Mod+Ctrl+Shift+WheelDown" = "column-move-right";
     "Mod+Ctrl+Shift+WheelUp" = "column-move-left";
     "Mod+Ctrl+U" = "column-move-to-workspace-next";
-    "Mod+Equal" = "window-modify-width:0.1";
+    "Mod+Equal" = "window-modify-primary-extent:0.1";
     "Mod+I" = "workspace-previous";
-    "Mod+Minus" = "window-modify-width:-0.1";
+    "Mod+Minus" = "window-modify-primary-extent:-0.1";
     "Mod+Page_Down" = "workspace-next";
     "Mod+Page_Up" = "workspace-previous";
     "Mod+Period" = "window-consume-right";
-    "Mod+R" = "window-cycle-width";
+    "Mod+R" = "window-cycle-primary-extent";
     "Mod+Shift+E" = "session-quit";
-    "Mod+Shift+Equal" = "window-modify-height:0.1";
+    "Mod+Shift+Equal" = "window-modify-secondary-extent:0.1";
     "Mod+Shift+H" = "output-focus-left";
     "Mod+Shift+I" = "workspace-move-up";
     "Mod+Shift+J" = "output-focus-down";
     "Mod+Shift+K" = "output-focus-up";
     "Mod+Shift+L" = "output-focus-right";
-    "Mod+Shift+Minus" = "window-modify-height:-0.1";
+    "Mod+Shift+Minus" = "window-modify-secondary-extent:-0.1";
     "Mod+Shift+Page_Down" = "workspace-move-down";
     "Mod+Shift+Page_Up" = "workspace-move-up";
-    "Mod+Shift+R" = "window-cycle-height";
+    "Mod+Shift+R" = "window-cycle-secondary-extent";
     "Mod+Shift+U" = "workspace-move-down";
     "Mod+Shift+WheelDown" = "window-focus-right";
     "Mod+Shift+WheelUp" = "window-focus-left";
@@ -128,7 +128,6 @@ in
   imports = [
     inputs.umbriel.homeModules.default
     ../portals.nix
-    ../xtrayhide.nix
   ];
 
   programs.umbriel = {
@@ -146,7 +145,6 @@ in
       general = {
         autostart = [
           "noctalia"
-          "corectrl"
         ];
 
         show_cheatsheet = false;
@@ -167,17 +165,17 @@ in
       keybinds = packagedBinds // navigationBinds // scratchpadBinds // appBinds // noctaliaBinds;
 
       layout = {
-        gap = 8;
-
-        scrolling = {
-          default_width_fraction = 0.5;
-        };
-
-        width_presets = [
+        extent_presets = [
           0.33333
           0.5
           0.66667
         ];
+
+        gap = 8;
+
+        scrolling = {
+          default_extent_fraction = 0.5;
+        };
       };
 
       window_rule = [
@@ -188,10 +186,10 @@ in
         {
           default_floating = true;
 
-          default_size = [
-            1020
-            900
-          ];
+          default_floating_size_px = {
+            height = 900;
+            width = 1020;
+          };
 
           match.app_id = "^dev.noctalia.Noctalia$";
         }
@@ -199,10 +197,10 @@ in
         {
           default_floating = true;
 
-          default_size = [
-            800
-            600
-          ];
+          default_floating_size_px = {
+            height = 600;
+            width = 800;
+          };
 
           match.app_id = "^dev.noctalia.UmbrielSharePicker$";
         }
@@ -234,16 +232,6 @@ in
           match.title = "^notificationtoasts_.+_desktop";
 
         }
-        # Battle.net's tray context menu, dragged back under the bar's tray.
-        {
-          default_position = {
-            anchor = "top_right";
-            x = 220;
-            y = 0;
-          };
-
-          match.title = "^Battle\\.net$";
-        }
         {
           default_fullscreen = true;
           match.title = "^World of Warcraft$";
@@ -253,15 +241,15 @@ in
           match.title = "^starcraft II$";
         }
         {
-          default_width = 1.0;
+          default_scrolling_extent = 1.0;
           match.app_id = "^zen-beta$";
         }
         {
-          default_width = 1.0;
+          default_scrolling_extent = 1.0;
           match.is_alone = true;
         }
         {
-          default_width = 0.5;
+          default_scrolling_extent = 0.5;
           match.is_alone = false;
         }
       ];
@@ -364,7 +352,10 @@ in
     [preferred]
     default=gnome;gtk;
     org.freedesktop.impl.portal.Access=gtk;
+    org.freedesktop.impl.portal.AppChooser=gtk;
+    org.freedesktop.impl.portal.FileChooser=gtk;
     org.freedesktop.impl.portal.Notification=gtk;
+    org.freedesktop.impl.portal.Print=gtk;
     org.freedesktop.impl.portal.ScreenCast=umbriel;
     org.freedesktop.impl.portal.Screenshot=umbriel;
     org.freedesktop.impl.portal.Secret=gnome-keyring;

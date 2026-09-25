@@ -121,7 +121,6 @@ in
       hl.on("hyprland.start", function()
         hl.exec_cmd("hypridle")
         hl.exec_cmd("proton-pass")
-        hl.exec_cmd("corectrl")
       end)
     ''
     + lib.optionalString hasNoctalia ''
