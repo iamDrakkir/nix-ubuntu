@@ -32,11 +32,6 @@
         export SSH_AUTH_SOCK="$(${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket)"
       '';
 
-      fish = lib.mkForce ''
-        set -e SSH_AGENT_PID
-        set -x SSH_AUTH_SOCK (${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket)
-      '';
-
       nushell = lib.mkForce ''
         $env.SSH_AUTH_SOCK = (${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket)
       '';

@@ -19,8 +19,9 @@
     # shell is deliberately not set. Pointing it at a Nix store path breaks
     # anything that validates the login shell against /etc/shells — pkexec
     # refuses to run at all ("The value for the SHELL variable was not found in
-    # the /etc/shells file"). The shell is set to the system-manager bash
-    # (/run/system-manager/sw/bin/bash) at the distro level instead.
+    # the /etc/shells file"). The shell is set to the system-manager zsh
+    # (/run/system-manager/sw/bin/zsh) at the distro level instead, with
+    # `chsh`; core/shells.nix registers that path in /etc/shells.
     #
     # SSH keys can be added in ./keys/ directory
     # openssh.authorizedKeys.keyFiles = [ ./keys/id_rsa.pub ];

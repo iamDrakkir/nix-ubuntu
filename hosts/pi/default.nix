@@ -58,8 +58,9 @@
   };
 
   nixpkgs.config.allowUnfree = true;
-  # fish is set as the user shell above — enable the NixOS module so it integrates properly
-  programs.fish.enable = true;
+  # zsh is set as the user shell below — enable the NixOS module so it lands in
+  # /etc/shells and gets system-wide completion wiring.
+  programs.zsh.enable = true;
 
   # Allow drakkir to use sudo without a password (optional, remove if not desired)
   security.sudo.extraRules = [
@@ -99,7 +100,7 @@
     ];
 
     isNormalUser = true;
-    shell = pkgs.fish;
+    shell = pkgs.zsh;
     # Add your public key here:
     # openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAA..." ];
   };

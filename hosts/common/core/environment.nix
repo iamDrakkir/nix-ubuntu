@@ -28,6 +28,10 @@
       neovim
       pipewire
       wireplumber
+      # Login shell. Needed here (not just in home-manager) so that a stable
+      # /run/system-manager/sw/bin/zsh exists to point the passwd entry at —
+      # a ~/.nix-profile or store path would break pkexec. See core/shells.nix.
+      zsh
     ];
   };
 }

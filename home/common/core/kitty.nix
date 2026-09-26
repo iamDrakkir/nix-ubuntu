@@ -36,7 +36,7 @@
       # Performance tuning
       repaint_delay = 10;
       # Shell integration
-      shell = "fish";
+      shell = "${config.programs.zsh.package}/bin/zsh";
       sync_to_monitor = true;
       tab_bar_align = "left";
       # Tab bar configuration

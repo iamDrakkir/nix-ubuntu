@@ -10,8 +10,9 @@
     enable = true;
 
     settings = {
-      # Default shell
-      command = "fish";
+      # Default shell. Absolute path: on the Ubuntu hosts zsh only exists in
+      # the nix profile, and the terminal may launch without it on PATH.
+      command = "${config.programs.zsh.package}/bin/zsh";
       # Behavior
       confirm-close-surface = false;
       # Custom shader
