@@ -87,14 +87,13 @@
     inputs@{
       self,
       home-manager,
-      nix-system-graphics,
       nixpkgs,
       system-manager,
       ...
     }:
     let
       # Custom packages overlay: see ./pkgs/default.nix
-      customPackages = final: prev: (import ./pkgs { pkgs = prev; });
+      customPackages = _final: prev: (import ./pkgs { pkgs = prev; });
       # ========== Per-user identity ==========
       # Single source of truth for git authorship and the uid used to locate
       # per-user runtime sockets (/run/user/<uid>/...). Consumed via the
@@ -114,7 +113,7 @@
       };
       # ========== Extend lib with lib.custom and lib.hm ==========
       lib = nixpkgs.lib.extend (
-        self: super:
+        self: _super:
         (import ./lib { lib = self; })
         // {
           # Import home-manager's lib.hm to fix missing lib.hm errors
@@ -180,6 +179,9 @@
           modules = [
             ./hosts/${hostname}
 
+            # Same overlays as the standalone home-manager configs.
+            { nixpkgs.overlays = overlays; }
+
             # Integrate home-manager as a NixOS module
             home-manager.nixosModules.home-manager
             {
@@ -232,7 +234,7 @@
         sys:
         import nixpkgs {
           config.allowUnfree = true;
-          overlays = overlays;
+          inherit overlays;
           system = sys;
         };
       # Helper function to create system configs for each host

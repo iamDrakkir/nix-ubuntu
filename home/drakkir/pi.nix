@@ -11,7 +11,7 @@
     ../common/core/nvim.nix
     ../common/core/shell.nix
 
-    # User identity (name/email come from the `identity` specialArg)
+    # SSH agent routing (uid comes from the `identity` specialArg)
     ./common/ssh.nix
   ];
 
@@ -21,9 +21,7 @@
     enable = true;
   };
 
-  # Override the genericLinux target — not needed on NixOS
+  # Override the genericLinux target — not needed on NixOS. This also turns off
+  # the system-manager/flatpak session plumbing in core/home.nix.
   targets.genericLinux.enable = false;
-  # On NixOS, systemd user env fixes from home.nix are still applied but
-  # the system-manager path is irrelevant; keep the profile clean.
-  xdg.systemDirs.data = [ ];
 }
