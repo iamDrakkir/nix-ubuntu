@@ -323,12 +323,25 @@ key_source = "file"
 builtin = "Ayu"
 community_palette = "Ayu Blue"
 mode = "dark"
+pure_black_dark = true
 source = "builtin"
 wallpaper_scheme = "m3-content"
 
     [theme.templates]
-    builtin_ids = [ "btop", "foot", "gtk3", "gtk4", "ghostty", "hyprland", "kitty", "niri", "starship", "umbriel" ]
-    community_ids = [ "opencode", "zen-browser", "neovim", "vscode", "bat", "herdr", "lazygit" ]
+    builtin_ids = [ "btop", "foot", "gtk3", "gtk4", "ghostty", "hyprland", "kitty", "niri", "qt", "starship", "umbriel" ]
+    community_ids = [
+        "opencode",
+        "zen-browser",
+        "discord",
+        "neovim",
+        "vscode",
+        "fastfetch",
+        "papirus-icons",
+        "bat",
+        "herdr",
+        "lazygit",
+        "yazi"
+    ]
 
 [wallpaper]
 directory = "/home/drakkir/Pictures/Wallpapers"

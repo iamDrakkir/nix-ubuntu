@@ -293,6 +293,9 @@ in
         "PUSHD_IGNORE_DUPS"
         "PUSHD_SILENT"
       ];
+
+      # EXTENDED_GLOB makes `#` a glob operator, which breaks `nixpkgs#foo`.
+      shellAliases.nix = "noglob nix";
     };
   };
 }
