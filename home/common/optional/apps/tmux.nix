@@ -122,8 +122,8 @@
       bind -T copy-mode-vi v send-keys -X begin-selection
       bind -T copy-mode-vi V send-keys -X select-line
       bind -T copy-mode-vi C-v send-keys -X rectangle-toggle
-      bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "xclip -in -selection clipboard"
-      bind -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "xclip -in -selection clipboard"
+      bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel "${pkgs.wl-clipboard}/bin/wl-copy"
+      bind -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "${pkgs.wl-clipboard}/bin/wl-copy"
       bind -T copy-mode-vi Escape send-keys -X cancel
       unbind-key -T copy-mode-vi MouseDragEnd1Pane
       bind -T copy-mode-vi WheelUpPane select-pane \; send-keys -t '{mouse}' -X clear-selection \; send-keys -t '{mouse}' -X -N 5 scroll-up
