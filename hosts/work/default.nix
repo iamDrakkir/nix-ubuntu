@@ -2,9 +2,9 @@
 
 {
   imports = [
+    # No ../common/users import: the login is the SSSD/AD account, and a
+    # same-named local user only gives the greeter a passwordless decoy.
     ../common/core
-
-    ../common/users/rhagelin
 
     # Optional system configs — opt in per host
     ../common/optional/noctalia-greeter.nix
