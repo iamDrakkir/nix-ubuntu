@@ -269,11 +269,21 @@
       # own, but reports "The following flake outputs are unchecked:
       # systemConfigs." — re-export them here so the system level is covered by
       # the same gate instead of only being caught at `just system` time.
+      #
+      # flake check also skips building homeConfigurations, which leaves most of
+      # each config (e.g. home.packages) unevaluated. Forcing the activation
+      # drvPath evaluates all of it without building or downloading anything.
       checks.${system} = {
         systemConfig-bigbox = self.systemConfigs.bigbox;
         systemConfig-terra = self.systemConfigs.terra;
         systemConfig-work = self.systemConfigs.work;
-      };
+      }
+      // lib.mapAttrs' (
+        name: home:
+        lib.nameValuePair "home-${lib.replaceStrings [ "@" ] [ "-" ] name}" (
+          pkgs.writeText "home-drv" (builtins.unsafeDiscardStringContext home.activationPackage.drvPath)
+        )
+      ) self.homeConfigurations;
 
       formatter.${system} = inputs.pedantix.packages.${system}.pedantix-wrapped;
 

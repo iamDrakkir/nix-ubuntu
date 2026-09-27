@@ -59,4 +59,5 @@ those files takes effect **without a rebuild** — and the repo must stay at
   under NixOS are often *not* available under system-manager.
 - Justfile sets `pipefail` on purpose: recipes pipe into `nom`, which otherwise
   hides rebuild failures. Keep it if you add recipes.
-- No CI, no test suite. `nix flake check` is the only automated gate.
+- No test suite. `.github/workflows/check.yml` runs `nix fmt -- --check` and
+  `nix flake check` on push/PR; run both locally before committing.
