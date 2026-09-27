@@ -2,8 +2,8 @@
 
 {
   # pinentry-gnome3 needs gcr to work outside a full GNOME session
-  # (e.g. hyprland/niri).
-  home.packages = [ pkgs.gcr ];
+  # (e.g. hyprland/niri). gcr_3 matches the ABI pinentry-gnome3 links against.
+  home.packages = [ pkgs.gcr_3 ];
   programs.gpg.enable = true;
 
   # Runs gpg-agent (socket-activated) and exposes it as an SSH agent.
