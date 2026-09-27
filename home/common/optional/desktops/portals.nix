@@ -18,7 +18,7 @@
 #
 # Nothing here is compositor-specific: the broken unit is the distro's and the
 # failure is a session restart racing a GTK app, so it applies to every session
-# on these hosts. It lives beside xtrayhide.nix rather than inside one desktop
+# on these hosts. It lives in desktops/ rather than inside one desktop
 # module for that reason — parking it in umbriel/ only ever worked because terra
 # imports every desktop module, so the drop-in landed no matter what booted.
 #

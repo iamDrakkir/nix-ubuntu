@@ -25,13 +25,11 @@
   # AMD GPU Kernel Parameter (Manual Setup Required)
   # ========================================================================
   #
-  # Same prerequisite as CoreCtrl — without it the amdgpu driver exposes no
-  # clock/voltage controls and LACT shows monitoring only. Edit
-  # GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub:
+  # Without it the amdgpu driver exposes no clock/voltage controls and LACT
+  # shows monitoring only. Edit GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub:
   #
   #   GRUB_CMDLINE_LINUX_DEFAULT="quiet splash amdgpu.ppfeaturemask=0xffffffff"
   #
-  # Then `sudo update-grub && sudo reboot`. If CoreCtrl's advanced mode already
-  # worked on this host, it is already set.
+  # Then `sudo update-grub && sudo reboot`.
   # ========================================================================
 }

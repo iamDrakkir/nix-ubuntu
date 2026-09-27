@@ -37,8 +37,8 @@ diff. Lists are intentionally not sorted (order is often significant).
   errors).
 - Modules receive `inputs outputs lib system username configUser hostname
   homeDirectory` via specialArgs/extraSpecialArgs.
-- `pkgs/default.nix` custom packages are applied as an overlay (`pkgs.xtrayhide`).
-  `overlays/default.nix` is currently empty.
+- `pkgs/default.nix` custom packages are applied as an overlay (currently
+  none). `overlays/default.nix` is currently empty and not wired in.
 
 ## Dotfiles are out-of-store symlinks
 

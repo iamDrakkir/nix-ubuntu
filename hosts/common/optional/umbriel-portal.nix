@@ -11,8 +11,7 @@
 #
 # XDG_DESKTOP_PORTAL_DIR would override that path, but it *replaces* the
 # directory rather than adding to it and would hide the distro's gtk and gnome
-# backends. Link the file into place instead, as corectrl.nix does for D-Bus and
-# polkit files that must live under /usr/share.
+# backends. Link the file into place with systemd-tmpfiles instead.
 let
   portal = inputs.umbriel.inputs.xdg-desktop-portal-umbriel.packages.${system}.default;
 in
