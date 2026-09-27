@@ -1,4 +1,4 @@
-{ pkgs, system, ... }:
+{ system, ... }:
 
 {
   # Determinate Nix owns /etc/nix/nix.conf, which `!include`s nix.custom.conf —

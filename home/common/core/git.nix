@@ -1,5 +1,4 @@
 {
-  config,
   homeDirectory,
   identity,
   ...
@@ -93,10 +92,7 @@
         tag = false;
       };
 
-      pull = {
-        default = "current";
-        rebase = true;
-      };
+      pull.rebase = true;
 
       push = {
         autoSetupRemote = true;

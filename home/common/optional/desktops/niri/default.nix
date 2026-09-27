@@ -468,11 +468,8 @@ in
       prefer-no-csd = true;
       # Screenshot path
       screenshot-path = "~/Pictures/Screenshots/Screenshot_%Y-%m-%d %H-%M-%S.png";
-
       # Spawn applications at startup
-      spawn-at-startup = [
-      ]
-      ++ lib.optionals noctaliaEnabled [ { command = [ "noctalia" ]; } ];
+      spawn-at-startup = lib.optionals noctaliaEnabled [ { command = [ "noctalia" ]; } ];
 
       # Window rules
       window-rules = [

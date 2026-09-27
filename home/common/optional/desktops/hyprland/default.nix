@@ -2,7 +2,6 @@
   lib,
   config,
   pkgs,
-  homeDirectory,
   hostname,
   inputs,
   system,
@@ -164,12 +163,9 @@ in
       # Shell-specific keybindings (only if a shell is enabled)
       ++ lib.optionals shellEnabled (
         lib.filter (b: b != null) [
-          (getOptionalShellBind "calendar")
           (getOptionalShellBind "clipboard")
           (getOptionalShellBind "launcherProviders")
           (getOptionalShellBind "emoji")
-          (getOptionalShellBind "dashboard")
-          (getOptionalShellBind "controlCenter")
           (getOptionalShellBind "audioPanel")
           (getOptionalShellBind "bluetoothPanel")
           (getOptionalShellBind "networkPanel")
@@ -230,10 +226,10 @@ in
         (getShellBind "brightnessUp" "XF86MonBrightnessUp" "brightnessctl -q s +10%")
         (getShellBind "brightnessDown" "XF86MonBrightnessDown" "brightnessctl -q s 10%-")
         (getShellBind "volumeMute" "XF86AudioMute" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
-        (getShellBind "mediaPlay" "XF86AudioPlay" "playerctl play-pause")
+        (mkBind "XF86AudioPlay" ''hl.dsp.exec_cmd("playerctl play-pause")'')
         (mkBind "XF86AudioPause" ''hl.dsp.exec_cmd("playerctl pause")'')
-        (getShellBind "mediaNext" "XF86AudioNext" "playerctl next")
-        (getShellBind "mediaPrev" "XF86AudioPrev" "playerctl previous")
+        (mkBind "XF86AudioNext" ''hl.dsp.exec_cmd("playerctl next")'')
+        (mkBind "XF86AudioPrev" ''hl.dsp.exec_cmd("playerctl previous")'')
         (getShellBind "micMute" "XF86AudioMicMute" "pactl set-source-mute @DEFAULT_SOURCE@ toggle")
         (getShellBind "lockKey" "XF86Lock" "hyprlock")
 

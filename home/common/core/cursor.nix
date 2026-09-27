@@ -40,8 +40,7 @@ in
       enable = true;
       gtk.enable = true;
       hyprcursor.enable = true;
-      name = selected.name;
-      package = selected.package;
+      inherit (selected) name package;
       size = cursorSize;
       x11.enable = true;
     };

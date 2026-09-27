@@ -1,4 +1,4 @@
-{ config, homeDirectory, ... }:
+{ config, ... }:
 
 {
   programs.kitty = {
