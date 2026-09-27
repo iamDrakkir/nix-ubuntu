@@ -2,56 +2,22 @@
   lib,
   config,
   pkgs,
-  hostname,
   inputs,
   system,
   ...
 }:
 
 let
-  # Must match the binary and the profile names declared in
-  # core/zen-browser.nix — `-p` is case-sensitive.
-  browserAdminProfile = "work_admin";
-  browserCmd = "zen-beta";
-  # Browser key assignments based on host
-  browserPersonalKey = if isWorkHost then "SUPER + SHIFT + B" else "SUPER + B";
-  browserPersonalProfile = "personal";
-  browserWorkKey = if isWorkHost then "SUPER + B" else "SUPER + SHIFT + B";
-  browserWorkProfile = "work";
-  # Return a shell bind or null if the field is absent in the active shell
-  getOptionalShellBind =
-    field:
-    let
-      kbField = shellKb.${field}.hyprland or null;
-    in
-    if kbField != null then mkShellBind kbField else null;
-  # Get a shell keybind (via .hyprland field) or fall back to an exec bind
-  getShellBind =
-    field: fallbackKey: fallbackCmd:
-    let
-      kbField = shellKb.${field}.hyprland or null;
-    in
-    if kbField != null then
-      mkShellBind kbField
-    else
-      mkBind fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
-  getShellBindRepeat =
-    field: fallbackKey: fallbackCmd:
-    let
-      kbField = shellKb.${field}.hyprland or null;
-    in
-    if kbField != null then
-      mkShellBindRepeat kbField
-    else
-      mkBindRepeat fallbackKey "hl.dsp.exec_cmd(${toLuaStr fallbackCmd})";
-  hasNoctalia = noctaliaKb != { };
-  isWorkHost = hostname == "work";
-  # Launcher keybind (provided by the shell; no standalone launcher installed)
-  launcherBinds =
-    let
-      launcherField = shellKb.launcher.hyprland or null;
-    in
-    lib.optionals (launcherField != null) [ (mkShellBind launcherField) ];
+  inherit (config.myConfig) browser chatCommand;
+  # h/j/k/l mapped to Hyprland's direction names
+  directions = {
+    h = "l";
+    j = "d";
+    k = "u";
+    l = "r";
+  };
+  execExpr = cmd: "hl.dsp.exec_cmd(${toLuaStr cmd})";
+  kb = config.myConfig.programs.noctalia.keybindings;
   # Wrap a Nix string as a raw Lua expression (renders without quotes)
   lua = lib.generators.mkLuaInline;
   # Build a settings.bind entry: hl.bind(key, dispatcher)
@@ -77,13 +43,15 @@ let
       { repeating = true; }
     ];
   };
-  # Build a bind from a shell keybinding struct { key; cmd; }
-  mkShellBind = kb: mkBind kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
-  mkShellBindRepeat = kb: mkBindRepeat kb.key "hl.dsp.exec_cmd(${toLuaStr kb.cmd})";
-  # Check which shell is enabled
-  noctaliaKb = config.myConfig.programs.noctalia.keybindings or { };
-  shellEnabled = hasNoctalia;
-  shellKb = noctaliaKb;
+  mkDirBinds =
+    mods: dispatch: lib.mapAttrsToList (key: dir: mkBind "${mods} + ${key}" (dispatch dir)) directions;
+  mkExec = key: cmd: mkBind key (execExpr cmd);
+  noctaliaBind = name: mkBind kb.${name}.hyprland.key (execExpr kb.${name}.hyprland.cmd);
+  # Volume keys repeat while held; every other Noctalia bind fires once.
+  noctaliaRepeating = [
+    "volumeDown"
+    "volumeUp"
+  ];
   # Render a Nix value as a Lua literal string (e.g. "foo" → "\"foo\"")
   toLuaStr = lib.generators.toLua { };
 
@@ -91,23 +59,16 @@ in
 
 {
   # Wayland utilities for Hyprland
-  home.packages =
-    with pkgs;
-    [
-      grim # Screenshot tool
-      slurp # Screen area selector
-      wl-clipboard # Clipboard utilities
-      wl-clipboard-x11 # X11 compatibility
-      hypridle # Idle management
-      playerctl # Media player control
-      wtype # Synthesise key events (universal copy/paste)
-      satty
-    ]
-    ++ lib.optionals (!shellEnabled) [
-      # Only include these when no shell is enabled
-      hyprlock # Lock screen (shells provide their own)
-      brightnessctl # Brightness control (shells handle this)
-    ];
+  home.packages = with pkgs; [
+    grim # Screenshot tool
+    slurp # Screen area selector
+    wl-clipboard # Clipboard utilities
+    wl-clipboard-x11 # X11 compatibility
+    hypridle # Idle management
+    playerctl # Media player control
+    wtype # Synthesise key events (universal copy/paste)
+    satty
+  ];
 
   imports = [ ../portals.nix ];
 
@@ -115,19 +76,17 @@ in
     configType = "lua";
     enable = true;
 
-    # Autostart programs and submap definition
+    # Autostart, Noctalia colours and the passthru submap. The colour module is
+    # rendered by Noctalia's hyprland template and is absent until its first run.
     extraConfig = ''
       hl.on("hyprland.start", function()
         hl.exec_cmd("hypridle")
         hl.exec_cmd("proton-pass")
-      end)
-    ''
-    + lib.optionalString hasNoctalia ''
-      hl.on("hyprland.start", function()
         hl.exec_cmd("noctalia")
       end)
-    ''
-    + ''
+
+      pcall(function() require("noctalia").apply_theme() end)
+
       hl.define_submap("passthru", function()
         hl.bind("SUPER + Escape", hl.dsp.submap("reset"))
       end)
@@ -139,48 +98,32 @@ in
       # All keybindings in a single bind list (repeating/drag via _args opts)
       bind = [
         # Applications
-        (mkBind "SUPER + RETURN" ''hl.dsp.exec_cmd("ghostty")'')
-        (mkBind "SUPER + SHIFT + RETURN" ''hl.dsp.exec_cmd("kitty")'')
-        (mkBind "SUPER + ALT + RETURN" ''hl.dsp.exec_cmd("foot")'')
-        (mkBind "SUPER + S" ''hl.dsp.exec_cmd("foot")'')
-        (mkBind "SUPER + E" ''hl.dsp.exec_cmd("nautilus")'')
-        (mkBind "SUPER + CTRL + SHIFT + B" ''hl.dsp.exec_cmd("${browserCmd} -p ${browserAdminProfile}")'')
-        (mkBind "SUPER + P" ''hl.dsp.exec_cmd("proton-pass")'')
-        (mkBind "SUPER + D" ''hl.dsp.exec_cmd("discord")'')
+        (mkExec "SUPER + RETURN" "ghostty")
+        (mkExec "SUPER + SHIFT + RETURN" "kitty")
+        (mkExec "SUPER + ALT + RETURN" "foot")
+        (mkExec "SUPER + E" "nautilus")
+        (mkExec "SUPER + B" "${browser.cmd} -p ${browser.primary}")
+        (mkExec "SUPER + SHIFT + B" "${browser.cmd} -p ${browser.secondary}")
+        (mkExec "SUPER + CTRL + SHIFT + B" "${browser.cmd} -p ${browser.admin}")
+        (mkExec "SUPER + P" "proton-pass")
 
         # Universal clipboard: send the legacy CUA chords, which both
         # terminals and GTK/Qt apps honour, so one key works everywhere.
-        (mkBind "SUPER + C" ''hl.dsp.exec_cmd("wtype -M ctrl -k Insert -m ctrl")'')
-        (mkBind "SUPER + V" ''hl.dsp.exec_cmd("wtype -M shift -k Insert -m shift")'')
-        (mkBind "SUPER + X" ''hl.dsp.exec_cmd("wtype -M ctrl -k x -m ctrl")'')
+        (mkExec "SUPER + C" "wtype -M ctrl -k Insert -m ctrl")
+        (mkExec "SUPER + V" "wtype -M shift -k Insert -m shift")
+        (mkExec "SUPER + X" "wtype -M ctrl -k x -m ctrl")
 
         # Screenshot
-        (mkBind "SUPER + SHIFT + S" (
-          "hl.dsp.exec_cmd(${toLuaStr ''grim -g "$(slurp)" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png''})"
-        ))
-      ]
-      ++ launcherBinds
-      # Shell-specific keybindings (only if a shell is enabled)
-      ++ lib.optionals shellEnabled (
-        lib.filter (b: b != null) [
-          (getOptionalShellBind "clipboard")
-          (getOptionalShellBind "launcherProviders")
-          (getOptionalShellBind "emoji")
-          (getOptionalShellBind "audioPanel")
-          (getOptionalShellBind "bluetoothPanel")
-          (getOptionalShellBind "networkPanel")
-          (getOptionalShellBind "nightlight")
-        ]
-      )
-      ++ [
+        (mkExec "SUPER + SHIFT + S" ''grim -g "$(slurp)" - | satty -f - --output-filename ~/Pictures/Screenshots/satty-$(date '+%Y%m%d-%H:%M:%S').png'')
+
         # Window management
         (mkBind "SUPER + Q" "hl.dsp.window.close()")
         (mkBind "SUPER + F" ''hl.dsp.window.fullscreen({ mode = "maximized" })'')
         (mkBind "SUPER + SHIFT + F" "hl.dsp.window.fullscreen()")
         (mkBind "SUPER + T" "hl.dsp.window.float()")
-        (mkBind "SUPER + J" ''hl.dsp.layout("togglesplit")'')
+        (mkBind "SUPER + R" ''hl.dsp.layout("togglesplit")'')
         (mkBind "SUPER + G" "hl.dsp.group.toggle()")
-        (mkBind "SUPER + M" ''hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit")'')
+        (mkExec "SUPER + M" "command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit")
 
         # Window navigation
         (mkBind "SUPER + left" ''hl.dsp.focus({ direction = "l" })'')
@@ -198,10 +141,17 @@ in
         (mkBind "SUPER + SHIFT + left" "hl.dsp.window.resize({ x = -100, y = 0, relative = true })")
         (mkBind "SUPER + SHIFT + up" "hl.dsp.window.resize({ x = 0, y = -100, relative = true })")
         (mkBind "SUPER + SHIFT + down" "hl.dsp.window.resize({ x = 0, y = 100, relative = true })")
-
-        # Lock screen
-        (getShellBind "lockScreen" "SUPER + CTRL + Escape" "hyprlock")
       ]
+      ++ lib.optional (chatCommand != null) (mkExec "SUPER + D" chatCommand)
+      # The README hierarchy: focus window, move window, focus monitor, move to monitor
+      ++ mkDirBinds "SUPER" (d: ''hl.dsp.focus({ direction = "${d}" })'')
+      ++ mkDirBinds "SUPER + CTRL" (d: ''hl.dsp.window.move({ direction = "${d}" })'')
+      ++ mkDirBinds "SUPER + SHIFT" (d: ''hl.dsp.focus({ monitor = "${d}" })'')
+      ++ mkDirBinds "SUPER + SHIFT + CTRL" (d: ''hl.dsp.window.move({ monitor = "${d}" })'')
+      ++ map noctaliaBind (lib.subtractLists noctaliaRepeating (lib.attrNames kb))
+      ++ map (
+        name: mkBindRepeat kb.${name}.hyprland.key (execExpr kb.${name}.hyprland.cmd)
+      ) noctaliaRepeating
       # Workspace switching: SUPER + 0-9 (0 → workspace 10)
       ++ map (
         n:
@@ -222,29 +172,14 @@ in
         (mkBind "SUPER + mouse_up" ''hl.dsp.focus({ workspace = "e-1" })'')
         (mkBind "SUPER + CTRL + down" ''hl.dsp.focus({ workspace = "empty" })'')
 
-        # Fn / media keys
-        (getShellBind "brightnessUp" "XF86MonBrightnessUp" "brightnessctl -q s +10%")
-        (getShellBind "brightnessDown" "XF86MonBrightnessDown" "brightnessctl -q s 10%-")
-        (getShellBind "volumeMute" "XF86AudioMute" "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle")
-        (mkBind "XF86AudioPlay" ''hl.dsp.exec_cmd("playerctl play-pause")'')
-        (mkBind "XF86AudioPause" ''hl.dsp.exec_cmd("playerctl pause")'')
-        (mkBind "XF86AudioNext" ''hl.dsp.exec_cmd("playerctl next")'')
-        (mkBind "XF86AudioPrev" ''hl.dsp.exec_cmd("playerctl previous")'')
-        (getShellBind "micMute" "XF86AudioMicMute" "pactl set-source-mute @DEFAULT_SOURCE@ toggle")
-        (getShellBind "lockKey" "XF86Lock" "hyprlock")
+        # Fn / media keys (brightness, volume, mic and lock come from Noctalia)
+        (mkExec "XF86AudioPlay" "playerctl play-pause")
+        (mkExec "XF86AudioPause" "playerctl pause")
+        (mkExec "XF86AudioNext" "playerctl next")
+        (mkExec "XF86AudioPrev" "playerctl previous")
 
         # Passthrough SUPER KEY to virtual machine
         (mkBind "SUPER + Z" ''hl.dsp.submap("passthru")'')
-
-        # Browser shortcuts (swapped based on hostname)
-        (mkBind browserPersonalKey ''hl.dsp.exec_cmd("${browserCmd} -p ${browserPersonalProfile}")'')
-        (mkBind browserWorkKey ''hl.dsp.exec_cmd("${browserCmd} -p ${browserWorkProfile}")'')
-
-        # Audio volume — repeatable (replaces binde)
-        (getShellBindRepeat "volumeUp" "XF86AudioRaiseVolume"
-          "wpctl set-volume -l 1 @DEFAULT_AUDIO_SINK@ 5%+"
-        )
-        (getShellBindRepeat "volumeDown" "XF86AudioLowerVolume" "wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-")
 
         # Mouse drag binds (replaces bindm)
         (mkBindDrag "SUPER + mouse:272" "hl.dsp.window.drag()")
@@ -264,8 +199,6 @@ in
         "decoration.shadow.render_power" = 3;
         "dwindle.preserve_split" = true;
         "general.border_size" = 2;
-        "general.col.active_border" = "rgb(fab387)"; # Catppuccin Mocha peach
-        "general.col.inactive_border" = "rgb(f5e0dc)"; # Catppuccin Mocha rosewater
         "general.gaps_in" = 3;
         "general.gaps_out" = 5;
         "general.layout" = "dwindle";

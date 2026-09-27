@@ -69,7 +69,7 @@ Prefer widening an existing tier over inventing a new modifier combination. If
 a binding does not fit the hierarchy, that is usually a sign it belongs in the
 menu.
 
-Niri, tmux, Herdr, and Neovim are configured to preserve this separation.
+Niri, Hyprland, tmux, Herdr, and Neovim are configured to preserve this separation.
 
 ### Universal clipboard
 

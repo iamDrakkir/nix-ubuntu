@@ -1,7 +1,6 @@
 {
   lib,
   config,
-  hostname,
   inputs,
   system,
   ...
@@ -10,30 +9,22 @@
 # Umbriel — noctalia's own wlroots compositor.
 let
   appBinds = {
-    "Mod+B" = "spawn:${browser.cmd} -p ${if isWork then browser.work else browser.personal}";
+    "Mod+B" = "spawn:${browser.cmd} -p ${browser.primary}";
     # Universal clipboard: synthesise the legacy CUA chords with wtype, which
     # both terminals and GTK/Qt apps honour, so one key works everywhere.
     "Mod+C" = "spawn:wtype -M ctrl -k Insert -m ctrl";
     "Mod+Ctrl+Shift+B" = "spawn:${browser.cmd} -p ${browser.admin}";
-    "Mod+D" = "spawn:${if isWork then "teams-for-linux" else "discord"}";
     "Mod+E" = "spawn:nautilus";
     "Mod+P" = "spawn:proton-pass";
     "Mod+Return" = "spawn:env GTK_IM_MODULE=simple ghostty";
-    "Mod+Shift+B" = "spawn:${browser.cmd} -p ${if isWork then browser.personal else browser.work}";
+    "Mod+Shift+B" = "spawn:${browser.cmd} -p ${browser.secondary}";
     # Umbriel has no screenshot action of its own, so use the shell's — which
     # is what draws the picker anyway.
     "Mod+Shift+S" = "spawn:noctalia msg screenshot-region";
     "Mod+V" = "spawn:wtype -M shift -k Insert -m shift";
-  };
-  browser = {
-    admin = "work_admin";
-    cmd = "zen-beta";
-    personal = "personal";
-    work = "work";
-  };
-  # On the work machine Mod+D opens Teams and Mod+B the work profile;
-  # elsewhere Discord and the personal profile.
-  isWork = hostname == "work";
+  }
+  // lib.optionalAttrs (chatCommand != null) { "Mod+D" = "spawn:${chatCommand}"; };
+  inherit (config.myConfig) browser chatCommand;
   navigationBinds = {
     "Mod+BracketLeft" = "window-consume-or-expel-left";
     "Mod+BracketRight" = "window-consume-or-expel-right";
@@ -84,7 +75,7 @@ let
   );
   # Every Noctalia bind that declares an umbriel variant, re-keyed by chord.
   noctaliaBinds = lib.mapAttrs' (_: v: lib.nameValuePair v.umbriel.key v.umbriel.action) (
-    lib.filterAttrs (_: v: v ? umbriel) (config.myConfig.programs.noctalia.keybindings or { })
+    lib.filterAttrs (_: v: v ? umbriel) config.myConfig.programs.noctalia.keybindings
   );
   # share/umbriel/config.toml's own binds, plus the vim directions it leaves to
   # the compiled-in defaults. Both need declaring: see the note at the top.
@@ -149,6 +140,10 @@ in
 
         show_cheatsheet = false;
       };
+
+      # Colours rendered by Noctalia's umbriel template; declared here because
+      # its post-hook cannot write the store-managed config.toml.
+      include.optional.files = [ "noctalia.toml" ];
 
       input = {
         # Focus follows the mouse, but capped: do not steal focus on hover if

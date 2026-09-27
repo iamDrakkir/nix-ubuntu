@@ -2,23 +2,14 @@
   lib,
   config,
   pkgs,
-  hostname,
   inputs,
+  options,
   ...
 }:
 
 let
-  # Must match the binary and the profile names declared in
-  # core/zen-browser.nix — `-p` is case-sensitive.
-  browserAdminProfile = "work_admin";
-  browserCmd = "zen-beta";
-  browserPersonalProfile = "personal";
-  browserWorkProfile = "work";
-  # On the work machine Super+D opens Teams; elsewhere it opens Discord.
-  isWork = hostname == "work";
-  # Conditionally use Noctalia keybindings
-  kb = config.myConfig.programs.noctalia.keybindings or { };
-  noctaliaEnabled = kb != { };
+  inherit (config.myConfig) browser chatCommand;
+  kb = config.myConfig.programs.noctalia.keybindings;
 in
 
 {
@@ -41,6 +32,16 @@ in
 
   # Configure Niri window manager
   programs.niri = {
+    # Appended so the colours Noctalia's niri template renders into
+    # ~/.config/niri/noctalia.kdl win; optional because it is absent until the
+    # template first runs (and always absent in the build-time validation).
+    config = options.programs.niri.config.default ++ [
+      (inputs.niri.lib.kdl.leaf "include" [
+        { optional = true; }
+        "noctalia.kdl"
+      ])
+    ];
+
     enable = true;
     package = pkgs.niri;
 
@@ -53,7 +54,7 @@ in
       # Keybindings
       binds =
         with config.lib.niri.actions;
-        lib.optionalAttrs noctaliaEnabled {
+        {
           # Control Center tabs and toggles (Super+Ctrl namespace)
           "${kb.audioPanel.niri.key}" = {
             action.spawn = kb.audioPanel.niri.action;
@@ -126,9 +127,9 @@ in
 
           "Mod+B" = {
             action.spawn = [
-              browserCmd
+              browser.cmd
               "-p"
-              (if isWork then browserWorkProfile else browserPersonalProfile)
+              browser.primary
             ];
 
             hotkey-overlay.title = "Browser";
@@ -170,9 +171,9 @@ in
 
           "Mod+Ctrl+Shift+B" = {
             action.spawn = [
-              browserCmd
+              browser.cmd
               "-p"
-              browserAdminProfile
+              browser.admin
             ];
 
             hotkey-overlay.title = "Browser (work admin)";
@@ -193,11 +194,6 @@ in
           "Mod+Ctrl+WheelScrollUp" = {
             action.move-column-to-workspace-up = [ ];
             cooldown-ms = 150;
-          };
-
-          "Mod+D" = {
-            action.spawn = [ (if isWork then "teams-for-linux" else "discord") ];
-            hotkey-overlay.title = if isWork then "Teams" else "Discord";
           };
 
           # Applications
@@ -319,9 +315,9 @@ in
 
           "Mod+Shift+B" = {
             action.spawn = [
-              browserCmd
+              browser.cmd
               "-p"
-              (if isWork then browserPersonalProfile else browserWorkProfile)
+              browser.secondary
             ];
 
             hotkey-overlay.title = "Browser (other profile)";
@@ -405,6 +401,12 @@ in
 
             hotkey-overlay.title = "Cut (universal)";
           };
+        }
+        // lib.optionalAttrs (chatCommand != null) {
+          "Mod+D" = {
+            action.spawn = [ chatCommand ];
+            hotkey-overlay.title = "Chat";
+          };
         };
 
       # Hotkey overlay
@@ -446,13 +448,8 @@ in
           proportion = 0.5;
         };
 
-        # Focus ring configuration
-        focus-ring = {
-          active.color = "#7fc8ff";
-          inactive.color = "#505050";
-          width = 4.0;
-        };
-
+        # Focus ring configuration (colours come from noctalia.kdl)
+        focus-ring.width = 4.0;
         gaps = 16;
 
         preset-column-widths = [
@@ -469,7 +466,7 @@ in
       # Screenshot path
       screenshot-path = "~/Pictures/Screenshots/Screenshot_%Y-%m-%d %H-%M-%S.png";
       # Spawn applications at startup
-      spawn-at-startup = lib.optionals noctaliaEnabled [ { command = [ "noctalia" ]; } ];
+      spawn-at-startup = [ { command = [ "noctalia" ]; } ];
 
       # Window rules
       window-rules = [
