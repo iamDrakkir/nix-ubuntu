@@ -12,7 +12,7 @@
 #
 # The host's own setuid helper lives at /usr/lib/polkit-1/polkit-agent-helper-1
 # and matches the host polkitd, so point the expected path at it. Same spirit as
-# home/common/optional/pam-shim.nix: bridge Nix binaries to host system paths.
+# home/common/core/pam-shim.nix: bridge Nix binaries to host system paths.
 #
 # The link must be re-made on every activation. suid-sgid-wrappers.service
 # populates a fresh wrappers.XXXXXXXX directory and re-points /run/wrappers/bin

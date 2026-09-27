@@ -12,7 +12,7 @@
   #     sudo apt install uidmap
   #
   # /etc/subuid and /etc/subgid are already populated for the user, and
-  # unprivileged user namespaces are enabled (hosts/common/core/sysctl-userns.nix).
+  # unprivileged user namespaces are enabled (hosts/common/core/sandboxing.nix).
   #
   # ONE-TIME DevPod setup (points DevPod's docker provider at Podman, so no
   # `docker` alias is needed):

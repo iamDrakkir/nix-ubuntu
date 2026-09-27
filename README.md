@@ -155,7 +155,7 @@ home/                    # Home-manager configurations
 │   ├── terra.nix        # Desktops + dev + gaming
 │   ├── bigbox.nix       # Desktops + dev + gaming + all programs
 │   ├── pi.nix           # Minimal headless: shell + dev tools
-│   └── common/          # Shared identity (git, ssh)
+│   └── common/          # Shared per-user config (ssh)
 └── rhagelin/
     ├── work.nix
     └── common/
@@ -182,7 +182,7 @@ The one standing exception is `desktops/`: which compositor a machine runs is a
 per-host menu by nature, so those stay optional even when all current hosts happen
 to import the same ones.
 
-Two things to know when a non-Ubuntu host is added:
+One thing to know when a non-Ubuntu host is added:
 
 - `pam-shim.nix` is in `core` but redirects PAM to the host's system libpam, which
   is correct on Ubuntu and wrong on NixOS. It will need to move out — and it fails
@@ -227,7 +227,7 @@ home-manager switch --flake ~/.config/nix#drakkir@terra
 # Set the login shell. This is not declarative: pointing users.users.<name>.shell
 # at a Nix store path breaks anything validating against /etc/shells. The
 # register-login-shell service adds this path to /etc/shells for you.
-chsh -s /run/system-manager/sw/bin/bash
+chsh -s /run/system-manager/sw/bin/zsh
 
 # Switch the display manager from GDM to greetd (desktop hosts only)
 sudo systemctl disable --now gdm
@@ -285,17 +285,6 @@ The `just` commands automatically detect your hostname and derive the flake user
 configurations. The `systemConfigs` outputs are re-exported as flake `checks` in
 `flake.nix` so the Ubuntu system level is verified by the same command — `nix flake
 check` skips `systemConfigs` on its own.
-
-### Shell Aliases
-
-Convenient shell aliases are also available after home-manager setup:
-
-```bash
-# Quick rebuild commands (auto-detect hostname)
-hms                # Home-manager switch
-syss               # System-manager switch (uses --sudo flag)
-nix-rebuild        # Both home and system
-```
 
 ### Desktop Environment Setup
 
@@ -402,7 +391,7 @@ noctalia binary — see the comment there before touching it.
 
 ### LACT Setup (GPU Control)
 
-It is declared in `hosts/common/optional/lact.nix` The `lactd` daemon is a plain systemd service that applies saved settings at boot, whether or not the GUI is running. 
+It is declared in `hosts/common/optional/lact.nix`. The `lactd` daemon is a plain systemd service that applies saved settings at boot, whether or not the GUI is running. 
 
 **For full GPU control** (overclocking, undervolting, custom fan curves), add the AMD GPU kernel parameter to GRUB
 
@@ -450,11 +439,10 @@ imports = [
   ../common/optional/desktops/niri
 
   # Features
-  ../common/optional/development.nix
   ../common/optional/gaming.nix
 
-  # Programs
-  ../common/optional/programs/zen-browser.nix
+  # Apps
+  ../common/optional/apps/tmux.nix
 ];
 ```
 
@@ -467,7 +455,11 @@ imports = [
 3. Register in `flake.nix`:
    ```nix
    systemConfigs.newhost = mkSystemConfig "newhost";
-   homeConfigurations."drakkir@newhost" = mkHomeConfig { configUser = "drakkir"; hostname = "newhost"; };
+   homeConfigurations."drakkir@newhost" = mkHomeConfig {
+     configUser = "drakkir";
+     hostname = "newhost";
+     identity = identities.drakkir;
+   };
    ```
 
 #### NixOS host
@@ -476,7 +468,11 @@ imports = [
 2. Create home config: `home/drakkir/newhost.nix`
 3. Register in `flake.nix`:
    ```nix
-   nixosConfigurations.newhost = mkNixosConfig { hostname = "newhost"; configUser = "drakkir"; };
+   nixosConfigurations.newhost = mkNixosConfig {
+     configUser = "drakkir";
+     hostname = "newhost";
+     identity = identities.drakkir;
+   };
    ```
    Pass `sys = "x86_64-linux"` if it's not an aarch64 machine.
 
@@ -506,7 +502,7 @@ keyctl show @s   # user: keyring:cli-local-key:<fingerprint>@ProtonPassCLI
 
 Kernel keyrings do not survive a reboot, so the agent starts empty once per boot.
 Rather than failing the push with a credential error, `core.sshCommand` points at a
-wrapper (`home/common/optional/apps/proton.nix`) that checks `ssh-add -l` and runs
+wrapper (`home/common/core/proton.nix`) that checks `ssh-add -l` and runs
 `pass-cli login` first — on the terminal if there is one, otherwise in a new window.
 
 To skip the login entirely, set `PROTON_PASS_KEY_PROVIDER=fs` so `pass-cli` persists
@@ -530,33 +526,21 @@ pkexec --disable-internal-agent true
 
 `pkexec` also refuses to run at all — "The value for the SHELL variable was not
 found in the `/etc/shells` file" — if your login shell isn't registered there.
-`hosts/common/core/shells.nix` appends `/run/system-manager/sw/bin/bash` to
+`hosts/common/core/shells.nix` appends `/run/system-manager/sw/bin/{bash,zsh}` to
 `/etc/shells` on every rebuild and at boot, so this should not happen; if it
 does, check that `register-login-shell.service` succeeded and that your shell is
 actually that path (`getent passwd "$USER"`).
 
-### System-Manager Packages Not Available in Hyprland Autostart
+### System-Manager Packages Not Available in Compositor Autostart
 
-If programs installed via system-manager's `environment.systemPackages` don't autostart in Hyprland or aren't visible in application launchers, ensure both of these are configured:
+If programs installed via system-manager's `environment.systemPackages` don't autostart in a compositor or aren't visible in application launchers, check these (all in place already):
 
-1. **PATH for systemd user session** - In `home/common/core/home.nix`, the `nix-setup-environment` service must include `/run/system-manager/sw/bin` in PATH:
+1. **PATH for the systemd user session** — `home/common/core/home.nix`: the `nix-setup-environment` service prepends `/run/system-manager/sw/bin` to PATH.
+2. **XDG_DATA_DIRS for desktop files** — `home/common/core/home.nix`: `xdg.systemDirs.data` adds `/run/system-manager/sw/share`, and the session launchers in `hosts/common/core/wayland-sessions.nix` source `hm-session-vars.sh` before exec'ing the compositor.
+3. **Linked share directories** — `hosts/common/core/environment.nix`:
    ```nix
-   ExecStart = "systemctl --user set-environment PATH=/run/system-manager/sw/bin:${homeDirectory}/.nix-profile/bin:...";
+   environment.pathsToLink = [ "/bin" "/share" ];
    ```
-
-2. **XDG_DATA_DIRS for desktop files** - In `home/common/optional/desktops/hyprland/default.nix`, add to the `env` array:
-   ```nix
-   env = [
-     "XDG_DATA_DIRS,/run/system-manager/sw/share:$XDG_DATA_DIRS"
-   ];
-   ```
-
-Additionally, system-manager must be configured to link share directories in `hosts/common/core/nix.nix`:
-```nix
-environment.pathsToLink = [ "/bin" "/share" ];
-```
-
-This ensures programs in `environment.systemPackages` are accessible to Hyprland's `exec-once` commands and visible in application launchers.
 
 ## Acknowledgements
 

@@ -81,8 +81,8 @@ let
           ${lib.getExe config.programs.ghostty.package} -e pass-cli login || true
         fi
 
-        # The agent unit fails while logged out and retries every 10s; kick it
-        # so the fresh session is picked up now rather than up to 10s from now.
+        # The agent unit fails while logged out and retries with backoff; kick
+        # it so the fresh session is picked up now rather than on the next retry.
         systemctl --user restart proton-pass-agent || true
 
         # Wait for keys rather than assuming the login has finished: the
