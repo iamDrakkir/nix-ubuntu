@@ -5,12 +5,26 @@
   ...
 }:
 let
+  inherit (config.myConfig) browser chatCommand;
   cursorSize = lib.toInt config.home.sessionVariables.CURSOR_SIZE;
   cursorTheme = config.home.sessionVariables.CURSOR_THEME;
+  customKeybindingPath = "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings";
 in
 {
   # GNOME dconf configuration
   dconf.settings = {
+    "${customKeybindingPath}/custom0" = {
+      binding = "<Super>b";
+      command = "${browser.cmd} -p ${browser.primary}";
+      name = "Open Zen Browser";
+    };
+
+    "${customKeybindingPath}/custom1" = {
+      binding = "<Super>Return";
+      command = "env GTK_IM_MODULE=simple ghostty";
+      name = "Open Ghostty Terminal";
+    };
+
     "org/gnome/SessionManager" = {
       logout-prompt = false;
     };
@@ -130,35 +144,10 @@ in
 
     "org/gnome/settings-daemon/plugins/media-keys" = {
       custom-keybindings = [
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
-        "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
-      ];
-    };
-
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
-      binding = "<Super>b";
-      command = "zen-beta";
-      name = "Open Zen Browser";
-    };
-
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
-      binding = "<Super>Return";
-      command = "env GTK_IM_MODULE=simple ghostty";
-      name = "Open Ghostty Terminal";
-    };
-
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
-      binding = "<Super>space";
-      command = "walker";
-      name = "Open Walker Launcher";
-    };
-
-    "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
-      binding = "<Super>d";
-      command = "discord";
-      name = "Open Discord";
+        "/${customKeybindingPath}/custom0/"
+        "/${customKeybindingPath}/custom1/"
+      ]
+      ++ lib.optional (chatCommand != null) "/${customKeybindingPath}/custom2/";
     };
 
     "org/gnome/settings-daemon/plugins/power" = {
@@ -211,6 +200,13 @@ in
       switch-to-application-8 = [ ];
       switch-to-application-9 = [ ];
     };
+  }
+  // lib.optionalAttrs (chatCommand != null) {
+    "${customKeybindingPath}/custom2" = {
+      binding = "<Super>d";
+      command = chatCommand;
+      name = "Open chat";
+    };
   };
 
   # GNOME-related packages
@@ -218,11 +214,6 @@ in
     gnome-shell-extensions
     gnome-browser-connector
     gnome-extension-manager
-
-    # Launcher for the Super+Space bind below. GNOME runs its own shell, so
-    # Noctalia (which the other compositors spawn at startup) is not running
-    # here and cannot provide the launcher.
-    walker
   ];
 
   imports = [

@@ -3,6 +3,7 @@
 {
   imports = [
     ./home.nix
+    ./options.nix
     ./git.nix
     ./shell.nix
     ./nvim.nix

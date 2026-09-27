@@ -5,6 +5,8 @@
     teams-for-linux
   ];
 
+  myConfig.chatCommand = "teams-for-linux";
+
   xdg.desktopEntries.teams-for-linux = {
     categories = [
       "Network"

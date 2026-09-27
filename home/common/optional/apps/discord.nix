@@ -6,6 +6,7 @@
 
 {
   home.packages = [ (lib.custom.wrapElectronApp pkgs pkgs.discord "discord") ];
+  myConfig.chatCommand = "discord";
 
   xdg.desktopEntries.discord = {
     categories = [

@@ -58,6 +58,13 @@ let
   isWork = hostname == "work";
 in
 {
+  myConfig.browser = {
+    admin = "work_admin";
+    cmd = "zen-beta";
+    primary = if isWork then "work" else "personal";
+    secondary = if isWork then "personal" else "work";
+  };
+
   programs.zen-browser = {
     enable = true;
     # The nixpkgs Firefox wrapper hardcodes MOZ_LEGACY_PROFILES=1, which forces

@@ -1,6 +1,6 @@
 { pkgs, ... }:
 
-# TODO: Ghostty and Walker still do not respect cursor theme/size after reboot
+# TODO: Ghostty still does not respect cursor theme/size after reboot
 # despite all the following being correctly configured:
 #   - GTK settings files (~/.config/gtk-{3,4}.0/settings.ini) are created with correct theme
 #   - XCURSOR_THEME, XCURSOR_SIZE, XCURSOR_PATH environment variables are set
